@@ -11,7 +11,7 @@ use crate::graphql::{
 mod graphql;
 mod services;
 mod data_source;
-
+mod models;
 
 #[derive(Clone)]
 pub struct State {
