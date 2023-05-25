@@ -17,6 +17,8 @@ name = "SeeVi-backend"
 version = "0.1.0"
 dependencies = [
  "async-graphql",
+ "async-graphql-tide",
+ "async-std",
  "firebase",
  "mongodb",
  "tide",
@@ -131,6 +133,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "71938f30533e4d95a6d17aa530939da3842c2ab6f4f84b9dae68447e4129f74a"
 
 [[package]]
+name = "async-attributes"
+version = "1.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a3203e79f4dd9bdda415ed03cf14dae5a2bf775c683a00f94e9cd1faf0f596e5"
+dependencies = [
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "async-channel"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -182,9 +194,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql"
-version = "5.0.8"
+version = "5.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ae09afb01514b3dbd6328547b2b11fcbcb0205d9c5e6f2e17e60cb166a82d7f"
+checksum = "364423936c4b828ac1615ce325e528c5afbe6e6995d799ee5683c7d36720dfa4"
 dependencies = [
  "async-graphql-derive",
  "async-graphql-parser",
@@ -215,9 +227,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-derive"
-version = "5.0.8"
+version = "5.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60ae62851dd3ff9a7550aee75e848e8834b75285b458753e98dd71d0733ad3f2"
+checksum = "23a06320343bbe0a1f2e29ec6d1ed34e0460f10e6827b3154a78e4ccc039dbc4"
 dependencies = [
  "Inflector",
  "async-graphql-parser",
@@ -231,9 +243,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-parser"
-version = "5.0.8"
+version = "5.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e6ee332acd99d2c50c3443beae46e9ed784c205eead9a668b7b5118b4a60a8b"
+checksum = "46ce3b4b57e2a4630ea5e69eeb02fb5ee3c5f48754fcf7fd6a7bf3b4f96538f0"
 dependencies = [
  "async-graphql-value",
  "pest",
@@ -242,10 +254,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "async-graphql-value"
-version = "5.0.8"
+name = "async-graphql-tide"
+version = "5.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "122da50452383410545b9428b579f4cda5616feb6aa0aff0003500c53fcff7b7"
+checksum = "67663f669b3f48f000f4f5f3306d504de9de25a7a6072c51a3666cd1fa485f56"
+dependencies = [
+ "async-graphql",
+ "async-trait",
+ "futures-util",
+ "serde_json",
+ "tide",
+ "tide-websockets",
+]
+
+[[package]]
+name = "async-graphql-value"
+version = "5.0.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "637c6b5a755133d47c9829df04b7a5e2f1856fe4c1101f581650c93198eba103"
 dependencies = [
  "bytes",
  "indexmap",
@@ -357,6 +383,7 @@ version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62565bb4402e926b29953c785397c6dc0391b7b446e45008b0049eb43cec6f5d"
 dependencies = [
+ "async-attributes",
  "async-channel",
  "async-global-executor",
  "async-io",
@@ -376,6 +403,21 @@ dependencies = [
  "pin-utils",
  "slab",
  "wasm-bindgen-futures",
+]
+
+[[package]]
+name = "async-std-resolver"
+version = "0.21.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f2f8a4a203be3325981310ab243a28e6e4ea55b6519bffce05d41ab60e09ad8"
+dependencies = [
+ "async-std",
+ "async-trait",
+ "futures-io",
+ "futures-util",
+ "pin-utils",
+ "socket2",
+ "trust-dns-resolver",
 ]
 
 [[package]]
@@ -415,6 +457,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.16",
+]
+
+[[package]]
+name = "async-tungstenite"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "07b30ef0ea5c20caaa54baea49514a206308989c68be7ecd86c7f956e4da6378"
+dependencies = [
+ "futures-io",
+ "futures-util",
+ "log 0.4.17",
+ "pin-project-lite 0.2.9",
+ "tungstenite",
 ]
 
 [[package]]
@@ -554,6 +609,12 @@ name = "bumpalo"
 version = "3.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a3e2c3daef883ecc1b5d58c15adae93470a91d425f3532ba1695849656af3fc1"
+
+[[package]]
+name = "byteorder"
+version = "1.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
 
 [[package]]
 name = "bytes"
@@ -1395,6 +1456,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "64e9829a50b42bb782c1df523f78d332fe371b10c661e78b7a3c34b0198e9fac"
 
 [[package]]
+name = "input_buffer"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f97967975f448f1a7ddb12b0bc41069d09ed6a1c161a92687e057325db35d413"
+dependencies = [
+ "bytes",
+]
+
+[[package]]
 name = "instant"
 version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1601,6 +1671,8 @@ version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebe15399de63ad4294c80069967736cbb87ebe467a8cd0629df9cab88a6fbde6"
 dependencies = [
+ "async-std",
+ "async-std-resolver",
  "async-trait",
  "base64 0.13.1",
  "bitflags",
@@ -1623,9 +1695,8 @@ dependencies = [
  "rustls",
  "rustls-pemfile",
  "serde",
- "serde_bytes",
  "serde_with",
- "sha-1",
+ "sha-1 0.10.1",
  "sha2 0.10.6",
  "socket2",
  "stringprep",
@@ -2353,6 +2424,19 @@ dependencies = [
 
 [[package]]
 name = "sha-1"
+version = "0.9.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "99cd6713db3cf16b6c84e06321e049a9b9f699826e16096d23bbcc44d15d51a6"
+dependencies = [
+ "block-buffer 0.9.0",
+ "cfg-if 1.0.0",
+ "cpufeatures",
+ "digest 0.9.0",
+ "opaque-debug",
+]
+
+[[package]]
+name = "sha-1"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f5058ada175748e33390e40e872bd0fe59a19f265d0158daa551c5a88a76009c"
@@ -2662,6 +2746,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "tide-websockets"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3592c5cb5cb1b7a2ff3a0e5353170c1bb5b104b2f66dd06f73304169b52cc725"
+dependencies = [
+ "async-dup",
+ "async-std",
+ "async-tungstenite",
+ "base64 0.13.1",
+ "futures-util",
+ "pin-project",
+ "serde",
+ "serde_json",
+ "sha-1 0.9.8",
+ "tide",
+]
+
+[[package]]
 name = "time"
 version = "0.1.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2870,6 +2972,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "tungstenite"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5fe8dada8c1a3aeca77d6b51a4f1314e0f4b8e438b7b1b71e3ddaca8080e4093"
+dependencies = [
+ "base64 0.13.1",
+ "byteorder",
+ "bytes",
+ "http",
+ "httparse",
+ "input_buffer",
+ "log 0.4.17",
+ "rand 0.8.5",
+ "sha-1 0.9.8",
+ "thiserror",
+ "url 2.3.1",
+ "utf-8",
+]
+
+[[package]]
 name = "typed-builder"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2972,6 +3094,12 @@ dependencies = [
  "winapi 0.2.8",
  "winapi-build",
 ]
+
+[[package]]
+name = "utf-8"
+version = "0.7.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9"
 
 [[package]]
 name = "uuid"
