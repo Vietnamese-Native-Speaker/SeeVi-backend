@@ -6,12 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-async-graphql = "5.0.8"
+async-graphql = { version = "5.0.8", features = ["chrono", "uuid", "bson"] }
 async-graphql-tide = "5.0.9"
 async-std = { version = "1.12.0", features = ["attributes"] }
-firebase = "0.9.1" # firebase seems to generate error relating libcurl
+# firebase = "0.9.1" # firebase seems to generate error relating libcurl
 mongodb = { version = "2.5.0", default-features = false, features = [
   "async-std-runtime",
 ] }
+serde = "1.0.163"
 tide = "0.16.0"
 tokio = { version = "1.28.1", features = ["full"] }
