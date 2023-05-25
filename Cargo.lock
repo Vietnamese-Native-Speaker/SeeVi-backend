@@ -206,7 +206,6 @@ dependencies = [
  "base64 0.13.1",
  "bson",
  "bytes",
- "chrono",
  "fast_chemail",
  "fnv",
  "futures-util",
@@ -225,7 +224,6 @@ dependencies = [
  "static_assertions",
  "tempfile",
  "thiserror",
- "uuid",
 ]
 
 [[package]]
