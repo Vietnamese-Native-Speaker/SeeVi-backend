@@ -1,6 +1,6 @@
 use async_graphql::SimpleObject;
 use serde::{Serialize, Deserialize};
-use mongodb::bson::{uuid::Uuid, oid::ObjectId};
+use mongodb::bson::uuid::Uuid;
 
 use super::education::Education;
 
@@ -14,10 +14,10 @@ pub struct User {
     pub skills: Option<String>,
     pub cv: Vec<Uuid>,
     pub primary_email: String,
-    pub other_mails: Option<Vec<String>>,
+    pub other_mails: Vec<String>,
     pub about: Option<String>,
-    pub avatar: Option<ObjectId>,
-    pub wallpaper: Option<ObjectId>,
+    pub avatar: Option<Uuid>,
+    pub cover_photo: Option<Uuid>,
     pub friends_list: Vec<Uuid>,
     pub education: Vec<Education>
 }
