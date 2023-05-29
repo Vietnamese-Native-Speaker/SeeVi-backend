@@ -1,5 +1,4 @@
 use async_graphql::{http::GraphiQLSource, EmptyMutation, EmptySubscription, Schema};
-use async_std::task;
 use seevi_backend::data_source::mongo;
 use tide::*;
 
@@ -8,8 +7,9 @@ use tide::prelude::*;
 
 use seevi_backend::State;
 
-fn main() -> Result<()> {
-    task::block_on(run())
+#[tokio::main]
+async fn main() -> Result<()> {
+    run().await
 }
 
 async fn run() -> Result<()> {
