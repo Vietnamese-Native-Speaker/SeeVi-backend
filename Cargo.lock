@@ -120,16 +120,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "71938f30533e4d95a6d17aa530939da3842c2ab6f4f84b9dae68447e4129f74a"
 
 [[package]]
-name = "async-attributes"
-version = "1.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a3203e79f4dd9bdda415ed03cf14dae5a2bf775c683a00f94e9cd1faf0f596e5"
-dependencies = [
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
 name = "async-channel"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -193,7 +183,6 @@ dependencies = [
  "base64 0.13.1",
  "bson",
  "bytes",
- "chrono",
  "fast_chemail",
  "fnv",
  "futures-util",
@@ -212,7 +201,6 @@ dependencies = [
  "static_assertions",
  "tempfile",
  "thiserror",
- "uuid",
 ]
 
 [[package]]
@@ -373,7 +361,6 @@ version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62565bb4402e926b29953c785397c6dc0391b7b446e45008b0049eb43cec6f5d"
 dependencies = [
- "async-attributes",
  "async-channel",
  "async-global-executor",
  "async-io",
@@ -393,21 +380,6 @@ dependencies = [
  "pin-utils",
  "slab",
  "wasm-bindgen-futures",
-]
-
-[[package]]
-name = "async-std-resolver"
-version = "0.21.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f2f8a4a203be3325981310ab243a28e6e4ea55b6519bffce05d41ab60e09ad8"
-dependencies = [
- "async-std",
- "async-trait",
- "futures-io",
- "futures-util",
- "pin-utils",
- "socket2",
- "trust-dns-resolver",
 ]
 
 [[package]]
@@ -1552,8 +1524,6 @@ version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebe15399de63ad4294c80069967736cbb87ebe467a8cd0629df9cab88a6fbde6"
 dependencies = [
- "async-std",
- "async-std-resolver",
  "async-trait",
  "base64 0.13.1",
  "bitflags",
@@ -1576,6 +1546,7 @@ dependencies = [
  "rustls",
  "rustls-pemfile",
  "serde",
+ "serde_bytes",
  "serde_with",
  "sha-1 0.10.1",
  "sha2 0.10.6",
@@ -2086,7 +2057,6 @@ version = "0.1.0"
 dependencies = [
  "async-graphql",
  "async-graphql-tide",
- "async-std",
  "mongodb",
  "serde",
  "tide",
