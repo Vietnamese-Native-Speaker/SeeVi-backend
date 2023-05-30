@@ -1,6 +1,8 @@
 use mongodb::bson::Uuid;
+use super::user_data_source_error::UserDataSourceError;
 
 use crate::models::users::{CreateUserInput, UpdateUserInput, User};
+
 
 /// Primary abstraction for User Data Source. Ones should implement this trait for
 /// different type of database in order to provide that data source to services
@@ -55,6 +57,3 @@ trait UserDataSource {
         unimplemented!()
     }
 }
-
-pub enum UserDataSourceError {}
-
