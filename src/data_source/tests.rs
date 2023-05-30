@@ -1,4 +1,19 @@
-use crate::models::{users::{create_user_input::CreateUserInputBuilder, update_user_input::UpdateUserInputBuilder}, education::Education};
+use crate::models::{users::{create_user_input::CreateUserInputBuilder, update_user_input::UpdateUserInputBuilder}, education::Education, cv::create_cv_input::CreateCVInputBuilder};
+
+#[test]
+fn test_create_cv_input(){
+    use mongodb::bson::Uuid;
+    let uuid = Uuid::new();
+    let test_cv_input = CreateCVInputBuilder::new(
+        uuid,
+        "title".to_string(),
+        vec!["tags".to_string()],
+    ).set_description("description".to_string()).build();
+    assert_eq!(test_cv_input.author_id, uuid);
+    assert_eq!(test_cv_input.title, "title".to_string());
+    assert_eq!(test_cv_input.description, Some("description".to_string()));
+    assert_eq!(test_cv_input.tags, vec!["tags".to_string()]);
+}
 
 #[test]
 fn test_create_user_input() {
