@@ -50,11 +50,7 @@ impl CreateUserInputBuilder {
         username: String,
         first_name: String,
         last_name: String,
-        cv: Vec<Uuid>,
         primary_email: String,
-        other_mails: Vec<String>,
-        friends_list: Vec<Uuid>,
-        education: Vec<Education>,
     ) -> Self {
         CreateUserInputBuilder {
             username,
@@ -62,14 +58,14 @@ impl CreateUserInputBuilder {
             last_name,
             country: None,
             skills: None,
-            cv,
+            cv: Vec::new(),
             primary_email,
-            other_mails,
+            other_mails: Vec::new(),
             about: None,
             avatar: None,
             cover_photo: None,
-            friends_list,
-            education,
+            friends_list: Vec::new(),
+            education: Vec::new(),
         }
     }
 
@@ -80,6 +76,16 @@ impl CreateUserInputBuilder {
 
     pub fn with_skills(mut self, skills: String) -> Self {
         self.skills = Some(skills);
+        self
+    }
+
+    pub fn with_cv(mut self, cv: Vec<Uuid>) -> Self {
+        self.cv = cv;
+        self
+    }
+
+    pub fn with_other_emails(mut self, other_mails: Vec<String>) -> Self {
+        self.other_mails = other_mails;
         self
     }
 
@@ -95,6 +101,16 @@ impl CreateUserInputBuilder {
 
     pub fn with_cover_photo(mut self, cover_photo: Uuid) -> Self {
         self.cover_photo = Some(cover_photo);
+        self
+    }
+
+    pub fn with_friends_list(mut self, friends_list: Vec<Uuid>) -> Self {
+        self.friends_list = friends_list;
+        self
+    }
+
+    pub fn with_education(mut self, education: Vec<Education>) -> Self {
+        self.education = education;
         self
     }
 
