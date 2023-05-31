@@ -85,3 +85,58 @@ fn test_name_invalid() {
     assert_eq!(format!("{}", err1), format!("Name {:?} is invalid", name1));
     assert_eq!(format!("{}", err2), format!("Name cannot be empty"));
 }
+
+#[test]
+fn test_cv_id_not_found(){
+    use mongodb::bson::Uuid;
+    use super::cv_data_source_error::CVDataSourceError;
+    
+    let uuid = Uuid::new();
+    let err = CVDataSourceError::UuidNotFound(uuid);
+    assert_eq!(format!("{}", err), format!("Uuid {:?} is not found", uuid));
+}
+
+#[test]
+fn test_too_long_description(){
+    use super::cv_data_source_error::CVDataSourceError;
+    let err = CVDataSourceError::TooLongDescription;
+    assert_eq!(format!("{}", err), format!("Description is too long"));
+}
+
+#[test]
+fn test_empty_title(){
+    use super::cv_data_source_error::CVDataSourceError;
+    let err = CVDataSourceError::EmptyTitle;
+    assert_eq!(format!("{}", err), format!("Title cannot be empty"));
+}   
+
+#[test]
+fn test_empty_id(){
+    use super::cv_data_source_error::CVDataSourceError;
+    let err = CVDataSourceError::EmptyId;
+    assert_eq!(format!("{}", err), format!("Id cannot be empty"));
+}
+
+#[test]
+fn test_invalid_title(){
+    use super::cv_data_source_error::CVDataSourceError;
+    let s = "hello".to_string();
+    let err = CVDataSourceError::InvalidTitle(s.clone());
+    assert_eq!(format!("{}", err), format!("Title {:?} is invalid", s.clone()));
+}
+
+#[test]
+fn test_invalid_id(){
+    use mongodb::bson::Uuid;
+    use super::cv_data_source_error::CVDataSourceError;
+    let uuid = Uuid::new();
+    let err = CVDataSourceError::InvalidId(uuid);
+    assert_eq!(format!("{}", err), format!("Uuid {:?} is invalid", uuid));
+}
+
+#[test]
+fn test_too_long_title(){
+    use super::cv_data_source_error::CVDataSourceError;
+    let err = CVDataSourceError::TooLongTitle;
+    assert_eq!(format!("{}", err), format!("Title is too long"));
+}
