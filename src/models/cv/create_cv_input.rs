@@ -40,22 +40,22 @@ impl CreateCVInputBuilder{
         }
     }
 
-    pub fn set_author_id(mut self, author_id: Uuid) -> Self {
+    pub fn with_author_id(mut self, author_id: Uuid) -> Self {
         self.author_id = author_id;
         self
     }
 
-    pub fn set_title(mut self, title: String) -> Self {
+    pub fn with_title(mut self, title: String) -> Self {
         self.title = title;
         self
     }
 
-    pub fn set_description(mut self, description: String) -> Self {
+    pub fn with_description(mut self, description: String) -> Self {
         self.description = Some(description);
         self
     }
-    pub fn set_tags(mut self, tags: Vec<String>) -> Self {
-        self.tags = tags;
+    pub fn with_tags(mut self, tag: String) -> Self {
+        self.tags.push(tag);
         self
     }
 
