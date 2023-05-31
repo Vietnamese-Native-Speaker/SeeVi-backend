@@ -79,13 +79,13 @@ impl CreateUserInputBuilder {
         self
     }
 
-    pub fn with_cv(mut self, cv: Vec<Uuid>) -> Self {
-        self.cv = cv;
+    pub fn with_cv(mut self, cv: Uuid) -> Self {
+        self.cv.push(cv);
         self
     }
 
-    pub fn with_other_emails(mut self, other_mails: Vec<String>) -> Self {
-        self.other_mails = other_mails;
+    pub fn with_other_mails(mut self, other_mails: String) -> Self {
+        self.other_mails.push(other_mails);
         self
     }
 
@@ -104,13 +104,13 @@ impl CreateUserInputBuilder {
         self
     }
 
-    pub fn with_friends_list(mut self, friends_list: Vec<Uuid>) -> Self {
-        self.friends_list = friends_list;
+    pub fn with_friends_list(mut self, friends_list: Uuid) -> Self {
+        self.friends_list.push(friends_list);
         self
     }
 
-    pub fn with_education(mut self, education: Vec<Education>) -> Self {
-        self.education = education;
+    pub fn with_education(mut self, education: Education) -> Self {
+        self.education.push(education);
         self
     }
 
