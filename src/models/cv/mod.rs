@@ -3,3 +3,5 @@ pub mod cv;
 
 pub use create_cv_input::CreateCVInput;
 pub use cv::CV;
+#[cfg(test)]
+mod tests;
