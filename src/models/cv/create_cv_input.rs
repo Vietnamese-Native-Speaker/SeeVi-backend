@@ -30,13 +30,12 @@ impl CreateCVInputBuilder{
     pub fn new(
         author_id:Uuid,
         title: String,
-        tags:Vec<String>
     ) -> Self{
         CreateCVInputBuilder{
             author_id,
             title,
             description:None,
-            tags,
+            tags: vec![],
         }
     }
 
@@ -54,7 +53,7 @@ impl CreateCVInputBuilder{
         self.description = Some(description);
         self
     }
-    pub fn with_tags(mut self, tag: String) -> Self {
+    pub fn with_tag(mut self, tag: String) -> Self {
         self.tags.push(tag);
         self
     }
