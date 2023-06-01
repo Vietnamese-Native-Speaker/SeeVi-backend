@@ -13,7 +13,7 @@ async fn main() -> Result<()> {
 }
 
 async fn run() -> Result<()> {
-    let mongo_ds = mongo::DataSource::init().await;
+    let mongo_ds = mongo::MongoDB::init().await;
 
     let schema = Schema::build(Query, EmptyMutation, EmptySubscription)
         .data(mongo_ds)
