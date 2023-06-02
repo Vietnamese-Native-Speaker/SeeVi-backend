@@ -3,6 +3,8 @@ use mongodb::bson::Uuid;
 
 use crate::models::cv::{CreateCVInput, CV};
 
+use super::cv_data_source_error::CVDataSourceError;
+
 /// Primary abstraction for CV Data Source. Ones should implement this trait for
 /// different type of database in order to provide that data source to services
 #[async_trait]
@@ -28,5 +30,3 @@ trait CVDataSource {
         unimplemented!()
     }
 }
-
-pub enum CVDataSourceError {}
