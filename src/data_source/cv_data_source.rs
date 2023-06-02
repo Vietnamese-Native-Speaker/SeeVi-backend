@@ -8,7 +8,7 @@ use super::cv_data_source_error::CVDataSourceError;
 /// Primary abstraction for CV Data Source. Ones should implement this trait for
 /// different type of database in order to provide that data source to services
 #[async_trait]
-trait CVDataSource {
+pub trait CVDataSource {
     /// Return the CV with the provided id.
     async fn get_cv_by_id(&self, id: Uuid) -> Result<CV, CVDataSourceError> {
         unimplemented!()

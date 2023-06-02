@@ -7,7 +7,7 @@ use crate::models::users::{CreateUserInput, UpdateUserInput, User};
 /// Primary abstraction for User Data Source. Ones should implement this trait for
 /// different type of database in order to provide that data source to services
 #[async_trait]
-trait UserDataSource {
+pub trait UserDataSource {
     /// Return the user using the provided `id`
     async fn get_user_by_id(&self, id: Uuid) -> Result<User, UserDataSourceError> {
         unimplemented!()
