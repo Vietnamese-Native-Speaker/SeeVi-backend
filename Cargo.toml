@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 async-graphql = { version = "5.0.8", features = ["bson"] }
 async-graphql-tide = "5.0.9"
+async-trait = "0.1.68"
 # firebase = "0.9.1" # firebase seems to generate error relating libcurl
 mongodb = { version = "2.5.0", default-features = false, features = [
   "tokio-runtime",
