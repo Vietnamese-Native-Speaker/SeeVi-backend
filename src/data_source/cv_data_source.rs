@@ -10,23 +10,23 @@ use super::cv_data_source_error::CVDataSourceError;
 #[async_trait]
 pub trait CVDataSource {
     /// Return the CV with the provided id.
-    async fn get_cv_by_id(&self, id: Uuid) -> Result<CV, CVDataSourceError> {
+    async fn get_cv_by_id(&self, _id: Uuid) -> Result<CV, CVDataSourceError> {
         unimplemented!()
     }
 
     /// Add CV with the provided input.
-    async fn create_cv(&self, input: CreateCVInput) -> Result<(), CVDataSourceError> {
+    async fn create_cv(&self, _input: CreateCVInput) -> Result<(), CVDataSourceError> {
         unimplemented!()
     }
 
     /// Update the CV with the provided input, using the id in the input as
     /// finder.
-    async fn update_cv_info(&self, input: CV) -> Result<CV, CVDataSourceError> {
+    async fn update_cv_info(&self, _input: CV) -> Result<CV, CVDataSourceError> {
         unimplemented!()
     }
 
     /// Delete the CV with the provided id.
-    async fn delete_cv(&self, id: Uuid) -> Result<(), CVDataSourceError> {
+    async fn delete_cv(&self, _id: Uuid) -> Result<(), CVDataSourceError> {
         unimplemented!()
     }
 }
