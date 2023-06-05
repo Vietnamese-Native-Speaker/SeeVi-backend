@@ -25,7 +25,10 @@ impl UserService {
     pub async fn change_country(&mut self) -> Result<User, dyn Box<impl Debug + Clone + Copy>> {
         unimplemented!()
     }
-    pub async fn change_skills(&mut self) -> Result<User, dyn Box<impl Debug + Clone + Copy>> {
+    pub async fn add_skills(&mut self) -> Result<User, dyn Box<impl Debug + Clone + Copy>> {
+        unimplemented!()
+    }
+    pub async fn remove_skills(&mut self) -> Result<User, dyn Box<impl Debug + Clone + Copy>> {
         unimplemented!()
     }
     pub async fn add_cv(&mut self) -> Result<User, dyn Box<impl Debug + Clone + Copy>> {
