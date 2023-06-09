@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate derive_builder;
+
 use async_graphql::{EmptyMutation, EmptySubscription, Schema};
 use graphql::query::Query;
 
