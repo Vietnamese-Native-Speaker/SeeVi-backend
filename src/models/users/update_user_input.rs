@@ -5,8 +5,11 @@ use crate::models::education::Education;
 
 /// An InputObject for User update query in GraphQL
 #[derive(Serialize, Deserialize, Clone, InputObject, Builder, Default)]
-#[builder(pattern = "owned")]
-#[builder(setter(prefix = "with", strip_option), default)]
+#[builder(
+    pattern = "owned",
+    setter(into, prefix = "with", strip_option),
+    default
+)]
 pub struct UpdateUserInput {
     pub username: Option<String>,
     pub first_name: Option<String>,

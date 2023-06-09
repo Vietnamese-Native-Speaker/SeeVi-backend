@@ -7,8 +7,7 @@ use derive_builder::Builder;
 
 /// An InputObject for User creation query in GraphQL.
 #[derive(Serialize, Deserialize, Clone, InputObject, Builder)]
-#[builder(pattern = "owned")]
-#[builder(setter(prefix = "with", strip_option))]
+#[builder(pattern = "owned", setter(into, prefix = "with", strip_option))]
 pub struct CreateUserInput {
     pub username: String,
     pub first_name: String,
@@ -41,8 +40,8 @@ impl CreateUserInputBuilder {
         self
     }
 
-    pub fn with_other_mail(mut self, other_mails: String) -> Self {
-        self.other_mails.push(other_mails);
+    pub fn with_other_mail(mut self, other_mails: impl Into<String>) -> Self {
+        self.other_mails.push(other_mails.into());
         self
     }
 
