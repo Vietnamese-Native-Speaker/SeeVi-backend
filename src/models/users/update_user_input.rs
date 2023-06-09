@@ -1,4 +1,5 @@
 use async_graphql::InputObject;
+use mongodb::bson::Uuid;
 use serde::{Deserialize, Serialize};
 
 use crate::models::education::Education;
@@ -11,6 +12,7 @@ use crate::models::education::Education;
     default
 )]
 pub struct UpdateUserInput {
+    pub user_id: Uuid,
     pub username: Option<String>,
     pub first_name: Option<String>,
     pub last_name: Option<String>,
