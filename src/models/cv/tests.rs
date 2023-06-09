@@ -3,7 +3,9 @@ use crate::models::cv::create_cv_input::CreateCVInputBuilder;
 fn test_create_cv_input_author_id() {
     use mongodb::bson::Uuid;
     let uuid = Uuid::new();
-    let test_cv_input = CreateCVInputBuilder::new(uuid, "title".to_string())
+    let test_cv_input = CreateCVInputBuilder::default()
+        .with_author_id(uuid)
+        .with_title("title")
         .build()
         .unwrap();
     assert_eq!(test_cv_input.author_id, uuid);
@@ -13,7 +15,9 @@ fn test_create_cv_input_author_id() {
 fn test_create_cv_input_title() {
     use mongodb::bson::Uuid;
     let uuid = Uuid::new();
-    let test_cv_input = CreateCVInputBuilder::new(uuid, "title".to_string())
+    let test_cv_input = CreateCVInputBuilder::default()
+        .with_author_id(uuid)
+        .with_title("title")
         .build()
         .unwrap();
     assert_eq!(test_cv_input.title, "title".to_string());
@@ -23,7 +27,9 @@ fn test_create_cv_input_title() {
 fn test_create_cv_input_description() {
     use mongodb::bson::Uuid;
     let uuid = Uuid::new();
-    let test_cv_input = CreateCVInputBuilder::new(uuid, "title".to_string())
+    let test_cv_input = CreateCVInputBuilder::default()
+        .with_author_id(uuid)
+        .with_title("title")
         .with_description("description".to_string())
         .build()
         .unwrap();
@@ -34,7 +40,9 @@ fn test_create_cv_input_description() {
 fn test_create_cv_input_tag() {
     use mongodb::bson::Uuid;
     let uuid = Uuid::new();
-    let test_cv_input = CreateCVInputBuilder::new(uuid, "title".to_string())
+    let test_cv_input = CreateCVInputBuilder::default()
+        .with_author_id(uuid)
+        .with_title("title")
         .with_tag("tag".to_string())
         .build()
         .unwrap();
