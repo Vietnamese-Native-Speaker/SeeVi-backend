@@ -10,6 +10,9 @@ async-graphql = { version = "5.0.8", features = ["bson"] }
 async-graphql-tide = "5.0.9"
 async-trait = "0.1.68"
 derive_builder = "0.12.0"
+google-cloud-auth = "0.10.0"
+google-cloud-default = {version = "0.3.0", features = ["storage"]}
+google-cloud-storage = "0.11.1"
 # firebase = "0.9.1" # firebase seems to generate error relating libcurl
 mongodb = { version = "2.5.0", default-features = false, features = [
   "tokio-runtime",
