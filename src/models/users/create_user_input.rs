@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 use crate::models::education::Education;
 use derive_builder::Builder;
 
+use super::user::Level;
+
 /// An InputObject for User creation query in GraphQL.
 #[derive(Serialize, Deserialize, Clone, InputObject, Builder)]
 #[builder(pattern = "owned", setter(into, prefix = "with", strip_option))]
@@ -18,11 +20,18 @@ pub struct CreateUserInput {
     pub primary_email: String,
     #[builder(setter(custom), field(type = "Vec<String>"))]
     pub other_mails: Vec<String>,
+    #[builder(default)]
     pub about: Option<String>,
+    #[builder(default)]
     pub avatar: Option<Uuid>,
+    #[builder(default)]
     pub cover_photo: Option<Uuid>,
     #[builder(setter(custom), field(type = "Vec<Education>"))]
     pub education: Vec<Education>,
+    #[builder(default)]
+    pub rating: Option<f64>,
+    #[builder(default)]
+    pub level: Option<Level>,
 }
 
 impl CreateUserInput {
