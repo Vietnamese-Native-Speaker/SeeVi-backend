@@ -13,17 +13,14 @@ pub struct CreateUserInput {
     pub first_name: String,
     pub last_name: String,
     pub country: Option<String>,
-    pub skills: Option<String>,
-    #[builder(setter(custom), field(type = "Vec<Uuid>"))]
-    pub cv: Vec<Uuid>,
+    #[builder(setter(custom), field(type = "Vec<String>"))]
+    pub skills: Vec<String>,
     pub primary_email: String,
     #[builder(setter(custom), field(type = "Vec<String>"))]
     pub other_mails: Vec<String>,
     pub about: Option<String>,
     pub avatar: Option<Uuid>,
     pub cover_photo: Option<Uuid>,
-    #[builder(setter(custom), field(type = "Vec<Uuid>"))]
-    pub friends_list: Vec<Uuid>,
     #[builder(setter(custom), field(type = "Vec<Education>"))]
     pub education: Vec<Education>,
 }
@@ -35,23 +32,17 @@ impl CreateUserInput {
 }
 
 impl CreateUserInputBuilder {
-    pub fn with_cv(mut self, cv: Uuid) -> Self {
-        self.cv.push(cv);
-        self
-    }
-
     pub fn with_other_mail(mut self, other_mails: impl Into<String>) -> Self {
         self.other_mails.push(other_mails.into());
         self
     }
-
-    pub fn with_friend(mut self, friend: Uuid) -> Self {
-        self.friends_list.push(friend);
+    pub fn with_education(mut self, education: Education) -> Self {
+        self.education.push(education);
         self
     }
 
-    pub fn with_education(mut self, education: Education) -> Self {
-        self.education.push(education);
+    pub fn with_skill<T: Into<String>>(mut self, skill: T) -> Self {
+        self.skills.push(skill.into());
         self
     }
 }
