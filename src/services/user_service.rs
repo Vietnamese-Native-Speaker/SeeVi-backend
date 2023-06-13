@@ -45,7 +45,34 @@ impl UserService {
         Err(Box::new("User creation failed"));
     }
     pub async fn authenticate(database: &mut impl UserDataSource, username: Option<String>, email: Option<String>, password: String) -> Result<User, dyn Box<impl Debug + Clone + Copy>> {
-        unimplemented!()
+        if (username.is_none() || email.is_none()) {
+            return Err(Box::new("Username or email must be provided"));
+        }
+        if (username.is_some()) {
+            let username = username.unwrap();
+            let user = database.find_user_by_username(username.clone()).await;
+            if (user.is_err()) {
+                return Err(Box::new("Wrong username or password"));
+            }
+            let user = user.unwrap();
+            if (user.password != password) {
+                return Err(Box::new("Wrong username or password"));
+            }
+            return Ok(user);
+        }
+        if(email.is_some()) {
+            let email = email.unwrap();
+            let user = database.find_user_by_email(email.clone()).await;
+            if (user.is_err()) {
+                return Err(Box::new("Wrong email or password"));
+            }
+            let user = user.unwrap();
+            if (user.password != password) {
+                return Err(Box::new("Wrong email or password"));
+            }
+            return Ok(user);
+        }
+        Err(Box::new("Wrong username or password"));
     }
     //Forget password = change password
     pub async fn change_password(database: &mut impl UserDataSource, user_id: Uuid, new_password: String) -> Result<User, dyn Box<impl Debug + Clone + Copy>> {
