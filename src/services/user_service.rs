@@ -1,4 +1,13 @@
+use serde::{Serialize, Deserialize};
+use jsonwebtoken::{encode, decode, Header, Algorithm, Validation, EncodingKey, DecodingKey};
+
 pub struct UserService;
+/// Our claims struct, it needs to derive `Serialize` and/or `Deserialize`
+#[derive(Debug, Serialize, Deserialize)]
+struct Claims {
+    username: String,
+    password: String, 
+}
 
 impl UserService {
     pub async fn register(database: &mut impl UserDataSource, user_input: CreateUserInput) -> Result<User, dyn Box<impl Debug + Clone + Copy>> {
@@ -42,9 +51,10 @@ impl UserService {
         if(database.create_user(user_input).await.is_ok()) {
             return Ok(Box::new("User created successfully"));
         }
-        Err(Box::new("User creation failed"));
+        return Err(Box::new("User creation failed"));
     }
-    pub async fn authenticate(database: &mut impl UserDataSource, username: Option<String>, email: Option<String>, password: String) -> Result<User, dyn Box<impl Debug + Clone + Copy>> {
+    //Function will return a token as a string that can be used for authentication
+    pub async fn authenticate(database: &mut impl UserDataSource, username: Option<String>, email: Option<String>, password: String) -> Result<String, dyn Box<impl Debug + Clone + Copy>> {
         if (username.is_none() || email.is_none()) {
             return Err(Box::new("Username or email must be provided"));
         }
@@ -58,7 +68,14 @@ impl UserService {
             if (user.password != password) {
                 return Err(Box::new("Wrong username or password"));
             }
-            return Ok(user);
+            let header = Header::new(Algorithm::HS256);
+            let claims = Claims {
+                username: user.username.to_owned(),
+                password: user.password.tơ_owned(),
+            };
+            let secret_key = "secret";
+            let token = (&header, &claims, &EncodingKey::from_secret(secret_key.as_ref())).encode();
+            return Ok(token);
         }
         if(email.is_some()) {
             let email = email.unwrap();
@@ -72,7 +89,7 @@ impl UserService {
             }
             return Ok(user);
         }
-        Err(Box::new("Wrong username or password"));
+        return Err(Box::new("Wrong username or password"));
     }
     //Forget password = change password
     pub async fn change_password(database: &mut impl UserDataSource, user_id: Uuid, new_password: String) -> Result<User, dyn Box<impl Debug + Clone + Copy>> {

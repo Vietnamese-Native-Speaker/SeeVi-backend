@@ -16,3 +16,6 @@ mongodb = { version = "2.5.0", default-features = false, features = [
 serde = "1.0.163"
 tide = "0.16.0"
 tokio = { version = "1.28.1", features = ["full"] }
+jsonwebtoken = "8"
+# If you do not need pem decoding, you can disable the default feature `use_pem` that way:
+# jsonwebtoken = {version = "8", default-features = false }
