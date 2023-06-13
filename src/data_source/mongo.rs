@@ -1,12 +1,7 @@
-use std::vec;
-
-use mongodb::{options::ClientOptions, Client, Database, bson::serde_helpers::timestamp_as_u32};
+use mongodb::bson::DateTime;
+use mongodb::{options::ClientOptions, Client, Database};
 
 use crate::data_source::user_data_source::UserDataSource;
-
-use crate::data_source::cv_data_source_error::CVDataSourceError;
-
-use crate::data_source::cv_data_source::CVDataSource;
 
 use crate::data_source::user_data_source_error::UserDataSourceError;
 
@@ -14,7 +9,11 @@ use async_trait::async_trait;
 
 use mongodb::bson;
 
-use crate::models::{users, cv};
+use crate::models::cv;
+use crate::models::users;
+
+use super::cv_data_source::CVDataSource;
+use super::cv_data_source_error::CVDataSourceError;
 
 pub struct MongoDB {
     client: Client,
@@ -47,24 +46,23 @@ impl UserDataSource for MongoDB {
         let result = collection.find_one(filter, None).await;
         match result {
             Ok(user) => match user {
-                Some(user) => {
-                    Ok(user)
-                }
+                Some(user) => Ok(user),
                 None => Err(UserDataSourceError::UuidNotFound(id)),
             },
             Err(_) => Err(UserDataSourceError::UuidNotFound(id)),
         }
     }
 
-    async fn get_user_by_username(&self, username: &str) -> Result<users::User, UserDataSourceError> {
+    async fn get_user_by_username(
+        &self,
+        username: &str,
+    ) -> Result<users::User, UserDataSourceError> {
         let collection: mongodb::Collection<users::User> = self.db.collection("users");
         let filter = bson::doc! {"username": username.clone()};
         let result = collection.find_one(filter, None).await;
         match result {
             Ok(user) => match user {
-                Some(user) => {
-                    Ok(user)
-                }
+                Some(user) => Ok(user),
                 None => Err(UserDataSourceError::UsernameNotFound(username.to_string())),
             },
             Err(_) => Err(UserDataSourceError::UsernameNotFound(username.to_string())),
@@ -101,7 +99,10 @@ impl UserDataSource for MongoDB {
         }
     }
 
-    async fn update_user_info(&self, input: users::UpdateUserInput) -> Result<users::User, UserDataSourceError> {
+    async fn update_user_info(
+        &self,
+        input: users::UpdateUserInput,
+    ) -> Result<users::User, UserDataSourceError> {
         let collection: mongodb::Collection<users::User> = self.db.collection("users");
         let filter = bson::doc! {"id": input.username.clone()};
         let update = bson::doc! {"$set": {
@@ -117,13 +118,19 @@ impl UserDataSource for MongoDB {
         let result = collection.update_one(filter, update, None).await;
         match result {
             Ok(_) => {
-                let return_user = self.get_user_by_username(input.username.clone().unwrap().as_str()).await;
+                let return_user = self
+                    .get_user_by_username(input.username.clone().unwrap().as_str())
+                    .await;
                 match return_user {
                     Ok(user) => Ok(user),
-                    Err(_) => Err(UserDataSourceError::UsernameNotFound(input.username.clone().unwrap())),
+                    Err(_) => Err(UserDataSourceError::UsernameNotFound(
+                        input.username.clone().unwrap(),
+                    )),
                 }
             }
-            Err(_) => Err(UserDataSourceError::UsernameTaken(input.username.clone().unwrap())),
+            Err(_) => Err(UserDataSourceError::UsernameTaken(
+                input.username.clone().unwrap(),
+            )),
         }
     }
 
@@ -162,9 +169,7 @@ impl CVDataSource for MongoDB {
         let result = collection.find_one(filter, None).await;
         match result {
             Ok(cv) => match cv {
-                Some(cv) => {
-                    Ok(cv)
-                }
+                Some(cv) => Ok(cv),
                 None => Err(CVDataSourceError::UuidNotFound(id)),
             },
             Err(_) => Err(CVDataSourceError::UuidNotFound(id)),
@@ -181,7 +186,7 @@ impl CVDataSource for MongoDB {
             tags: _input.tags,
             comments: vec![],
             cv: bson::Uuid::new(),
-            created: DateTime::new(),
+            created: DateTime::now(),
         };
         let result = collection.insert_one(cv, None).await;
         match result {
@@ -204,3 +209,4 @@ impl CVDataSource for MongoDB {
         }
     }
 }
+
