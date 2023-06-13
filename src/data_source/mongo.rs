@@ -1,4 +1,6 @@
-use mongodb::{options::ClientOptions, Client, Database};
+use std::vec;
+
+use mongodb::{options::ClientOptions, Client, Database, bson::serde_helpers::timestamp_as_u32};
 
 use crate::data_source::user_data_source::UserDataSource;
 
@@ -54,7 +56,7 @@ impl UserDataSource for MongoDB {
         }
     }
 
-    async fn get_user_by_username(&self, username: String) -> Result<users::User, UserDataSourceError> {
+    async fn get_user_by_username(&self, username: &str) -> Result<users::User, UserDataSourceError> {
         let collection: mongodb::Collection<users::User> = self.db.collection("users");
         let filter = bson::doc! {"username": username.clone()};
         let result = collection.find_one(filter, None).await;
@@ -63,9 +65,9 @@ impl UserDataSource for MongoDB {
                 Some(user) => {
                     Ok(user)
                 }
-                None => Err(UserDataSourceError::UsernameNotFound(username.clone())),
+                None => Err(UserDataSourceError::UsernameNotFound(username.to_string())),
             },
-            Err(_) => Err(UserDataSourceError::UsernameNotFound(username.clone())),
+            Err(_) => Err(UserDataSourceError::UsernameNotFound(username.to_string())),
         }
     }
 
@@ -78,14 +80,19 @@ impl UserDataSource for MongoDB {
             last_name: input.last_name,
             country: input.country,
             skills: input.skills,
-            cv: input.cv,
             primary_email: input.primary_email,
             other_mails: input.other_mails,
             about: input.about,
             avatar: input.avatar,
             cover_photo: input.cover_photo,
-            friends_list: input.friends_list,
             education: input.education,
+            cv: vec![],
+            friends_list: vec![],
+            rating: None,
+            level: None,
+            shared_cvs: vec![],
+            saved_cvs: vec![],
+            liked_cvs: vec![],
         };
         let result = collection.insert_one(user, None).await;
         match result {
@@ -110,7 +117,7 @@ impl UserDataSource for MongoDB {
         let result = collection.update_one(filter, update, None).await;
         match result {
             Ok(_) => {
-                let return_user = self.get_user_by_username(input.username.clone().unwrap()).await;
+                let return_user = self.get_user_by_username(input.username.clone().unwrap().as_str()).await;
                 match return_user {
                     Ok(user) => Ok(user),
                     Err(_) => Err(UserDataSourceError::UsernameNotFound(input.username.clone().unwrap())),
@@ -172,6 +179,9 @@ impl CVDataSource for MongoDB {
             title: _input.title,
             description: _input.description,
             tags: _input.tags,
+            comments: vec![],
+            cv: bson::Uuid::new(),
+            created: DateTime::new(),
         };
         let result = collection.insert_one(cv, None).await;
         match result {
