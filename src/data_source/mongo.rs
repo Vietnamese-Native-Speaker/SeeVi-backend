@@ -69,7 +69,7 @@ impl UserDataSource for MongoDB {
         }
     }
 
-    async fn create_user(&self, input: users::CreateUserInput) -> Result<(), UserDataSourceError> {
+    async fn create_user(&self, input: users::CreateUserInput) -> Result<users::User, UserDataSourceError> {
         let collection = self.db.collection("users");
         let user: users::User = users::User {
             user_id: bson::Uuid::new(),
@@ -92,9 +92,10 @@ impl UserDataSource for MongoDB {
             saved_cvs: vec![],
             liked_cvs: vec![],
         };
+        let user_clone = user.clone();
         let result = collection.insert_one(user, None).await;
         match result {
-            Ok(_) => Ok(()),
+            Ok(_) => Ok(user_clone),
             Err(_) => Err(UserDataSourceError::UsernameTaken(input.username.clone())),
         }
     }
@@ -134,12 +135,13 @@ impl UserDataSource for MongoDB {
         }
     }
 
-    async fn delete_user(&self, id: bson::Uuid) -> Result<(), UserDataSourceError> {
+    async fn delete_user(&self, id: bson::Uuid) -> Result<users::User, UserDataSourceError> {
         let collection: mongodb::Collection<users::User> = self.db.collection("users");
         let filter = bson::doc! {"id": id};
+        let user = self.get_user_by_id(id).await;
         let result = collection.delete_one(filter, None).await;
         match result {
-            Ok(_) => Ok(()),
+            Ok(_) => Ok(user.unwrap()),
             Err(_) => Err(UserDataSourceError::UuidNotFound(id)),
         }
     }
@@ -176,7 +178,7 @@ impl CVDataSource for MongoDB {
         }
     }
 
-    async fn create_cv(&self, _input: cv::CreateCVInput) -> Result<(), CVDataSourceError> {
+    async fn create_cv(&self, _input: cv::CreateCVInput) -> Result<cv::CV, CVDataSourceError> {
         let collection: mongodb::Collection<cv::CV> = self.db.collection("cvs");
         let cv: cv::CV = cv::CV {
             _id: bson::Uuid::new(),
@@ -188,9 +190,10 @@ impl CVDataSource for MongoDB {
             cv: bson::Uuid::new(),
             created: DateTime::now(),
         };
+        let cv_clone = cv.clone();
         let result = collection.insert_one(cv, None).await;
         match result {
-            Ok(_) => Ok(()),
+            Ok(_) => Ok(cv_clone),
             Err(_) => Err(CVDataSourceError::UuidNotFound(_input.author_id)),
         }
     }
