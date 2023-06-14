@@ -7,7 +7,7 @@ use crate::models::ResourceIdentifier;
 /// Struct represents CV defined in the Diagram. Note that this struct only
 /// represents the metadata of a CV. Actual implementation of the CV is to
 /// be discussed.
-#[derive(Serialize, Deserialize, Clone, SimpleObject)]
+#[derive(Debug, Serialize, Deserialize, Clone, SimpleObject, PartialEq)]
 #[graphql(complex)]
 pub struct CV {
     pub _id: Uuid,
