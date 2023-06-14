@@ -1,4 +1,6 @@
 pub mod query;
+pub mod mutation;
+pub mod user_graphql;
 
 use async_graphql::http::receive_json;
 use tide::*;
