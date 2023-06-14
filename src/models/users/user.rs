@@ -13,6 +13,7 @@ pub enum Level {
 
 /// The User Model struct.
 #[derive(Serialize, Deserialize, Clone, SimpleObject)]
+#[graphql(complex)]
 pub struct User {
     pub user_id: Uuid,
     pub username: String,
@@ -24,7 +25,9 @@ pub struct User {
     pub primary_email: String,
     pub other_mails: Vec<String>,
     pub about: Option<String>,
+    #[graphql(skip)]
     pub avatar: Option<ResourceIdentifier>,
+    #[graphql(skip)]
     pub cover_photo: Option<ResourceIdentifier>,
     pub friends_list: Vec<Uuid>,
     pub education: Vec<Education>,
