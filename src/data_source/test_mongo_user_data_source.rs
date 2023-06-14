@@ -4,12 +4,15 @@ use crate::models::users::{
 };
 use crate::models::education::Education;
 use mongodb::bson::Uuid;
+use serial_test::serial;
 use crate::data_source::user_data_source::UserDataSource;
 use crate::data_source::user_data_source_error::UserDataSourceError;
 use super::mongo::MongoDB;
+
 #[tokio::test]
+#[serial]
 async fn test_create_user_and_get_user_by_username(){
-    let mongodb = MongoDB::init().await;
+    let mongodb = MongoDB::init_test().await;
     let uuid = Uuid::new();
     let input = CreateUserInputBuilder::default()
         .with_username("username")
@@ -45,7 +48,7 @@ async fn test_create_user_and_get_user_by_username(){
     assert_eq!(check_input.skills, vec!["skill".to_string()]);
     assert_eq!(check_input.cv, vec![]);
     assert_eq!(check_input.primary_email, "primary_email".to_string());
-    assert_eq!(check_input.other_mails, vec!["other_mails".to_string()]);
+    assert_eq!(check_input.other_mails, vec!["other_mails".to_string(), "other_mails2".to_string()]);
     assert_eq!(check_input.about, Some("about".to_string()));
     assert_eq!(check_input.avatar, Some(uuid));
     assert_eq!(check_input.cover_photo, Some(uuid));
@@ -68,8 +71,9 @@ async fn test_create_user_and_get_user_by_username(){
 }
 
 #[tokio::test]
+#[serial]
 async fn test_get_user_by_id(){
-    let mongodb = MongoDB::init().await;
+    let mongodb = MongoDB::init_test().await;
     let uuid = Uuid::new();
     let input = CreateUserInputBuilder::default()
         .with_username("username")
@@ -91,11 +95,11 @@ async fn test_get_user_by_id(){
             degree: Some("Bachelor's Degree".to_string()),
         })
         .with_about("about".to_string())
-        .with_avatar(uuid)
-        .with_cover_photo(uuid)
+        .with_avatar(uuid.clone())
+        .with_cover_photo(uuid.clone())
         .build()
         .unwrap();
-    mongodb.create_user(input).await;
+    mongodb.create_user(input).await.unwrap();
     let uuid2 = mongodb.get_user_by_username("username").await.unwrap().user_id;
     let check_input = mongodb.get_user_by_id(uuid2).await.unwrap();
     assert_eq!(check_input.username, "username".to_string());
@@ -128,8 +132,9 @@ async fn test_get_user_by_id(){
 }
 
 #[tokio::test]
+#[serial]
 async fn test_delete_user(){
-    let mongodb = MongoDB::init().await;
+    let mongodb = MongoDB::init_test().await;
     let uuid = Uuid::new();
     let input = CreateUserInputBuilder::default()
         .with_username("username")
@@ -155,19 +160,19 @@ async fn test_delete_user(){
         .with_cover_photo(uuid)
         .build()
         .unwrap();
-    mongodb.create_user(input);
+    mongodb.create_user(input).await.unwrap();
     let uuid2 = mongodb.get_user_by_username("username").await.unwrap().user_id;
     let uuid3 = Uuid::new();
     let error = mongodb.delete_user(uuid3).await;
     assert_eq!(error, Err(UserDataSourceError::UuidNotFound(uuid3)));
-    mongodb.delete_user(uuid2);
+    mongodb.delete_user(uuid2).await.unwrap();
     let error2 = mongodb.get_user_by_id(uuid2).await;
     assert_eq!(error2, Err(UserDataSourceError::UuidNotFound(uuid2)))
 }
 
 // #[tokio::test]
 // async fn test_update_user_info(){
-    // let mongodb = MongoDB::init().await;
+    // let mongodb = MongoDB::init_test().await;
     // let uuid = Uuid::new();
     // let input = CreateUserInputBuilder::default()
     //     .with_username("username")

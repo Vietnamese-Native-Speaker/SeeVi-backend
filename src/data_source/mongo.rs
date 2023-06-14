@@ -35,6 +35,20 @@ impl MongoDB {
         let db = client.database("tmp");
         MongoDB { client, db }
     }
+
+    #[cfg(test)]
+    pub async fn init_test() -> MongoDB {
+        use crate::models::{cv::CV, users::User};
+
+        let mut client_options = ClientOptions::parse("mongodb://127.0.0.1:27017")
+            .await
+            .expect("Failed to parse options!");
+        client_options.app_name = Some("SeeVi".to_string());
+        let client = Client::with_options(client_options).expect("Failed to initialize database!");
+        let db = client.database("test");
+        db.drop(None).await.unwrap();
+        MongoDB { client, db }
+    }
 }
 
 // Implement datasource for MongoDB
@@ -69,7 +83,10 @@ impl UserDataSource for MongoDB {
         }
     }
 
-    async fn create_user(&self, input: users::CreateUserInput) -> Result<users::User, UserDataSourceError> {
+    async fn create_user(
+        &self,
+        input: users::CreateUserInput,
+    ) -> Result<users::User, UserDataSourceError> {
         let collection = self.db.collection("users");
         let user: users::User = users::User {
             user_id: bson::Uuid::new(),
@@ -212,4 +229,3 @@ impl CVDataSource for MongoDB {
         }
     }
 }
-

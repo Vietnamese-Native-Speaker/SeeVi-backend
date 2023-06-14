@@ -1,14 +1,17 @@
-use mongodb::{options::ClientOptions, Client, Database, bson::serde_helpers::timestamp_as_u32};
-use mongodb::bson::Uuid;
-use crate::models::cv::{
-    cv::CV,
-    create_cv_input::{CreateCVInput, CreateCVInputBuilder},
-};
-use super::{cv_data_source::CVDataSource, cv_data_source_error::CVDataSourceError};
 use super::mongo::MongoDB;
+use super::{cv_data_source::CVDataSource, cv_data_source_error::CVDataSourceError};
+use crate::models::cv::{
+    create_cv_input::{CreateCVInput, CreateCVInputBuilder},
+    cv::CV,
+};
+use mongodb::bson::Uuid;
+use mongodb::{bson::serde_helpers::timestamp_as_u32, options::ClientOptions, Client, Database};
+use serial_test::serial;
+
 #[tokio::test]
-async fn test_create_cv(){
-    let mongodb = MongoDB::init().await;
+#[serial]
+async fn test_create_cv() {
+    let mongodb = MongoDB::init_test().await;
     let uuid = Uuid::new();
     let input = CreateCVInputBuilder::default()
         .with_author_id(uuid)
@@ -23,7 +26,10 @@ async fn test_create_cv(){
     assert_eq!(check_input.author_id, uuid);
     assert_eq!(check_input.title, "title".to_string());
     assert_eq!(check_input.description, Some("description".to_string()));
-    assert_eq!(check_input.tags, vec!["tag".to_string(), "tag2".to_string()]);
+    assert_eq!(
+        check_input.tags,
+        vec!["tag".to_string(), "tag2".to_string()]
+    );
     assert_eq!(check_input.comments, vec![]);
 
     let check_input2 = mongodb.create_cv(input_clone).await;
@@ -31,8 +37,9 @@ async fn test_create_cv(){
 }
 
 #[tokio::test]
-async fn get_cv_by_id(){
-    let mongodb = MongoDB::init().await;
+#[serial]
+async fn get_cv_by_id() {
+    let mongodb = MongoDB::init_test().await;
     let uuid = Uuid::new();
     let input = CreateCVInputBuilder::default()
         .with_author_id(uuid)
@@ -49,7 +56,10 @@ async fn get_cv_by_id(){
     assert_eq!(check_input2.author_id, uuid);
     assert_eq!(check_input2.title, "title".to_string());
     assert_eq!(check_input2.description, Some("description".to_string()));
-    assert_eq!(check_input2.tags, vec!["tag".to_string(), "tag2".to_string()]);
+    assert_eq!(
+        check_input2.tags,
+        vec!["tag".to_string(), "tag2".to_string()]
+    );
     assert_eq!(check_input2.comments, vec![]);
 }
 
