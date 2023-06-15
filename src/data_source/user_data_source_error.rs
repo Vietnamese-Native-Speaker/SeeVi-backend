@@ -35,6 +35,12 @@ pub enum UserDataSourceError {
 
     /// Error when the name field provided is invalid.
     InvalidNameField(String),
+
+    /// Error when create user fails.
+    CreateUserFailed,
+
+    /// Error when wrong username or password is provided.
+    WrongEmailUsernameOrPassword,
 }
 
 impl fmt::Display for UserDataSourceError {
@@ -109,6 +115,16 @@ impl fmt::Display for UserDataSourceError {
                 else {
                     write!(f, "Name {:?} is invalid", name)
                 }
+            },
+
+            // Display message for create user failed
+            UserDataSourceError::CreateUserFailed => {
+                write!(f, "Create user failed")
+            },
+
+            // Display message for wrong email/username or password
+            UserDataSourceError::WrongEmailUsernameOrPassword => {
+                write!(f, "Wrong email/username or password")
             },
         }
     }
