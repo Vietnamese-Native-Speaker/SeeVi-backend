@@ -143,3 +143,19 @@ mod user_tests {
         assert_eq!(format!("{}", err2), format!("Name cannot be empty"));
     }
 }
+
+#[test]
+fn test_user_create_fail() {
+    use super::user_data_source_error::UserDataSourceError;
+
+    let err = UserDataSourceError::CreateUserFailed;
+    assert_eq!(format!("{}", err), format!("Create user failed"));
+}
+
+#[test]
+fn test_wrong_email_username_or_password() {
+    use super::user_data_source_error::UserDataSourceError;
+
+    let err = UserDataSourceError::WrongEmailUsernameOrPassword;
+    assert_eq!(format!("{}", err), format!("Wrong email/username or password"));
+}
