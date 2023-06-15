@@ -1,30 +1,32 @@
+use async_graphql::async_trait::async_trait;
 use mongodb::bson::Uuid;
 
-use crate::models::cv::{CV, CreateCVInput};
+use crate::models::cv::{CreateCVInput, CV};
+
+use super::cv_data_source_error::CVDataSourceError;
 
 /// Primary abstraction for CV Data Source. Ones should implement this trait for
 /// different type of database in order to provide that data source to services
-trait CVDataSource {
+#[async_trait]
+pub trait CVDataSource {
     /// Return the CV with the provided id.
-    fn get_cv_by_id(&self, id: Uuid) -> Result<CV, CVDataSourceError> {
+    async fn get_cv_by_id(&self, _id: Uuid) -> Result<CV, CVDataSourceError> {
         unimplemented!()
     }
 
     /// Add CV with the provided input.
-    fn create_cv(&self, input: CreateCVInput) -> Result<(), CVDataSourceError> {
+    async fn create_cv(&self, _input: CreateCVInput) -> Result<CV, CVDataSourceError> {
         unimplemented!()
     }
 
     /// Update the CV with the provided input, using the id in the input as
     /// finder.
-    fn update_cv_info(&self, input: CV) -> Result<CV, CVDataSourceError> {
+    async fn update_cv_info(&self, _input: CV) -> Result<CV, CVDataSourceError> {
         unimplemented!()
     }
 
     /// Delete the CV with the provided id.
-    fn delete_cv(&self, id: Uuid) -> Result<(), CVDataSourceError> {
+    async fn delete_cv(&self, _id: Uuid) -> Result<(), CVDataSourceError> {
         unimplemented!()
     }
 }
-
-pub enum CVDataSourceError {}
