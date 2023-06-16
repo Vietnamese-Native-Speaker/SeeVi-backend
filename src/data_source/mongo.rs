@@ -56,7 +56,7 @@ impl MongoDB {
 impl UserDataSource for MongoDB {
     async fn get_user_by_id(&self, id: bson::Uuid) -> Result<users::User, UserDataSourceError> {
         let collection: mongodb::Collection<users::User> = self.db.collection("users");
-        let filter = bson::doc! {"id": id};
+        let filter = bson::doc! {"user_id": id};
         let result = collection.find_one(filter, None).await;
         match result {
             Ok(user) => match user {
@@ -110,10 +110,18 @@ impl UserDataSource for MongoDB {
             liked_cvs: vec![],
         };
         let user_clone = user.clone();
-        let result = collection.insert_one(user, None).await;
-        match result {
-            Ok(_) => Ok(user_clone),
-            Err(_) => Err(UserDataSourceError::UsernameTaken(input.username.clone())),
+        let filter = bson::doc! {"username" : input.username.clone()};
+        let check_username_already_exist = collection.find_one(filter, None).await;
+        match check_username_already_exist
+        {
+            Ok(temp_user) => Err(UserDataSourceError::UsernameTaken(input.username)),
+            Err(_) =>{
+                let result = collection.insert_one(user, None).await;
+                match result {
+                    Ok(_) => Ok(user_clone),
+                    Err(_) => Err(UserDataSourceError::InvalidUsername(input.username.clone())),
+                }
+            },
         }
     }
 
@@ -122,7 +130,7 @@ impl UserDataSource for MongoDB {
         input: users::UpdateUserInput,
     ) -> Result<users::User, UserDataSourceError> {
         let collection: mongodb::Collection<users::User> = self.db.collection("users");
-        let filter = bson::doc! {"id": input.username.clone()};
+        let filter = bson::doc! {"username": input.username.clone()};
         let update = bson::doc! {"$set": {
             "username": input.username.clone(),
             "first_name": input.first_name,
@@ -154,11 +162,11 @@ impl UserDataSource for MongoDB {
 
     async fn delete_user(&self, id: bson::Uuid) -> Result<users::User, UserDataSourceError> {
         let collection: mongodb::Collection<users::User> = self.db.collection("users");
-        let filter = bson::doc! {"id": id};
+        let filter = bson::doc! {"user_id": id};
         let user = self.get_user_by_id(id).await;
         let result = collection.delete_one(filter, None).await;
         match result {
-            Ok(_) => Ok(user.unwrap()),
+            Ok(_) => user,
             Err(_) => Err(UserDataSourceError::UuidNotFound(id)),
         }
     }
@@ -178,13 +186,17 @@ impl UserDataSource for MongoDB {
     async fn delete_other_email(&self, _email: String) -> Result<(), UserDataSourceError> {
         unimplemented!()
     }
+
+    async fn get_user_by_email(&self, _email: &str) -> Result<users::User, UserDataSourceError> {
+        unimplemented!()
+    }
 }
 
 #[async_trait]
 impl CVDataSource for MongoDB {
     async fn get_cv_by_id(&self, id: bson::Uuid) -> Result<cv::CV, CVDataSourceError> {
         let collection: mongodb::Collection<cv::CV> = self.db.collection("cvs");
-        let filter = bson::doc! {"id": id};
+        let filter = bson::doc! {"_id": id};
         let result = collection.find_one(filter, None).await;
         match result {
             Ok(cv) => match cv {
@@ -221,7 +233,7 @@ impl CVDataSource for MongoDB {
 
     async fn delete_cv(&self, id: bson::Uuid) -> Result<(), CVDataSourceError> {
         let collection: mongodb::Collection<cv::CV> = self.db.collection("cvs");
-        let filter = bson::doc! {"id": id};
+        let filter = bson::doc! {"_id": id};
         let result = collection.delete_one(filter, None).await;
         match result {
             Ok(_) => Ok(()),
