@@ -15,6 +15,8 @@ pub struct UpdateUserInput {
     #[builder(default)]
     pub username: Option<String>,
     #[builder(default)]
+    pub password: Option<String>,
+    #[builder(default)]
     pub first_name: Option<String>,
     #[builder(default)]
     pub last_name: Option<String>,

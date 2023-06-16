@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::models::education::Education;
 use derive_builder::Builder;
-use bcrypt::{DEFAULT_COST, hash, verify};
 
 use super::user::Level;
 
@@ -13,7 +12,6 @@ use super::user::Level;
 #[builder(pattern = "owned", setter(into, prefix = "with", strip_option))]
 pub struct CreateUserInput {
     pub username: String,
-    #[builder(setter(custom), field(type = "String"))]
     pub password: String,
     pub first_name: String,
     pub last_name: String,
@@ -44,14 +42,6 @@ impl CreateUserInput {
 }
 
 impl CreateUserInputBuilder {
-    pub fn with_password(mut self, password: impl Into<String>) -> Self {
-        let hashPassword = hash(password.into(), DEFAULT_COST);
-        match hashPassword {
-            Ok(hashPassword) => self.password = hashPassword,
-            Err(_) => panic!("Error hashing password"),
-        }
-        self
-    }
     pub fn with_other_mail(mut self, other_mails: impl Into<String>) -> Self {
         self.other_mails.push(other_mails.into());
         self
