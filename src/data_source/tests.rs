@@ -76,7 +76,7 @@ mod user_tests {
             .build()
             .unwrap();
 
-        let db = MongoDB::init().await;
+        let db = MongoDB::init_test().await;
         db.create_user(new_user_input).await.unwrap();
         let user = db.get_user_by_username("username").await.unwrap();
         assert_eq!(user.username, "username");
