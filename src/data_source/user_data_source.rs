@@ -19,6 +19,12 @@ pub trait UserDataSource {
         unimplemented!()
     }
 
+    /// Return the user using the provided primary `email`, the `email` is
+    /// asummed to be unique.
+    async fn get_user_by_email(&self, _email: &str) -> Result<User, UserDataSourceError> {
+        unimplemented!()
+    }
+
     /// Create new user in the database using the provided input, implementer should check
     /// for uniqueness of the username.
     async fn create_user(&self, _input: CreateUserInput) -> Result<User, UserDataSourceError> {
