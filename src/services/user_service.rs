@@ -5,14 +5,13 @@ use jsonwebtoken::{encode, decode, Header, Algorithm, Validation, EncodingKey, D
 use crate::{models::{users::{CreateUserInput, User}, education::Education}, data_source::{user_data_source::UserDataSource, user_data_source_error::UserDataSourceError}};
 
 pub struct UserService;
-/// Our claims struct, it needs to derive `Serialize` and/or `Deserialize`
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
     username: String,
     password: String, 
 }
 
-pub fn hashPassword(s: String) -> String {
+pub fn hash_password(s: String) -> String {
     let result = bcrypt::hash(s, bcrypt::DEFAULT_COST);
     match result {
         Ok(result) => {
@@ -64,41 +63,30 @@ impl UserService {
         if database.get_user_by_email(email.clone()).await.is_ok() {
             return Err(UserDataSourceError::EmailTaken(email))
         }
-        let hash = hashPassword(user_input.password);
+        let hash = hash_password(user_input.password);
         let user_input = CreateUserInput {
-            username: user_input.username,
             password: hash,
-            first_name: user_input.first_name,
-            last_name: user_input.last_name,
-            country: user_input.country,
-            skills: user_input.skills,
-            primary_email: user_input.primary_email,
-            other_mails: user_input.other_mails,
-            about: user_input.about,
-            avatar: user_input.avatar,
-            cover_photo: user_input.cover_photo,
-            education: user_input.education,
-            rating: user_input.rating,
-            level: user_input.level
+            ..user_input
         };
-        match database.create_user(user_input).await {
-            Ok(user) => return Ok(user),
-            Err(err) => return Err(err),
+        if let Ok(user) = database.create_user(user_input).await {
+            return Ok(user);
+        }
+        else {
+            return Err(UserDataSourceError::CreateUserFailed);
         }
     }
     //Function will return a token as a string that can be used for authentication
-    pub async fn authenticate(database: &mut (impl UserDataSource + std::marker::Sync), username: Option<String>, email: Option<String>, password: String) -> Result<String, UserDataSourceError> {
+    pub async fn authenticate(database: &mut (impl UserDataSource + std::marker::Sync), username: Option<String>, email: Option<String>, password: String) -> Result<String, UserDataSourceError> { 
         if username.is_none() && email.is_none() {
             return Err(UserDataSourceError::EmptyUsername);
         }
-        if username.is_some() {
-            let username = username.unwrap();
+        if let Some(username) = username.clone() {
             let user = database.get_user_by_username(username.clone()).await;
             if user.is_err() {
                 return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
             }
             let user = user.unwrap();
-            if user.password != password {
+            if let Err(_) = bcrypt::verify(password, user.password.as_str()) {
                 return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
             }
             let header = Header::new(Algorithm::HS256);
@@ -107,20 +95,20 @@ impl UserService {
                 password: user.password.to_owned(),
             };
             let secret_key = "secret";
-            let token = encode(&header, &claims, &EncodingKey::from_secret(secret_key.as_ref()));
-            match token {
-                Ok(token) => return Ok(token),
-                Err(_) => return Err(UserDataSourceError::WrongEmailUsernameOrPassword),
+            if let Ok(token) = encode(&header, &claims, &EncodingKey::from_secret(secret_key.as_ref())) {
+                return Ok(token);
+            }
+            else {
+                return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
             }
         }
-        else if email.is_some() {
-            let email = email.unwrap();
+        else if let Some(email) = email.clone() {
             let user = database.get_user_by_email(email.clone()).await;
             if user.is_err() {
                 return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
             }
             let user = user.unwrap();
-            if user.password != password {
+            if let Err(_) = bcrypt::verify(password, user.password.as_str()) {
                 return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
             }
             let header = Header::new(Algorithm::HS256);
@@ -129,10 +117,11 @@ impl UserService {
                 password: user.password.to_owned(),
             };
             let secret_key = "secret";
-            let token = encode(&header, &claims, &EncodingKey::from_secret(secret_key.as_ref()));
-            match token {
-                Ok(token) => return Ok(token),
-                Err(_) => return Err(UserDataSourceError::WrongEmailUsernameOrPassword),
+            if let Ok(token) = encode(&header, &claims, &EncodingKey::from_secret(secret_key.as_ref())) {
+                return Ok(token);
+            }
+            else {
+                return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
             }
         }
         return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
