@@ -1,6 +1,6 @@
 use crate::models::users::{
     create_user_input::{CreateUserInput, CreateUserInputBuilder},
-    update_user_input::UpdateUserInput,
+    update_user_input::{UpdateUserInput, UpdateUserInputBuilder},
 };
 use crate::models::education::Education;
 use mongodb::bson::Uuid;
@@ -170,44 +170,70 @@ async fn test_delete_user(){
     assert_eq!(error2, Err(UserDataSourceError::UuidNotFound(uuid2)))
 }
 
-// #[tokio::test]
-// async fn test_update_user_info(){
-    // let mongodb = MongoDB::init_test().await;
-    // let uuid = Uuid::new();
-    // let input = CreateUserInputBuilder::default()
-    //     .with_username("username")
-    //     .with_first_name("first_name")
-    //     .with_last_name("last_name")
-    //     .with_country("country")
-    //     .with_skill("skill")
-    //     .with_primary_email("primary_email")
-    //     .with_other_mail("other_mails")
-    //     .with_other_mail("other_mails2")
-    //     .with_education(Education {
-    //         institution: "University of Example 1".to_string(),
-    //         course: Some("Computer Science".to_string()),
-    //         degree: Some("Bachelor's Degree".to_string()),
-    //     })
-    //     .with_education(Education {
-    //         institution: "University of Example 2".to_string(),
-    //         course: Some("Computer Science".to_string()),
-    //         degree: Some("Bachelor's Degree".to_string()),
-    //     })
-    //     .with_about("about".to_string())
-    //     .with_avatar(uuid)
-    //     .with_cover_photo(uuid)
-    //     .build()
-    //     .unwrap();
-    // mongodb.create_user(input).await;
-    // let uuid2 = mongodb.get_user_by_username("username").await.unwrap().user_id;
-    // let updateinput = UpdateUserInputBuilder::default()
-    //     .with_username(Some("username2".to_string()))
-    //     .with_first_name(Some("first_name2".to_string()))
-    //     .with_last_name(Some("last_name2".to_string()))
-    //     .with_country(Some("country2".to_string()))
-    //     .with_skills(Some("skill2".to_string()))
-    //     .with_primary_email(Some("primary_email2".to_string()))
-    //     .with_about(Some("about2".to_string()))
-    //     .
-// }
+#[tokio::test]
+async fn test_update_user_info(){
+    let mongodb = MongoDB::init_test().await;
+    let uuid = Uuid::new();
+    let input = CreateUserInputBuilder::default()
+        .with_username("username")
+        .with_first_name("first_name")
+        .with_last_name("last_name")
+        .with_country("country")
+        .with_skill("skill")
+        .with_primary_email("primary_email")
+        .with_other_mail("other_mails")
+        .with_other_mail("other_mails2")
+        .with_education(Education {
+            institution: "University of Example 1".to_string(),
+            course: Some("Computer Science".to_string()),
+            degree: Some("Bachelor's Degree".to_string()),
+        })
+        .with_education(Education {
+            institution: "University of Example 2".to_string(),
+            course: Some("Computer Science".to_string()),
+            degree: Some("Bachelor's Degree".to_string()),
+        })
+        .with_about("about".to_string())
+        .with_avatar(uuid)
+        .with_cover_photo(uuid)
+        .build()
+        .unwrap();
+    let check_input = mongodb.create_user(input).await.unwrap();
+    let updateinput = UpdateUserInputBuilder::default()
+        .with_user_id(check_input.user_id)
+        .with_username("username2".to_string())
+        .with_first_name("first_name2".to_string())
+        .with_last_name("last_name2".to_string())
+        .with_country("country2".to_string())
+        .with_skills("skill2".to_string())
+        .with_primary_email("primary_email2".to_string())
+        .with_about("about2".to_string())
+        .build()
+        .unwrap();
+    let check_input2 = mongodb.update_user_info(updateinput).await.unwrap();
+    assert_eq!(check_input2.username, "username2".to_string());
+    assert_eq!(check_input2.first_name, "first_name2".to_string());
+    assert_eq!(check_input2.last_name, "last_name2".to_string());
+    assert_eq!(check_input2.country, Some("country2".to_string()));
+    assert_eq!(check_input2.skills, vec!["skill2".to_string()]);
+    assert_eq!(check_input2.cv, vec![]);
+    assert_eq!(check_input2.primary_email, "primary_email2".to_string());
+    assert_eq!(check_input2.other_mails, vec!["other_mails".to_string(), "other_mails2".to_string()]);
+    assert_eq!(check_input2.about, Some("about2".to_string()));
+    assert_eq!(check_input2.avatar, Some(uuid));
+    assert_eq!(check_input2.cover_photo, Some(uuid));
+    assert_eq!(check_input2.friends_list, vec![]);
+    assert_eq!(check_input2.education.len(), 2);
+    assert_eq!(check_input2.education[0].institution, "University of Example 1".to_string());
+    assert_eq!(check_input2.education[0].course, Some("Computer Science".to_string()));
+    assert_eq!(check_input2.education[0].degree, Some("Bachelor's Degree".to_string()));
+    assert_eq!(check_input2.education[1].institution, "University of Example 2".to_string());
+    assert_eq!(check_input2.education[1].course, Some("Computer Science".to_string()));
+    assert_eq!(check_input2.education[1].degree, Some("Bachelor's Degree".to_string()));
+    assert_eq!(check_input2.rating, None);
+    assert_eq!(check_input2.level, None);
+    assert_eq!(check_input2.shared_cvs, vec![]);
+    assert_eq!(check_input2.saved_cvs, vec![]);
+    assert_eq!(check_input2.liked_cvs, vec![]);
+}
 
