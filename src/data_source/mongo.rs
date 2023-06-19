@@ -5,6 +5,7 @@ use mongodb::{options::ClientOptions, Client, Database};
 use crate::data_source::user_data_source::UserDataSource;
 
 use crate::data_source::user_data_source_error::UserDataSourceError;
+use crate::models::education::Education;
 
 use async_trait::async_trait;
 
@@ -142,7 +143,7 @@ impl UserDataSource for MongoDB {
             "primary_email": input.primary_email,
             "about": input.about,
             // TODO: load the struct "education" into the document
-            // "education": bson::to_bson(&input.education).unwrap(),
+            "education": bson::to_bson::<Vec<Education>>(&input.education.unwrap()).unwrap(),
         }};
         println!("{}",update.get("$set").unwrap());
         let result = collection.find_one_and_update(filter.clone(), update, FindOneAndUpdateOptions::builder().return_document(ReturnDocument::After).build()).await.expect("update user failed");

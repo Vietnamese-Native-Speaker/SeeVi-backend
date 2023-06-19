@@ -21,7 +21,7 @@ pub struct UpdateUserInput {
     #[builder(default)]
     pub country: Option<String>,
     #[builder(default)]
-    pub skills: Option<String>,
+    pub skills: Option<Vec<String>>,
     #[builder(default)]
     pub primary_email: Option<String>,
     #[builder(default)]
