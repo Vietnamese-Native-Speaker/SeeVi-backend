@@ -1,3 +1,6 @@
+mod test_mongo_cv_data_source;
+mod test_mongo_user_data_source;
+
 mod cv_tests {
     use super::super::cv_data_source_error::CVDataSourceError;
     #[test]

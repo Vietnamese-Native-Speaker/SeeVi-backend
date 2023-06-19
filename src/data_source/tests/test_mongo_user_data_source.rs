@@ -1,13 +1,12 @@
-use crate::models::users::{
+use crate::{models::users::{
     create_user_input::{CreateUserInput, CreateUserInputBuilder},
     update_user_input::{UpdateUserInput, UpdateUserInputBuilder},
-};
+}, data_source::mongo::MongoDB};
 use crate::models::education::Education;
 use mongodb::bson::Uuid;
 use serial_test::serial;
 use crate::data_source::user_data_source::UserDataSource;
 use crate::data_source::user_data_source_error::UserDataSourceError;
-use super::mongo::MongoDB;
 
 #[tokio::test]
 #[serial]

@@ -1,5 +1,5 @@
-use super::mongo::MongoDB;
-use super::{cv_data_source::CVDataSource, cv_data_source_error::CVDataSourceError};
+use super::super::{cv_data_source::CVDataSource, cv_data_source_error::CVDataSourceError};
+use crate::data_source::mongo::MongoDB;
 use crate::data_source::user_data_source::UserDataSource;
 use crate::models::cv::{
     create_cv_input::{CreateCVInput, CreateCVInputBuilder},
