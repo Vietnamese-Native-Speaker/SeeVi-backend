@@ -2,10 +2,13 @@ use mongodb::bson::Uuid;
 use std::fmt;
 
 #[non_exhaustive]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum CVDataSourceError {
     // uuid cannot be found
     UuidNotFound(Uuid),
+
+    // author id cannot be found
+    AuthorIdNotFound(Uuid),
 
     // description is longer than limit
     TooLongDescription,
@@ -49,6 +52,9 @@ impl fmt::Display for CVDataSourceError {
             }
             CVDataSourceError::TooLongTitle => {
                 write!(f, "Title is too long")
+            }
+            CVDataSourceError::AuthorIdNotFound(uuid) => {
+                write!(f, "Author id {:?} is not found", uuid)
             }
         }
     }
