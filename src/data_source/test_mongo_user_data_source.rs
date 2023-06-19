@@ -95,8 +95,8 @@ async fn test_get_user_by_id(){
             degree: Some("Bachelor's Degree".to_string()),
         })
         .with_about("about".to_string())
-        .with_avatar(uuid.clone())
-        .with_cover_photo(uuid.clone())
+        .with_avatar(uuid)
+        .with_cover_photo(uuid)
         .build()
         .unwrap();
     mongodb.create_user(input).await.unwrap();
@@ -171,6 +171,7 @@ async fn test_delete_user(){
 }
 
 #[tokio::test]
+#[serial]
 async fn test_update_user_info(){
     let mongodb = MongoDB::init_test().await;
     let uuid = Uuid::new();
@@ -205,7 +206,12 @@ async fn test_update_user_info(){
         .with_first_name("first_name2".to_string())
         .with_last_name("last_name2".to_string())
         .with_country("country2".to_string())
-        .with_skills("skill2".to_string())
+        .with_education(vec![Education{
+            institution: "University of Example 3".to_string(),
+            course: Some("Computer Science".to_string()),
+            degree: Some("Bachelor's Degree".to_string()),
+        }])
+        .with_skills(vec!["skill".to_string(), "skill2".to_string()])
         .with_primary_email("primary_email2".to_string())
         .with_about("about2".to_string())
         .build()
@@ -215,7 +221,7 @@ async fn test_update_user_info(){
     assert_eq!(check_input2.first_name, "first_name2".to_string());
     assert_eq!(check_input2.last_name, "last_name2".to_string());
     assert_eq!(check_input2.country, Some("country2".to_string()));
-    assert_eq!(check_input2.skills, vec!["skill2".to_string()]);
+    assert_eq!(check_input2.skills, vec!["skill".to_string(), "skill2".to_string()]);
     assert_eq!(check_input2.cv, vec![]);
     assert_eq!(check_input2.primary_email, "primary_email2".to_string());
     assert_eq!(check_input2.other_mails, vec!["other_mails".to_string(), "other_mails2".to_string()]);
@@ -223,13 +229,10 @@ async fn test_update_user_info(){
     assert_eq!(check_input2.avatar, Some(uuid));
     assert_eq!(check_input2.cover_photo, Some(uuid));
     assert_eq!(check_input2.friends_list, vec![]);
-    assert_eq!(check_input2.education.len(), 2);
-    assert_eq!(check_input2.education[0].institution, "University of Example 1".to_string());
+    assert_eq!(check_input2.education.len(), 1);
+    assert_eq!(check_input2.education[0].institution, "University of Example 3".to_string());
     assert_eq!(check_input2.education[0].course, Some("Computer Science".to_string()));
     assert_eq!(check_input2.education[0].degree, Some("Bachelor's Degree".to_string()));
-    assert_eq!(check_input2.education[1].institution, "University of Example 2".to_string());
-    assert_eq!(check_input2.education[1].course, Some("Computer Science".to_string()));
-    assert_eq!(check_input2.education[1].degree, Some("Bachelor's Degree".to_string()));
     assert_eq!(check_input2.rating, None);
     assert_eq!(check_input2.level, None);
     assert_eq!(check_input2.shared_cvs, vec![]);
