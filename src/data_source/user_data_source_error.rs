@@ -45,6 +45,9 @@ pub enum UserDataSourceError {
 
     // Error when password is invalid
     InvalidPassword,
+
+    UpdateUserFailed,
+
 }
 
 impl fmt::Display for UserDataSourceError {
@@ -129,6 +132,10 @@ impl fmt::Display for UserDataSourceError {
 
             UserDataSourceError::InvalidPassword => {
                 write!(f, "Password is invalid")
+            }
+
+            UserDataSourceError::UpdateUserFailed => {
+                write!(f, "Update user failed")
             }
         }
     }
