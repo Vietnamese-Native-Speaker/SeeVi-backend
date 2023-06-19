@@ -1,8 +1,9 @@
-use mongodb::bson::Uuid;
 use serde::{Serialize, Deserialize};
 use jsonwebtoken::{encode, decode, Header, Algorithm, Validation, EncodingKey, DecodingKey};
 
-use crate::{models::{users::{CreateUserInput, User}, education::Education}, data_source::{user_data_source::UserDataSource, user_data_source_error::UserDataSourceError}};
+use crate::{models::{users::{CreateUserInput, User, UpdateUserInput}, education::Education}, data_source::{user_data_source::UserDataSource, user_data_source_error::UserDataSourceError}};
+
+use super::ResourceIdentifier;
 
 pub struct UserService;
 #[derive(Debug, Serialize, Deserialize)]
@@ -127,70 +128,216 @@ impl UserService {
         return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
     }
     //Forget password = change password
-    pub async fn change_password(database: &mut impl UserDataSource, user_id: Uuid, new_password: String) -> Result<User, UserDataSourceError> {
-        unimplemented!()
+    pub async fn change_password(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_password: String) -> Result<User, UserDataSourceError> {
+        let user = database.get_user_by_id(user_id.clone()).await;
+        if user.is_err() {
+            return Err(UserDataSourceError::UuidNotFound((user_id)));
+        }
+        let new_hashed_password = hash_password(new_password);
+        let new_user = UpdateUserInput::builder()
+            .with_user_id(user_id)
+            .with_password(new_hashed_password)
+            .build()
+            .unwrap();
+        if let Ok(user) = database.update_user_info(new_user).await {
+            return Ok(user);
+        }
+        else {
+            return Err(UserDataSourceError::UpdateUserFailed);
+        }
     }
-    pub async fn change_email(database: &mut impl UserDataSource, user_id: Uuid, new_email: String) -> Result<User, UserDataSourceError> {
-        unimplemented!()
+    pub async fn change_primary_email(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_email: String) -> Result<User, UserDataSourceError> {
+        let user = database.get_user_by_id(user_id.clone()).await;
+        if user.is_err() {
+            return Err(UserDataSourceError::UuidNotFound((user_id)));
+        }
+        let new_user = UpdateUserInput::builder()
+            .with_user_id(user_id)
+            .with_primary_email(new_email)
+            .build()
+            .unwrap();
+        if let Ok(user) = database.update_user_info(new_user).await {
+            return Ok(user);
+        }
+        else {
+            return Err(UserDataSourceError::UpdateUserFailed);
+        }
     }
-    pub async fn change_username(database: &mut impl UserDataSource, user_id: Uuid, new_username: String) -> Result<User, UserDataSourceError> {
-        unimplemented!()
+    pub async fn change_other_mails(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_other_mails: Vec<String>) -> Result<User, UserDataSourceError> {
+        let user = database.get_user_by_id(user_id.clone()).await;
+        if user.is_err() {
+            return Err(UserDataSourceError::UuidNotFound((user_id)));
+        }
+        let new_user = UpdateUserInput::builder()
+            .with_user_id(user_id)
+            .with_other_mails(new_other_mails)
+            .build()
+            .unwrap();
+        if let Ok(user) = database.update_user_info(new_user).await {
+            return Ok(user);
+        }
+        else {
+            return Err(UserDataSourceError::UpdateUserFailed);
+        }
     }
-    pub async fn change_name(database: &mut impl UserDataSource, user_id: Uuid, new_first_name: String, new_last_name: String) -> Result<User, UserDataSourceError> {
-        unimplemented!()
+    pub async fn change_username(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_username: String) -> Result<User, UserDataSourceError> {
+        let user = database.get_user_by_id(user_id.clone()).await;
+        if user.is_err() {
+            return Err(UserDataSourceError::UuidNotFound((user_id)));
+        }
+        let new_user = UpdateUserInput::builder()
+            .with_user_id(user_id)
+            .with_username(new_username)
+            .build()
+            .unwrap();
+        if let Ok(user) = database.update_user_info(new_user).await {
+            return Ok(user);
+        }
+        else {
+            return Err(UserDataSourceError::UpdateUserFailed);
+        }
     }
-    pub async fn change_country(database: &mut impl UserDataSource, user_id: Uuid, new_country: String) -> Result<User, UserDataSourceError> {
-        unimplemented!()
+    pub async fn change_name(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_first_name: Option<String>, new_last_name: Option<String>) -> Result<User, UserDataSourceError> {
+        let user = database.get_user_by_id(user_id.clone()).await;
+        if user.is_err() {
+            return Err(UserDataSourceError::UuidNotFound((user_id)));
+        }
+        let new_user = UpdateUserInput::builder()
+            .with_user_id(user_id)
+            .with_first_name(new_first_name.unwrap())
+            .with_last_name(new_last_name.unwrap())
+            .build()
+            .unwrap();
+        if let Ok(user) = database.update_user_info(new_user).await {
+            return Ok(user);
+        }
+        else {
+            return Err(UserDataSourceError::UpdateUserFailed);
+        }
     }
-    pub async fn add_skills(database: &mut impl UserDataSource, user_id: Uuid, new_skill: String) -> Result<User, UserDataSourceError> {
-        unimplemented!()
+    pub async fn change_country(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_country: String) -> Result<User, UserDataSourceError> {
+        let user = database.get_user_by_id(user_id.clone()).await;
+        if user.is_err() {
+            return Err(UserDataSourceError::UuidNotFound((user_id)));
+        }
+        let new_user = UpdateUserInput::builder()
+            .with_user_id(user_id)
+            .with_country(new_country)
+            .build()
+            .unwrap();
+        if let Ok(user) = database.update_user_info(new_user).await {
+            return Ok(user);
+        }
+        else {
+            return Err(UserDataSourceError::UpdateUserFailed);
+        }
     }
-    pub async fn remove_skills(database: &mut impl UserDataSource, user_id: Uuid, to_remove_skill: String) -> Result<User, UserDataSourceError> {
-        unimplemented!()
+    pub async fn change_skills(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_skills: Vec<String>) -> Result<User, UserDataSourceError> {
+        let user = database.get_user_by_id(user_id.clone()).await;
+        if user.is_err() {
+            return Err(UserDataSourceError::UuidNotFound((user_id)));
+        }
+        let new_user = UpdateUserInput::builder()
+            .with_user_id(user_id)
+            .with_skills(new_skills)
+            .build()
+            .unwrap();
+        if let Ok(user) = database.update_user_info(new_user).await {
+            return Ok(user);
+        }
+        else {
+            return Err(UserDataSourceError::UpdateUserFailed);
+        }
     }
-    pub async fn add_cv(database: &mut impl UserDataSource, user_id: Uuid, new_cv: Uuid) -> Result<User, UserDataSourceError> {
-        unimplemented!()
+    pub async fn add_cv(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_cv: ResourceIdentifier) -> Result<User, UserDataSourceError> {
+        todo!()
     }
-    pub async fn remove_cv(database: &mut impl UserDataSource, user_id: Uuid, to_remove_cv:Uuid) -> Result<User, UserDataSourceError> {
-        unimplemented!()
+    pub async fn remove_cv(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, to_remove_cv:ResourceIdentifier) -> Result<User, UserDataSourceError> {
+        todo!()
     }
-    pub async fn add_email(database: &mut impl UserDataSource, user_id: Uuid, new_email: String) -> Result<User, UserDataSourceError> {
-        unimplemented!()
+    pub async fn change_about(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_about: String) -> Result<User, UserDataSourceError> {
+        let user = database.get_user_by_id(user_id.clone()).await;
+        if user.is_err() {
+            return Err(UserDataSourceError::UuidNotFound((user_id)));
+        }
+        let new_user = UpdateUserInput::builder()
+            .with_user_id(user_id)
+            .with_about(new_about)
+            .build()
+            .unwrap();
+        if let Ok(user) = database.update_user_info(new_user).await {
+            return Ok(user);
+        }
+        else {
+            return Err(UserDataSourceError::UpdateUserFailed);
+        }
     }
-    pub async fn remove_email(database: &mut impl UserDataSource, user_id: Uuid, to_remove_email: String) -> Result<User, UserDataSourceError> {
-        unimplemented!()
+    pub async fn change_avatar(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_avatar: ResourceIdentifier) -> Result<User, UserDataSourceError> {
+        let user = database.get_user_by_id(user_id.clone()).await;
+        if user.is_err() {
+            return Err(UserDataSourceError::UuidNotFound((user_id)));
+        }
+        let new_user = UpdateUserInput::builder()
+            .with_user_id(user_id)
+            .with_avatar(new_avatar)
+            .build()
+            .unwrap();
+        if let Ok(user) = database.update_user_info(new_user).await {
+            return Ok(user);
+        }
+        else {
+            return Err(UserDataSourceError::UpdateUserFailed);
+        }
     }
-    pub async fn change_about(database: &mut impl UserDataSource, user_id: Uuid, new_about: String) -> Result<User, UserDataSourceError> {
-        unimplemented!()
+    pub async fn change_cover_photo(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_cover_photo: ResourceIdentifier) -> Result<User, UserDataSourceError> {
+        let user = database.get_user_by_id(user_id.clone()).await;
+        if user.is_err() {
+            return Err(UserDataSourceError::UuidNotFound((user_id)));
+        }
+        let new_user = UpdateUserInput::builder()
+            .with_user_id(user_id)
+            .with_cover_photo(new_cover_photo)
+            .build()
+            .unwrap();
+        if let Ok(user) = database.update_user_info(new_user).await {
+            return Ok(user);
+        }
+        else {
+            return Err(UserDataSourceError::UpdateUserFailed);
+        }
     }
-    pub async fn change_avatar(database: &mut impl UserDataSource, user_id: Uuid, new_avatar: Uuid) -> Result<User, UserDataSourceError> {
-        unimplemented!()
+    pub async fn update_friend_list(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, friend_list: Vec<ResourceIdentifier>) -> Result<User, UserDataSourceError> {
+        let user = database.get_user_by_id(user_id.clone()).await;
+        if user.is_err() {
+            return Err(UserDataSourceError::UuidNotFound((user_id)));
+        }
+        let new_user = UpdateUserInput::builder()
+            .with_user_id(user_id)
+            .with_friend_list(friend_list)
+            .build()
+            .unwrap();
+        if let Ok(user) = database.update_user_info(new_user).await {
+            return Ok(user);
+        }
+        else {
+            return Err(UserDataSourceError::UpdateUserFailed);
+        } 
     }
-    pub async fn change_cover_photo(database: &mut impl UserDataSource, user_id: Uuid, new_cover_photo: Uuid) -> Result<User, UserDataSourceError> {
-        unimplemented!()
-    }
-    pub async fn add_friend(database: &mut impl UserDataSource, user_id: Uuid, new_friend: Uuid) -> Result<User, UserDataSourceError> {
-        unimplemented!()
-    }
-    pub async fn remove_friend(database: &mut impl UserDataSource, user_id: Uuid, to_remove_friend: Uuid) -> Result<User, UserDataSourceError> {
-        unimplemented!()
-    }
-    pub async fn add_education(database: &mut impl UserDataSource, user_id: Uuid, new_education: Education) -> Result<User, UserDataSourceError> {
-        unimplemented!()
-    }
-    pub async fn remove_education(database: &mut impl UserDataSource, user_id: Uuid) -> Result<User, UserDataSourceError> {
-        unimplemented!()
-    }
-    pub async fn find_user_by_username(database: &mut impl UserDataSource, _username: String) -> Result<User, UserDataSourceError> {
-        unimplemented!()
-    }
-    pub async fn find_user_by_email(database: &mut impl UserDataSource, _email: String) -> Result<User, UserDataSourceError> {
-        unimplemented!()
-    }
-    pub async fn find_user_by_id(database: &mut impl UserDataSource, user_id: Uuid) -> Result<User, UserDataSourceError> {
-        unimplemented!()
-    }
-    pub async fn get_friends_of_user(database: &mut impl UserDataSource, user_id: Uuid) -> Result<Vec<User>, UserDataSourceError> {
-        unimplemented!()
+    pub async fn update_education(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_education: Vec<Education>) -> Result<User, UserDataSourceError> {
+        let user = database.get_user_by_id(user_id.clone()).await;
+        if user.is_err() {
+            return Err(UserDataSourceError::UuidNotFound((user_id)));
+        }
+        let new_user = UpdateUserInput::builder()
+            .with_user_id(user_id)
+            .with_education(new_education)
+            .build()
+            .unwrap();
+        if let Ok(user) = database.update_user_info(new_user).await {
+            return Ok(user);
+        }
+        else {
+            return Err(UserDataSourceError::UpdateUserFailed);
+        } 
     }
 }
