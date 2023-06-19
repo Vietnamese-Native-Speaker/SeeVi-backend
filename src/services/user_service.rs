@@ -55,11 +55,11 @@ impl UserService {
             return Err(UserDataSourceError::InvalidNameField(user_input.last_name))
         }
 
-        let username = user_input.username;
+        let username = user_input.username.clone();
         if database.get_user_by_username(username.clone()).await.is_ok() {
             return Err(UserDataSourceError::UsernameTaken(username))
         }
-        let email = user_input.primary_email;
+        let email = user_input.primary_email.clone();
         if database.get_user_by_email(email.clone()).await.is_ok() {
             return Err(UserDataSourceError::EmailTaken(email))
         }

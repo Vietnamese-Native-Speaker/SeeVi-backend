@@ -57,4 +57,8 @@ pub trait UserDataSource {
     async fn delete_other_email(&self, _email: String) -> Result<(), UserDataSourceError> {
         unimplemented!()
     }
+
+    async fn get_user_by_email(&self, _email: String) -> Result<User, UserDataSourceError> {
+        unimplemented!()
+    }
 }
