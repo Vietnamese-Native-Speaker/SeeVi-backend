@@ -12,6 +12,7 @@ fn test_create_user_input_to_user() {
     let uuid = Uuid::new();
     let test_user_input = CreateUserInputBuilder::default()
         .with_username("username")
+        .with_password("password")
         .with_first_name("first_name")
         .with_last_name("last_name")
         .with_country("country")
@@ -65,6 +66,7 @@ fn test_update_user() {
     let user_uuid = Uuid::new();
     let test_user_input = CreateUserInputBuilder::default()
         .with_username("username")
+        .with_password("password")
         .with_first_name("first_name")
         .with_last_name("last_name")
         .with_country("country")

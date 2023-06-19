@@ -17,7 +17,7 @@ pub fn hash_password(s: String) -> String {
         Ok(result) => {
             return result;
         }
-        Err(_) => return ("Failed to hash".to_string()),
+        Err(_) => return "Failed to hash".to_string(),
     }
 }   
 
