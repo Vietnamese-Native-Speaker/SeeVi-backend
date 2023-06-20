@@ -17,6 +17,7 @@ async fn test_create_cv() {
     let mongodb = MongoDB::init_test().await;
     let uuid = Uuid::new();
     let user = CreateUserInputBuilder::default()
+        .with_password("password")
         .with_username("username")
         .with_first_name("first_name")
         .with_last_name("last_name")
@@ -67,6 +68,7 @@ async fn get_cv_by_id() {
     let mongodb = MongoDB::init_test().await;
     let uuid = Uuid::new();
     let user = CreateUserInputBuilder::default()
+        .with_password("password")
         .with_username("username")
         .with_first_name("first_name")
         .with_last_name("last_name")
