@@ -12,13 +12,14 @@ fn test_create_user_input_to_user() {
     let uuid = Uuid::new();
     let test_user_input = CreateUserInputBuilder::default()
         .with_username("username")
+        .with_password("password")
         .with_first_name("first_name")
         .with_last_name("last_name")
         .with_country("country")
-        .with_skill("skill")
+        .with_skills("skill")
         .with_primary_email("primary_email")
-        .with_other_mail("other_mails")
-        .with_other_mail("other_mails2")
+        .with_other_mails("other_mails")
+        .with_other_mails("other_mails2")
         .with_education(Education {
             institution: "University of Example 1".to_string(),
             course: Some("Computer Science".to_string()),
@@ -38,6 +39,7 @@ fn test_create_user_input_to_user() {
     let _user = User {
         user_id: Uuid::new(),
         username: test_user_input.username,
+        password: test_user_input.password,
         first_name: test_user_input.first_name,
         last_name: test_user_input.last_name,
         country: test_user_input.country,
@@ -64,13 +66,14 @@ fn test_update_user() {
     let user_uuid = Uuid::new();
     let test_user_input = CreateUserInputBuilder::default()
         .with_username("username")
+        .with_password("password")
         .with_first_name("first_name")
         .with_last_name("last_name")
         .with_country("country")
-        .with_skill("skill")
+        .with_skills("skill")
         .with_primary_email("primary_email")
-        .with_other_mail("other_mails")
-        .with_other_mail("other_mails2")
+        .with_other_mails("other_mails")
+        .with_other_mails("other_mails2")
         .with_education(Education {
             institution: "University of Example 1".to_string(),
             course: Some("Computer Science".to_string()),
@@ -90,6 +93,7 @@ fn test_update_user() {
     let _user = User {
         user_id: user_uuid,
         username: test_user_input.username,
+        password: test_user_input.password,
         first_name: test_user_input.first_name,
         last_name: test_user_input.last_name,
         country: test_user_input.country,

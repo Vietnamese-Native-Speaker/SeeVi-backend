@@ -19,9 +19,15 @@ pub trait UserDataSource {
         unimplemented!()
     }
 
+    // Return the user using the provided `email`, the `email` is
+    // asummed to be unique.
+    async fn get_user_by_email(&self, _email: String) -> Result<User, UserDataSourceError> {
+        unimplemented!()
+    }
+
     /// Add new user into the database using the provided input, implementer should check
     /// for uniqueness of the username.
-    async fn create_user(&self, _input: CreateUserInput) -> Result<(), UserDataSourceError> {
+    async fn create_user(&self, _input: CreateUserInput) -> Result<User, UserDataSourceError> {
         unimplemented!()
     }
 
@@ -32,7 +38,7 @@ pub trait UserDataSource {
     }
 
     /// Delete the user in the database with the provided id.
-    async fn delete_user(&self, _id: Uuid) -> Result<(), UserDataSourceError> {
+    async fn delete_user(&self, _id: Uuid) -> Result<User, UserDataSourceError> {
         unimplemented!()
     }
 

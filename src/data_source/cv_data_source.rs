@@ -15,7 +15,7 @@ pub trait CVDataSource {
     }
 
     /// Add CV with the provided input.
-    async fn create_cv(&self, _input: CreateCVInput) -> Result<(), CVDataSourceError> {
+    async fn create_cv(&self, _input: CreateCVInput) -> Result<CV, CVDataSourceError> {
         unimplemented!()
     }
 
