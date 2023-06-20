@@ -1,3 +1,6 @@
+mod test_mongo_cv_data_source;
+mod test_mongo_user_data_source;
+
 mod cv_tests {
     use super::super::cv_data_source_error::CVDataSourceError;
     #[test]
@@ -53,7 +56,34 @@ mod cv_tests {
 }
 
 mod user_tests {
+    use mongodb::bson::Uuid;
+
+    use crate::data_source::mongo::MongoDB;
+    use crate::models::users::CreateUserInput;
+
+    use super::super::cv_data_source::CVDataSource;
+    use super::super::user_data_source::UserDataSource;
     use super::super::user_data_source_error::UserDataSourceError;
+
+    #[tokio::test]
+    async fn basic_user_create_then_get() {
+        let user_uuid = Uuid::new();
+        let new_user_input = CreateUserInput::builder()
+            .with_last_name("LastName")
+            .with_first_name("FirstName")
+            .with_skill("Nothing")
+            .with_about("Nothing")
+            .with_country("VN")
+            .with_primary_email("pemail")
+            .with_username("username")
+            .build()
+            .unwrap();
+
+        let db = MongoDB::init_test().await;
+        db.create_user(new_user_input).await.unwrap();
+        let user = db.get_user_by_username("username").await.unwrap();
+        assert_eq!(user.username, "username");
+    }
 
     #[test]
     fn test_user_id_not_found() {

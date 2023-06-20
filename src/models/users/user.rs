@@ -12,7 +12,7 @@ pub enum Level {
 }
 
 /// The User Model struct.
-#[derive(Serialize, Deserialize, Clone, SimpleObject)]
+#[derive(Debug, Serialize, Deserialize, Clone, SimpleObject, PartialEq)]
 pub struct User {
     pub user_id: Uuid,
     pub username: String,
@@ -35,3 +35,4 @@ pub struct User {
     pub saved_cvs: Vec<Uuid>,
     pub liked_cvs: Vec<Uuid>,
 }
+

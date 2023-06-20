@@ -2,7 +2,7 @@ use mongodb::bson::Uuid;
 use std::fmt;
 
 #[non_exhaustive]
-#[derive(Debug, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum UserDataSourceError {
     /// Error when the uid is not found
     UuidNotFound(Uuid),
