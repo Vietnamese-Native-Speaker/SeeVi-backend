@@ -69,11 +69,14 @@ impl UserService {
             password: hash,
             ..user_input
         };
-        if let Ok(user) = database.create_user(user_input).await {
-            return Ok(user);
-        }
-        else {
-            return Err(UserDataSourceError::CreateUserFailed);
+        let user = database.create_user(user_input).await;
+        match user {
+            Ok(_) => {
+                return user;
+            }
+            Err(_) => {
+                return Err(UserDataSourceError::CreateUserFailed);
+            }
         }
     }
     //Function will return a token as a string that can be used for authentication
@@ -117,7 +120,7 @@ impl UserService {
                 username: user.username.to_owned(),
                 password: user.password.to_owned(),
             };
-            let secret_key = "secret";
+            let secret_key = "secret"; 
             if let Ok(token) = encode(&header, &claims, &EncodingKey::from_secret(secret_key.as_ref())) {
                 return Ok(token);
             }
@@ -139,11 +142,14 @@ impl UserService {
             .with_password(new_hashed_password)
             .build()
             .unwrap();
-        if let Ok(user) = database.update_user_info(new_user).await {
-            return Ok(user);
-        }
-        else {
-            return Err(UserDataSourceError::UpdateUserFailed);
+        let user = database.update_user_info(new_user).await;
+        match user {
+            Ok(_) => {
+                return user;
+            }
+            Err(_) => {
+                return Err(UserDataSourceError::UpdateUserFailed);
+            }
         }
     }
     pub async fn change_primary_email(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_email: String) -> Result<User, UserDataSourceError> {
@@ -156,11 +162,14 @@ impl UserService {
             .with_primary_email(new_email)
             .build()
             .unwrap();
-        if let Ok(user) = database.update_user_info(new_user).await {
-            return Ok(user);
-        }
-        else {
-            return Err(UserDataSourceError::UpdateUserFailed);
+        let user = database.update_user_info(new_user).await;
+        match user {
+            Ok(_) => {
+                return user;
+            }
+            Err(_) => {
+                return Err(UserDataSourceError::UpdateUserFailed);
+            }
         }
     }
     pub async fn change_other_mails(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_other_mails: Vec<String>) -> Result<User, UserDataSourceError> {
@@ -173,11 +182,14 @@ impl UserService {
             .with_other_mails(new_other_mails)
             .build()
             .unwrap();
-        if let Ok(user) = database.update_user_info(new_user).await {
-            return Ok(user);
-        }
-        else {
-            return Err(UserDataSourceError::UpdateUserFailed);
+        let user = database.update_user_info(new_user).await;
+        match user {
+            Ok(_) => {
+                return user;
+            }
+            Err(_) => {
+                return Err(UserDataSourceError::UpdateUserFailed);
+            }
         }
     }
     pub async fn change_username(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_username: String) -> Result<User, UserDataSourceError> {
@@ -190,11 +202,14 @@ impl UserService {
             .with_username(new_username)
             .build()
             .unwrap();
-        if let Ok(user) = database.update_user_info(new_user).await {
-            return Ok(user);
-        }
-        else {
-            return Err(UserDataSourceError::UpdateUserFailed);
+        let user = database.update_user_info(new_user).await;
+        match user {
+            Ok(_) => {
+                return user;
+            }
+            Err(_) => {
+                return Err(UserDataSourceError::UpdateUserFailed);
+            }
         }
     }
     pub async fn change_name(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_first_name: Option<String>, new_last_name: Option<String>) -> Result<User, UserDataSourceError> {
@@ -208,11 +223,14 @@ impl UserService {
             .with_last_name(new_last_name.unwrap())
             .build()
             .unwrap();
-        if let Ok(user) = database.update_user_info(new_user).await {
-            return Ok(user);
-        }
-        else {
-            return Err(UserDataSourceError::UpdateUserFailed);
+        let user = database.update_user_info(new_user).await;
+        match user {
+            Ok(_) => {
+                return user;
+            }
+            Err(_) => {
+                return Err(UserDataSourceError::UpdateUserFailed);
+            }
         }
     }
     pub async fn change_country(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_country: String) -> Result<User, UserDataSourceError> {
@@ -225,11 +243,14 @@ impl UserService {
             .with_country(new_country)
             .build()
             .unwrap();
-        if let Ok(user) = database.update_user_info(new_user).await {
-            return Ok(user);
-        }
-        else {
-            return Err(UserDataSourceError::UpdateUserFailed);
+        let user = database.update_user_info(new_user).await;
+        match user {
+            Ok(_) => {
+                return user;
+            }
+            Err(_) => {
+                return Err(UserDataSourceError::UpdateUserFailed);
+            }
         }
     }
     pub async fn change_skills(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_skills: Vec<String>) -> Result<User, UserDataSourceError> {
@@ -242,11 +263,14 @@ impl UserService {
             .with_skills(new_skills)
             .build()
             .unwrap();
-        if let Ok(user) = database.update_user_info(new_user).await {
-            return Ok(user);
-        }
-        else {
-            return Err(UserDataSourceError::UpdateUserFailed);
+        let user = database.update_user_info(new_user).await;
+        match user {
+            Ok(_) => {
+                return user;
+            }
+            Err(_) => {
+                return Err(UserDataSourceError::UpdateUserFailed);
+            }
         }
     }
     pub async fn add_cv(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_cv: ResourceIdentifier) -> Result<User, UserDataSourceError> {
@@ -265,11 +289,14 @@ impl UserService {
             .with_about(new_about)
             .build()
             .unwrap();
-        if let Ok(user) = database.update_user_info(new_user).await {
-            return Ok(user);
-        }
-        else {
-            return Err(UserDataSourceError::UpdateUserFailed);
+        let user = database.update_user_info(new_user).await;
+        match user {
+            Ok(_) => {
+                return user;
+            }
+            Err(_) => {
+                return Err(UserDataSourceError::UpdateUserFailed);
+            }
         }
     }
     pub async fn change_avatar(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_avatar: ResourceIdentifier) -> Result<User, UserDataSourceError> {
@@ -282,11 +309,14 @@ impl UserService {
             .with_avatar(new_avatar)
             .build()
             .unwrap();
-        if let Ok(user) = database.update_user_info(new_user).await {
-            return Ok(user);
-        }
-        else {
-            return Err(UserDataSourceError::UpdateUserFailed);
+        let user = database.update_user_info(new_user).await;
+        match user {
+            Ok(_) => {
+                return user;
+            }
+            Err(_) => {
+                return Err(UserDataSourceError::UpdateUserFailed);
+            }
         }
     }
     pub async fn change_cover_photo(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_cover_photo: ResourceIdentifier) -> Result<User, UserDataSourceError> {
@@ -299,11 +329,14 @@ impl UserService {
             .with_cover_photo(new_cover_photo)
             .build()
             .unwrap();
-        if let Ok(user) = database.update_user_info(new_user).await {
-            return Ok(user);
-        }
-        else {
-            return Err(UserDataSourceError::UpdateUserFailed);
+        let user = database.update_user_info(new_user).await;
+        match user {
+            Ok(_) => {
+                return user;
+            }
+            Err(_) => {
+                return Err(UserDataSourceError::UpdateUserFailed);
+            }
         }
     }
     pub async fn update_friend_list(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, friend_list: Vec<ResourceIdentifier>) -> Result<User, UserDataSourceError> {
@@ -316,12 +349,15 @@ impl UserService {
             .with_friend_list(friend_list)
             .build()
             .unwrap();
-        if let Ok(user) = database.update_user_info(new_user).await {
-            return Ok(user);
+        let user = database.update_user_info(new_user).await;
+        match user {
+            Ok(_) => {
+                return user;
+            }
+            Err(_) => {
+                return Err(UserDataSourceError::UpdateUserFailed);
+            }
         }
-        else {
-            return Err(UserDataSourceError::UpdateUserFailed);
-        } 
     }
     pub async fn update_education(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_education: Vec<Education>) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
@@ -333,11 +369,14 @@ impl UserService {
             .with_education(new_education)
             .build()
             .unwrap();
-        if let Ok(user) = database.update_user_info(new_user).await {
-            return Ok(user);
+        let user = database.update_user_info(new_user).await;
+        match user {
+            Ok(_) => {
+                return user;
+            }
+            Err(_) => {
+                return Err(UserDataSourceError::UpdateUserFailed);
+            }
         }
-        else {
-            return Err(UserDataSourceError::UpdateUserFailed);
-        } 
     }
 }
