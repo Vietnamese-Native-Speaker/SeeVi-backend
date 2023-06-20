@@ -7,6 +7,7 @@ use crate::models::users::user::Level;
 use crate::models::users::{User, UpdateUserInput, CreateUserInput, self};
 use crate::services::user_service::UserService;
 use crate::{data_source::user_data_source_error::UserDataSourceError};
+use crate::services::user_service::Claims;
 use std::cell::Cell;
 use std::sync::Mutex;
 struct MockDatabase {
@@ -139,3 +140,38 @@ async fn register_user_test() {
         degree: Some("Bachelor's Degree".to_string()),
     }]);
 }
+
+#[tokio::test]
+async fn authenticate_user_test() {
+    let mut db = MockDatabase {
+        users: Mutex::new(Vec::new()),
+    };
+    let uuid = Uuid::new();
+    let user = CreateUserInputBuilder::default()
+        .with_username("test_user")
+        .with_password("test_password")
+        .with_first_name("test_first_name")
+        .with_last_name("test_last_name")
+        .with_country("test_country")
+        .with_skills("test_skill_1")
+        .with_skills("test_skill_2")
+        .with_primary_email("test_primary_email")
+        .with_other_mails("test_mail1")
+        .with_other_mails("test_mail2")
+        .with_about("test_about")
+        .with_avatar(uuid.clone())
+        .with_cover_photo(uuid.clone())
+        .with_education(Education {
+            institution: "University of Example 1".to_string(),
+            course: Some("Computer Science".to_string()),
+            degree: Some("Bachelor's Degree".to_string()),
+        })
+        .build()
+        .unwrap();
+    let user2 = UserService::register(&mut db, user).await.unwrap();
+    let key = b"secret";
+    let token = UserService::authenticate(&mut db, Some(user2.username), None, "test_password".to_string()).await.unwrap();
+    let token_data = jsonwebtoken::decode::<Claims>(&token, &jsonwebtoken::DecodingKey::from_secret(key.as_ref()), &jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::HS256)).unwrap();
+    assert_eq!(token_data.claims.username, "test_user");
+    assert_eq!(bcrypt::verify("test_password", &token_data.claims.password).unwrap(), true);
+}   
