@@ -16,7 +16,7 @@ struct MockDatabase {
 
 #[async_trait]
 impl UserDataSource for MockDatabase {
-    async fn get_user_by_username(&self, username: String) -> Result<User, UserDataSourceError> {
+    async fn get_user_by_username(&self, username: &str) -> Result<User, UserDataSourceError> {
         let mut users = self.users.lock().unwrap();
         for user in users.iter() {
             if user.username == username {
@@ -25,7 +25,7 @@ impl UserDataSource for MockDatabase {
         }
         Err(UserDataSourceError::UsernameNotFound(username.to_string()))
     }
-    async fn get_user_by_email(&self, email: String) -> Result<User, UserDataSourceError> {
+    async fn get_user_by_email(&self, email: &str) -> Result<User, UserDataSourceError> {
         let mut users = self.users.lock().unwrap();
         for user in users.iter() {
             if user.primary_email == email {
@@ -107,11 +107,11 @@ async fn register_user_test() {
         .with_first_name("test_first_name")
         .with_last_name("test_last_name")
         .with_country("test_country")
-        .with_skills("test_skill_1")
-        .with_skills("test_skill_2")
+        .with_skill("test_skill_1")
+        .with_skill("test_skill_2")
         .with_primary_email("test_primary_email")
-        .with_other_mails("test_mail1")
-        .with_other_mails("test_mail2")
+        .with_other_mail("test_mail1")
+        .with_other_mail("test_mail2")
         .with_about("test_about")
         .with_avatar(uuid.clone())
         .with_cover_photo(uuid.clone())
@@ -153,11 +153,11 @@ async fn authenticate_user_test() {
         .with_first_name("test_first_name")
         .with_last_name("test_last_name")
         .with_country("test_country")
-        .with_skills("test_skill_1")
-        .with_skills("test_skill_2")
+        .with_skill("test_skill_1")
+        .with_skill("test_skill_2")
         .with_primary_email("test_primary_email")
-        .with_other_mails("test_mail1")
-        .with_other_mails("test_mail2")
+        .with_other_mail("test_mail1")
+        .with_other_mail("test_mail2")
         .with_about("test_about")
         .with_avatar(uuid.clone())
         .with_cover_photo(uuid.clone())

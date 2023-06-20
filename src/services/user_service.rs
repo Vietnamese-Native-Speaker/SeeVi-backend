@@ -58,11 +58,11 @@ impl UserService {
         }
 
         let username = user_input.username.clone();
-        if database.get_user_by_username(username.clone()).await.is_ok() {
+        if database.get_user_by_username(&username).await.is_ok() {
             return Err(UserDataSourceError::UsernameTaken(username))
         }
         let email = user_input.primary_email.clone();
-        if database.get_user_by_email(email.clone()).await.is_ok() {
+        if database.get_user_by_email(&email).await.is_ok() {
             return Err(UserDataSourceError::EmailTaken(email))
         }
         let hash = hash_password(user_input.password);
@@ -86,7 +86,7 @@ impl UserService {
             return Err(UserDataSourceError::EmptyUsername);
         }
         if let Some(username) = username.clone() {
-            let user = database.get_user_by_username(username.clone()).await;
+            let user = database.get_user_by_username(&username).await;
             if user.is_err() {
                 return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
             }
@@ -109,7 +109,7 @@ impl UserService {
             }
         }
         else if let Some(email) = email.clone() {
-            let user = database.get_user_by_email(email.clone()).await;
+            let user = database.get_user_by_email(&email).await;
             if user.is_err() {
                 return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
             }

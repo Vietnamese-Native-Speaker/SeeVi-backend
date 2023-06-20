@@ -16,10 +16,10 @@ fn test_create_user_input_to_user() {
         .with_first_name("first_name")
         .with_last_name("last_name")
         .with_country("country")
-        .with_skills("skill")
+        .with_skill("skill")
         .with_primary_email("primary_email")
-        .with_other_mails("other_mails")
-        .with_other_mails("other_mails2")
+        .with_other_mail("other_mails")
+        .with_other_mail("other_mails2")
         .with_education(Education {
             institution: "University of Example 1".to_string(),
             course: Some("Computer Science".to_string()),
@@ -70,10 +70,10 @@ fn test_update_user() {
         .with_first_name("first_name")
         .with_last_name("last_name")
         .with_country("country")
-        .with_skills("skill")
+        .with_skill("skill")
         .with_primary_email("primary_email")
-        .with_other_mails("other_mails")
-        .with_other_mails("other_mails2")
+        .with_other_mail("other_mails")
+        .with_other_mail("other_mails2")
         .with_education(Education {
             institution: "University of Example 1".to_string(),
             course: Some("Computer Science".to_string()),
