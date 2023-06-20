@@ -1,5 +1,5 @@
 use serde::{Serialize, Deserialize};
-use jsonwebtoken::{encode, decode, Header, Algorithm, Validation, EncodingKey, DecodingKey};
+use jsonwebtoken::{encode, Header, Algorithm, EncodingKey};
 
 use crate::{models::{users::{CreateUserInput, User, UpdateUserInput}, education::Education}, data_source::{user_data_source::UserDataSource, user_data_source_error::UserDataSourceError}};
 

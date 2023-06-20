@@ -1,14 +1,10 @@
 use super::super::{cv_data_source::CVDataSource, cv_data_source_error::CVDataSourceError};
 use crate::data_source::mongo::MongoDB;
 use crate::data_source::user_data_source::UserDataSource;
-use crate::models::cv::{
-    create_cv_input::{CreateCVInput, CreateCVInputBuilder},
-    cv::CV,
-};
+use crate::models::cv::create_cv_input::CreateCVInputBuilder;
 use crate::models::education::Education;
 use crate::models::users::create_user_input::CreateUserInputBuilder;
 use mongodb::bson::Uuid;
-use mongodb::{bson::serde_helpers::timestamp_as_u32, options::ClientOptions, Client, Database};
 use serial_test::serial;
 
 #[tokio::test]

@@ -1,6 +1,8 @@
 pub mod create_user_input;
 pub mod update_user_input;
 pub mod user;
+
+#[cfg(test)]
 pub mod tests;
 
 pub use create_user_input::CreateUserInput;

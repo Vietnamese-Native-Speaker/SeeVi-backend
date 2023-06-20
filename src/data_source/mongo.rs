@@ -1,5 +1,5 @@
 use mongodb::bson::DateTime;
-use mongodb::options::{UpdateOptions, FindOneAndUpdateOptions, ReturnDocument};
+use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Database};
 
 use crate::data_source::user_data_source::UserDataSource;
@@ -40,7 +40,6 @@ impl MongoDB {
 
     #[cfg(test)]
     pub async fn init_test() -> MongoDB {
-        use crate::models::{cv::CV, users::User};
 
         let mut client_options = ClientOptions::parse("mongodb://127.0.0.1:27017")
             .await

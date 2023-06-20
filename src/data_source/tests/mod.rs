@@ -61,13 +61,11 @@ mod user_tests {
     use crate::data_source::mongo::MongoDB;
     use crate::models::users::CreateUserInput;
 
-    use super::super::cv_data_source::CVDataSource;
     use super::super::user_data_source::UserDataSource;
     use super::super::user_data_source_error::UserDataSourceError;
 
     #[tokio::test]
     async fn basic_user_create_then_get() {
-        let user_uuid = Uuid::new();
         let new_user_input = CreateUserInput::builder()
             .with_password("password")
             .with_last_name("LastName")
