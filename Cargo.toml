@@ -21,3 +21,7 @@ serde = "1.0.163"
 serial_test = "2.0.0"
 tide = "0.16.0"
 tokio = { version = "1.28.1", features = ["full"] }
+jsonwebtoken = "8"
+bcrypt = "0.14"
+struct_iterable = "0.1.1"
+lazy_static = "1.4.0"

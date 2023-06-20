@@ -92,6 +92,7 @@ impl UserDataSource for MongoDB {
         let collection = self.db.collection("users");
         let user: users::User = users::User {
             user_id: bson::Uuid::new(),
+            password: input.password,
             username: input.username.clone(),
             first_name: input.first_name,
             last_name: input.last_name,

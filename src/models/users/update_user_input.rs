@@ -2,7 +2,7 @@ use async_graphql::InputObject;
 use mongodb::bson::Uuid;
 use serde::{Deserialize, Serialize};
 
-use crate::models::education::Education;
+use crate::models::{education::Education, ResourceIdentifier};
 
 /// An InputObject for User update query in GraphQL
 #[derive(Serialize, Deserialize, Clone, InputObject, Builder, Default)]
@@ -15,6 +15,8 @@ pub struct UpdateUserInput {
     #[builder(default)]
     pub username: Option<String>,
     #[builder(default)]
+    pub password: Option<String>,
+    #[builder(default)]
     pub first_name: Option<String>,
     #[builder(default)]
     pub last_name: Option<String>,
@@ -25,7 +27,15 @@ pub struct UpdateUserInput {
     #[builder(default)]
     pub primary_email: Option<String>,
     #[builder(default)]
+    pub other_mails: Option<Vec<String>>,
+    #[builder(default)]
     pub about: Option<String>,
+    #[builder(default)]
+    pub avatar: Option<ResourceIdentifier>,
+    #[builder(default)]
+    pub cover_photo: Option<ResourceIdentifier>,
+    #[builder(default)]
+    pub friends_list: Option<Vec<ResourceIdentifier>>,
     #[builder(default)]
     pub education: Option<Vec<Education>>,
 }

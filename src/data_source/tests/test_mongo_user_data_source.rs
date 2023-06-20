@@ -14,6 +14,7 @@ async fn test_create_user_and_get_user_by_username(){
     let mongodb = MongoDB::init_test().await;
     let uuid = Uuid::new();
     let input = CreateUserInputBuilder::default()
+        .with_password("password")
         .with_username("username")
         .with_first_name("first_name")
         .with_last_name("last_name")
@@ -75,6 +76,7 @@ async fn test_get_user_by_id(){
     let mongodb = MongoDB::init_test().await;
     let uuid = Uuid::new();
     let input = CreateUserInputBuilder::default()
+        .with_password("password")
         .with_username("username")
         .with_first_name("first_name")
         .with_last_name("last_name")
@@ -136,6 +138,7 @@ async fn test_delete_user(){
     let mongodb = MongoDB::init_test().await;
     let uuid = Uuid::new();
     let input = CreateUserInputBuilder::default()
+        .with_password("password")
         .with_username("username")
         .with_first_name("first_name")
         .with_last_name("last_name")
@@ -175,6 +178,7 @@ async fn test_update_user_info(){
     let mongodb = MongoDB::init_test().await;
     let uuid = Uuid::new();
     let input = CreateUserInputBuilder::default()
+        .with_password("password")
         .with_username("username")
         .with_first_name("first_name")
         .with_last_name("last_name")

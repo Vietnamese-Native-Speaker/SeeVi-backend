@@ -69,6 +69,7 @@ mod user_tests {
     async fn basic_user_create_then_get() {
         let user_uuid = Uuid::new();
         let new_user_input = CreateUserInput::builder()
+            .with_password("password")
             .with_last_name("LastName")
             .with_first_name("FirstName")
             .with_skill("Nothing")

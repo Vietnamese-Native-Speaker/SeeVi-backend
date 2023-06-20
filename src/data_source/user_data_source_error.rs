@@ -42,6 +42,12 @@ pub enum UserDataSourceError {
 
     /// Error when wrong username or password is provided.
     WrongEmailUsernameOrPassword,
+
+    // Error when password is invalid
+    InvalidPassword,
+
+    UpdateUserFailed,
+
 }
 
 impl fmt::Display for UserDataSourceError {
@@ -123,6 +129,14 @@ impl fmt::Display for UserDataSourceError {
             UserDataSourceError::WrongEmailUsernameOrPassword => {
                 write!(f, "Wrong email/username or password")
             },
+
+            UserDataSourceError::InvalidPassword => {
+                write!(f, "Password is invalid")
+            }
+
+            UserDataSourceError::UpdateUserFailed => {
+                write!(f, "Update user failed")
+            }
         }
     }
 }
