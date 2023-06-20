@@ -7,9 +7,10 @@ use super::ResourceIdentifier;
 
 pub struct UserService;
 #[derive(Debug, Serialize, Deserialize)]
-struct Claims {
-    username: String,
-    password: String, 
+pub struct Claims {
+    pub username: String,
+    pub password: String, 
+    pub exp: usize,
 }
 
 pub fn hash_password(s: String) -> String {
@@ -97,6 +98,7 @@ impl UserService {
             let claims = Claims {
                 username: user.username.to_owned(),
                 password: user.password.to_owned(),
+                exp: 10000000000,
             };
             let secret_key = "secret";
             if let Ok(token) = encode(&header, &claims, &EncodingKey::from_secret(secret_key.as_ref())) {
@@ -119,6 +121,7 @@ impl UserService {
             let claims = Claims {
                 username: user.username.to_owned(),
                 password: user.password.to_owned(),
+                exp: 10000000000,
             };
             let secret_key = "secret"; 
             if let Ok(token) = encode(&header, &claims, &EncodingKey::from_secret(secret_key.as_ref())) {
