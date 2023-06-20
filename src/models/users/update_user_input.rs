@@ -35,7 +35,7 @@ pub struct UpdateUserInput {
     #[builder(default)]
     pub cover_photo: Option<ResourceIdentifier>,
     #[builder(default)]
-    pub friend_list: Option<Vec<ResourceIdentifier>>,
+    pub friends_list: Option<Vec<ResourceIdentifier>>,
     #[builder(default)]
     pub education: Option<Vec<Education>>,
 }

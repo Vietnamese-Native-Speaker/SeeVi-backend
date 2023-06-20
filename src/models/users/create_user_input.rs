@@ -42,7 +42,7 @@ impl CreateUserInput {
 }
 
 impl CreateUserInputBuilder {
-    pub fn with_other_mail(mut self, other_mails: impl Into<String>) -> Self {
+    pub fn with_other_mails(mut self, other_mails: impl Into<String>) -> Self {
         self.other_mails.push(other_mails.into());
         self
     }
@@ -51,7 +51,7 @@ impl CreateUserInputBuilder {
         self
     }
 
-    pub fn with_skill<T: Into<String>>(mut self, skill: T) -> Self {
+    pub fn with_skills<T: Into<String>>(mut self, skill: T) -> Self {
         self.skills.push(skill.into());
         self
     }
