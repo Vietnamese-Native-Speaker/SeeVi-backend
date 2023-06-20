@@ -65,41 +65,6 @@ impl StorageServer {
         }
     }
 
-    /// Return the signed url for download files. When calling, please use the following format:
-    /// let url = url_for_get(user_id, file_id).await.unwrap();
-    /// user_id and file_id are both Uuid type.
-    /// 
-    /// For example:
-    /// 
-    /// async fn test_url_for_put() {
-    ///     use super::storage_service::StorageServer;
-    ///     use mongodb::bson::Uuid;
-    ///     let storage_server = StorageServer::new("./src/services/storage_service/credentials.json".to_string()).await;
-    ///     assert!(storage_server.is_ok());
-    ///     let storage_server = storage_server.unwrap();
-    ///     let user_id = Uuid::new();
-    ///     let file_id = Uuid::new();
-    ///     let url = storage_server.url_for_put(user_id, file_id).await.unwrap();
-    ///     println!("{}", url);
-    ///     assert_eq!(1, 1)
-    /// }
-    /// 
-
-    pub async fn url_for_put(&self, user_id: Uuid, file_id: Uuid) -> Result<String, SignedURLError> {
-        let bucket = String::from("crispy-garbanzo");
-        let object = String::from(user_id.to_string() + "/" + &file_id.to_string());
-        let url = self.client
-            .signed_url(&bucket, &object, None, None, SignedURLOptions{
-                method: SignedURLMethod::PUT,
-                ..Default::default()
-            })
-            .await; 
-        match url {
-            Ok(url) => Ok(url),
-            Err(e) => Err(e),
-        }
-    }
-
     pub async fn put_file(&self, file: File, user_id: Uuid) -> Result<String, httpError> {
         let bucket_name = String::from("crispy-garbanzo");
         let file_id = Uuid::new();
