@@ -1,5 +1,5 @@
 use async_graphql::{http::GraphiQLSource, EmptyMutation, EmptySubscription, Schema};
-use seevi_backend::data_source::mongo;
+use seevi_backend::{data_source::mongo, graphql::mutation::Mutation};
 use tide::*;
 
 use seevi_backend::graphql::{graphql, query::Query};
@@ -7,7 +7,7 @@ use tide::prelude::*;
 
 use seevi_backend::State;
 
-#[tokio::main]
+#[async_std::main]
 async fn main() -> Result<()> {
     run().await
 }
@@ -15,7 +15,7 @@ async fn main() -> Result<()> {
 async fn run() -> Result<()> {
     let mongo_ds = mongo::MongoDB::init().await;
 
-    let schema = Schema::build(Query, EmptyMutation, EmptySubscription)
+    let schema = Schema::build(Query, Mutation, EmptySubscription)
         .data(mongo_ds)
         .finish();
 
