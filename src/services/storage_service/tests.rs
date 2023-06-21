@@ -1,4 +1,4 @@
-#[tokio::test]
+#[async_std::test]
 async fn test_url_for_get() {
     use super::storage_service::StorageServer;
     use mongodb::bson::Uuid;
@@ -12,7 +12,7 @@ async fn test_url_for_get() {
     assert_eq!(1, 1)
 }
 
-#[tokio::test]
+#[async_std::test]
 async fn test_put_file() {
     use super::storage_service::StorageServer;
     use tokio::fs::File;

@@ -127,7 +127,7 @@ impl UserDataSource for MockDatabase {
     }
 }
 
-#[tokio::test]
+#[async_std::test]
 async fn register_user_test() {
     let mut db = MockDatabase {
         users: Mutex::new(Vec::new()),
@@ -185,7 +185,7 @@ async fn register_user_test() {
     );
 }
 
-#[tokio::test]
+#[async_std::test]
 async fn authenticate_user_test() {
     let mut db = MockDatabase {
         users: Mutex::new(Vec::new()),
