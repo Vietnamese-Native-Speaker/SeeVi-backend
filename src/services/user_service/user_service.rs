@@ -1,15 +1,21 @@
-use serde::{Serialize, Deserialize};
-use jsonwebtoken::{encode, Header, Algorithm, EncodingKey};
+use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
+use serde::{Deserialize, Serialize};
 
-use crate::{models::{users::{CreateUserInput, User, UpdateUserInput}, education::Education}, data_source::{user_data_source::UserDataSource, user_data_source_error::UserDataSourceError}};
+use crate::{
+    data_source::{user_data_source::UserDataSource, user_data_source_error::UserDataSourceError},
+    models::{
+        education::Education,
+        users::{CreateUserInput, UpdateUserInput, User},
+    },
+};
 
-use super::ResourceIdentifier;
+use super::super::ResourceIdentifier;
 
 pub struct UserService;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     pub username: String,
-    pub password: String, 
+    pub password: String,
     pub exp: usize,
 }
 
@@ -21,17 +27,20 @@ pub fn hash_password(s: String) -> String {
         }
         Err(_) => return "Failed to hash".to_string(),
     }
-}   
+}
 
 impl UserService {
-    pub async fn register(database: &mut (impl UserDataSource + std::marker::Sync), user_input: CreateUserInput) -> Result<User, UserDataSourceError> {
+    pub async fn register(
+        database: &(impl UserDataSource + std::marker::Sync),
+        user_input: CreateUserInput,
+    ) -> Result<User, UserDataSourceError> {
         fn check_invalid_characters(s: &str) -> bool {
             if s.len() == 0 {
                 return true;
             }
             let invalid_chars = [
-                ' ', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '+', '=', '[', ']', '{', '}', '|', '\\',
-                '/', '<', '>', '?', ';', ':', '"', '\'', ',', '.'
+                ' ', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '+', '=', '[', ']', '{',
+                '}', '|', '\\', '/', '<', '>', '?', ';', ':', '"', '\'', ',', '.',
             ];
             for ch in s.chars() {
                 if invalid_chars.contains(&ch) {
@@ -42,29 +51,29 @@ impl UserService {
         }
 
         if check_invalid_characters(user_input.username.as_str()) {
-            return Err(UserDataSourceError::InvalidUsername(user_input.username))
+            return Err(UserDataSourceError::InvalidUsername(user_input.username));
         }
         if check_invalid_characters(user_input.password.as_str()) {
-            return Err(UserDataSourceError::InvalidPassword)
+            return Err(UserDataSourceError::InvalidPassword);
         }
         if check_invalid_characters(user_input.primary_email.as_str()) {
-            return Err(UserDataSourceError::InvalidEmail(user_input.primary_email))
+            return Err(UserDataSourceError::InvalidEmail(user_input.primary_email));
         }
-        if check_invalid_characters(user_input.first_name.as_str())  {
-            return Err(UserDataSourceError::InvalidNameField(user_input.first_name))
+        if check_invalid_characters(user_input.first_name.as_str()) {
+            return Err(UserDataSourceError::InvalidNameField(user_input.first_name));
         }
         if check_invalid_characters(user_input.last_name.as_str()) {
-            return Err(UserDataSourceError::InvalidNameField(user_input.last_name))
+            return Err(UserDataSourceError::InvalidNameField(user_input.last_name));
         }
 
         let username = user_input.username.clone();
         if database.get_user_by_username(&username).await.is_ok() {
-            return Err(UserDataSourceError::UsernameTaken(username))
+            return Err(UserDataSourceError::UsernameTaken(username));
         }
-        let email = user_input.primary_email.clone();
-        if database.get_user_by_email(&email).await.is_ok() {
-            return Err(UserDataSourceError::EmailTaken(email))
-        }
+        // let email = user_input.primary_email.clone();
+        // if database.get_user_by_email(&email).await.is_ok() {
+        //     return Err(UserDataSourceError::EmailTaken(email))
+        // }
         let hash = hash_password(user_input.password);
         let user_input = CreateUserInput {
             password: hash,
@@ -81,7 +90,12 @@ impl UserService {
         }
     }
     //Function will return a token as a string that can be used for authentication
-    pub async fn authenticate(database: &mut (impl UserDataSource + std::marker::Sync), username: Option<String>, email: Option<String>, password: String) -> Result<String, UserDataSourceError> { 
+    pub async fn authenticate(
+        database: &mut (impl UserDataSource + std::marker::Sync),
+        username: Option<String>,
+        email: Option<String>,
+        password: String,
+    ) -> Result<String, UserDataSourceError> {
         if username.is_none() && email.is_none() {
             return Err(UserDataSourceError::EmptyUsername);
         }
@@ -101,14 +115,16 @@ impl UserService {
                 exp: 10000000000,
             };
             let secret_key = "secret";
-            if let Ok(token) = encode(&header, &claims, &EncodingKey::from_secret(secret_key.as_ref())) {
+            if let Ok(token) = encode(
+                &header,
+                &claims,
+                &EncodingKey::from_secret(secret_key.as_ref()),
+            ) {
                 return Ok(token);
-            }
-            else {
+            } else {
                 return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
             }
-        }
-        else if let Some(email) = email.clone() {
+        } else if let Some(email) = email.clone() {
             let user = database.get_user_by_email(&email).await;
             if user.is_err() {
                 return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
@@ -123,18 +139,25 @@ impl UserService {
                 password: user.password.to_owned(),
                 exp: 10000000000,
             };
-            let secret_key = "secret"; 
-            if let Ok(token) = encode(&header, &claims, &EncodingKey::from_secret(secret_key.as_ref())) {
+            let secret_key = "secret";
+            if let Ok(token) = encode(
+                &header,
+                &claims,
+                &EncodingKey::from_secret(secret_key.as_ref()),
+            ) {
                 return Ok(token);
-            }
-            else {
+            } else {
                 return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
             }
         }
         return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
     }
     //Forget password = change password
-    pub async fn change_password(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_password: String) -> Result<User, UserDataSourceError> {
+    pub async fn change_password(
+        database: &mut (impl UserDataSource + std::marker::Sync),
+        user_id: ResourceIdentifier,
+        new_password: String,
+    ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
             return Err(UserDataSourceError::UuidNotFound(user_id));
@@ -155,7 +178,11 @@ impl UserService {
             }
         }
     }
-    pub async fn change_primary_email(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_email: String) -> Result<User, UserDataSourceError> {
+    pub async fn change_primary_email(
+        database: &mut (impl UserDataSource + std::marker::Sync),
+        user_id: ResourceIdentifier,
+        new_email: String,
+    ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
             return Err(UserDataSourceError::UuidNotFound(user_id));
@@ -175,7 +202,11 @@ impl UserService {
             }
         }
     }
-    pub async fn change_other_mails(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_other_mails: Vec<String>) -> Result<User, UserDataSourceError> {
+    pub async fn change_other_mails(
+        database: &mut (impl UserDataSource + std::marker::Sync),
+        user_id: ResourceIdentifier,
+        new_other_mails: Vec<String>,
+    ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
             return Err(UserDataSourceError::UuidNotFound(user_id));
@@ -195,7 +226,11 @@ impl UserService {
             }
         }
     }
-    pub async fn change_username(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_username: String) -> Result<User, UserDataSourceError> {
+    pub async fn change_username(
+        database: &mut (impl UserDataSource + std::marker::Sync),
+        user_id: ResourceIdentifier,
+        new_username: String,
+    ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
             return Err(UserDataSourceError::UuidNotFound(user_id));
@@ -215,7 +250,12 @@ impl UserService {
             }
         }
     }
-    pub async fn change_name(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_first_name: Option<String>, new_last_name: Option<String>) -> Result<User, UserDataSourceError> {
+    pub async fn change_name(
+        database: &mut (impl UserDataSource + std::marker::Sync),
+        user_id: ResourceIdentifier,
+        new_first_name: Option<String>,
+        new_last_name: Option<String>,
+    ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
             return Err(UserDataSourceError::UuidNotFound(user_id));
@@ -236,7 +276,11 @@ impl UserService {
             }
         }
     }
-    pub async fn change_country(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_country: String) -> Result<User, UserDataSourceError> {
+    pub async fn change_country(
+        database: &mut (impl UserDataSource + std::marker::Sync),
+        user_id: ResourceIdentifier,
+        new_country: String,
+    ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
             return Err(UserDataSourceError::UuidNotFound(user_id));
@@ -256,7 +300,11 @@ impl UserService {
             }
         }
     }
-    pub async fn change_skills(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_skills: Vec<String>) -> Result<User, UserDataSourceError> {
+    pub async fn change_skills(
+        database: &mut (impl UserDataSource + std::marker::Sync),
+        user_id: ResourceIdentifier,
+        new_skills: Vec<String>,
+    ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
             return Err(UserDataSourceError::UuidNotFound(user_id));
@@ -276,13 +324,25 @@ impl UserService {
             }
         }
     }
-    pub async fn add_cv(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_cv: ResourceIdentifier) -> Result<User, UserDataSourceError> {
+    pub async fn add_cv(
+        database: &mut (impl UserDataSource + std::marker::Sync),
+        user_id: ResourceIdentifier,
+        new_cv: ResourceIdentifier,
+    ) -> Result<User, UserDataSourceError> {
         todo!()
     }
-    pub async fn remove_cv(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, to_remove_cv:ResourceIdentifier) -> Result<User, UserDataSourceError> {
+    pub async fn remove_cv(
+        database: &mut (impl UserDataSource + std::marker::Sync),
+        user_id: ResourceIdentifier,
+        to_remove_cv: ResourceIdentifier,
+    ) -> Result<User, UserDataSourceError> {
         todo!()
     }
-    pub async fn change_about(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_about: String) -> Result<User, UserDataSourceError> {
+    pub async fn change_about(
+        database: &mut (impl UserDataSource + std::marker::Sync),
+        user_id: ResourceIdentifier,
+        new_about: String,
+    ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
             return Err(UserDataSourceError::UuidNotFound(user_id));
@@ -302,7 +362,11 @@ impl UserService {
             }
         }
     }
-    pub async fn change_avatar(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_avatar: ResourceIdentifier) -> Result<User, UserDataSourceError> {
+    pub async fn change_avatar(
+        database: &mut (impl UserDataSource + std::marker::Sync),
+        user_id: ResourceIdentifier,
+        new_avatar: ResourceIdentifier,
+    ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
             return Err(UserDataSourceError::UuidNotFound(user_id));
@@ -322,7 +386,11 @@ impl UserService {
             }
         }
     }
-    pub async fn change_cover_photo(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_cover_photo: ResourceIdentifier) -> Result<User, UserDataSourceError> {
+    pub async fn change_cover_photo(
+        database: &mut (impl UserDataSource + std::marker::Sync),
+        user_id: ResourceIdentifier,
+        new_cover_photo: ResourceIdentifier,
+    ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
             return Err(UserDataSourceError::UuidNotFound(user_id));
@@ -342,7 +410,11 @@ impl UserService {
             }
         }
     }
-    pub async fn update_friend_list(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, friend_list: Vec<ResourceIdentifier>) -> Result<User, UserDataSourceError> {
+    pub async fn update_friend_list(
+        database: &mut (impl UserDataSource + std::marker::Sync),
+        user_id: ResourceIdentifier,
+        friend_list: Vec<ResourceIdentifier>,
+    ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
             return Err(UserDataSourceError::UuidNotFound(user_id));
@@ -362,7 +434,11 @@ impl UserService {
             }
         }
     }
-    pub async fn update_education(database: &mut (impl UserDataSource + std::marker::Sync), user_id: ResourceIdentifier, new_education: Vec<Education>) -> Result<User, UserDataSourceError> {
+    pub async fn update_education(
+        database: &mut (impl UserDataSource + std::marker::Sync),
+        user_id: ResourceIdentifier,
+        new_education: Vec<Education>,
+    ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
             return Err(UserDataSourceError::UuidNotFound(user_id));
