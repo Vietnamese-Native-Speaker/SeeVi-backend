@@ -1,9 +1,8 @@
-use async_graphql::{http::GraphiQLSource, EmptyMutation, EmptySubscription, Schema};
+use async_graphql::{http::GraphiQLSource, EmptySubscription, Schema};
 use seevi_backend::{data_source::mongo, graphql::mutation::Mutation};
 use tide::*;
 
 use seevi_backend::graphql::{graphql, query::Query};
-use tide::prelude::*;
 
 use seevi_backend::State;
 
