@@ -15,12 +15,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - uses: actions/checkout@v3
     
     - id: 'auth'
       name: 'Authenticate to Google Cloud'
       uses: 'google-github-actions/auth@v1'
       with:
         credentials_json: '${{ secrets.GOOGLE_CLOUD_CREDENTIALS }}'
+        export_environment_variables: true
+        create_credentials_file: true
+        credentials_file_path: './src/services/storage_service/credentials.json'
     - name: Cache
       uses: actions/cache@v1.2.1
       with:
@@ -28,7 +32,6 @@ jobs:
         path: .cache
         # An explicit key for restoring and saving the cache
         key: cargo-artifact
-    - uses: actions/checkout@v3
     - name: Build
       run: cargo build --verbose
     - name: Start MongoDB in GitHub Actions
