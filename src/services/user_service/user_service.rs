@@ -50,21 +50,21 @@ impl UserService {
             false
         }
 
-        if check_invalid_characters(user_input.username.as_str()) {
-            return Err(UserDataSourceError::InvalidUsername(user_input.username));
-        }
-        if check_invalid_characters(user_input.password.as_str()) {
-            return Err(UserDataSourceError::InvalidPassword);
-        }
-        if check_invalid_characters(user_input.primary_email.as_str()) {
-            return Err(UserDataSourceError::InvalidEmail(user_input.primary_email));
-        }
-        if check_invalid_characters(user_input.first_name.as_str()) {
-            return Err(UserDataSourceError::InvalidNameField(user_input.first_name));
-        }
-        if check_invalid_characters(user_input.last_name.as_str()) {
-            return Err(UserDataSourceError::InvalidNameField(user_input.last_name));
-        }
+        // if check_invalid_characters(user_input.username.as_str()) {
+        //     return Err(UserDataSourceError::InvalidUsername(user_input.username));
+        // }
+        // if check_invalid_characters(user_input.password.as_str()) {
+        //     return Err(UserDataSourceError::InvalidPassword);
+        // }
+        // if check_invalid_characters(user_input.primary_email.as_str()) {
+        //     return Err(UserDataSourceError::InvalidEmail(user_input.primary_email));
+        // }
+        // if check_invalid_characters(user_input.first_name.as_str()) {
+        //     return Err(UserDataSourceError::InvalidNameField(user_input.first_name));
+        // }
+        // if check_invalid_characters(user_input.last_name.as_str()) {
+        //     return Err(UserDataSourceError::InvalidNameField(user_input.last_name));
+        // }
 
         let username = user_input.username.clone();
         if database.get_user_by_username(&username).await.is_ok() {

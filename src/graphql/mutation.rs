@@ -11,6 +11,9 @@ pub struct Mutation;
 #[Object]
 impl Mutation {
     async fn user_register(&self, ctx: &Context<'_>, new_user: CreateUserInput) -> GqlResult<User> {
-        todo!()
+        Ok(UserService::register(
+            ctx.data_unchecked::<MongoDB>(),
+            new_user,
+        ).await.unwrap())
     }
 }
