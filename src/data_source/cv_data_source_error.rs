@@ -2,9 +2,13 @@ use mongodb::bson::Uuid;
 use std::fmt;
 
 #[non_exhaustive]
-pub enum CVDataSourceError{
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum CVDataSourceError {
     // uuid cannot be found
     UuidNotFound(Uuid),
+
+    // author id cannot be found
+    AuthorIdNotFound(Uuid),
 
     // description is longer than limit
     TooLongDescription,
@@ -25,30 +29,34 @@ pub enum CVDataSourceError{
     InvalidId(Uuid),
 }
 
-impl fmt::Display for CVDataSourceError{
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result{
-        match self{
-            CVDataSourceError::UuidNotFound(uuid) =>{
+impl fmt::Display for CVDataSourceError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            CVDataSourceError::UuidNotFound(uuid) => {
                 write!(f, "Uuid {:?} is not found", uuid)
-            },
-            CVDataSourceError::TooLongDescription =>{
+            }
+            CVDataSourceError::TooLongDescription => {
                 write!(f, "Description is too long")
-            },
-            CVDataSourceError::EmptyTitle =>{
-                write!(f, "Title cannot be empty") 
-            },
-            CVDataSourceError::EmptyId =>{
+            }
+            CVDataSourceError::EmptyTitle => {
+                write!(f, "Title cannot be empty")
+            }
+            CVDataSourceError::EmptyId => {
                 write!(f, "Id cannot be empty")
             }
-            CVDataSourceError::InvalidTitle(s) =>{
+            CVDataSourceError::InvalidTitle(s) => {
                 write!(f, "Title {:?} is invalid", s)
-            },
-            CVDataSourceError::InvalidId(uuid) =>{
+            }
+            CVDataSourceError::InvalidId(uuid) => {
                 write!(f, "Uuid {:?} is invalid", uuid)
-            },
-            CVDataSourceError::TooLongTitle =>{
+            }
+            CVDataSourceError::TooLongTitle => {
                 write!(f, "Title is too long")
+            }
+            CVDataSourceError::AuthorIdNotFound(uuid) => {
+                write!(f, "Author id {:?} is not found", uuid)
             }
         }
     }
 }
+

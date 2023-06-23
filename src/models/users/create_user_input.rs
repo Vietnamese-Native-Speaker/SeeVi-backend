@@ -12,6 +12,7 @@ use super::user::Level;
 #[builder(pattern = "owned", setter(into, prefix = "with", strip_option))]
 pub struct CreateUserInput {
     pub username: String,
+    pub password: String,
     pub first_name: String,
     pub last_name: String,
     pub country: Option<String>,

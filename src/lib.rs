@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate derive_builder;
 
-use async_graphql::{EmptyMutation, EmptySubscription, Schema};
-use graphql::query::Query;
+use async_graphql::{EmptySubscription, Schema};
+use graphql::{mutation::Mutation, query::Query};
 
 pub mod data_source;
 pub mod graphql;
@@ -11,5 +11,5 @@ pub mod services;
 
 #[derive(Clone)]
 pub struct State {
-    pub schema: Schema<Query, EmptyMutation, EmptySubscription>,
+    pub schema: Schema<Query, Mutation, EmptySubscription>,
 }
