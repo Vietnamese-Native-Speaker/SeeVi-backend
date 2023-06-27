@@ -228,7 +228,7 @@ async fn authenticate_user_test() {
         &jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::HS256),
     )
     .unwrap();
-    assert_eq!(token_data.claims.username, "test_user");
+    assert_eq!(token_data.claims.sub, "test_user");
     assert_eq!(
         bcrypt::verify("test_password", &token_data.claims.password).unwrap(),
         true

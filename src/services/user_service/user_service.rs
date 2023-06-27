@@ -1,4 +1,4 @@
-use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
+use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -14,9 +14,11 @@ use super::super::ResourceIdentifier;
 pub struct UserService;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
-    pub username: String,
+    // sub is the subject of the token, here we choose to use the username since it is unique
+    pub sub: String,
     pub password: String,
     pub exp: usize,
+    pub aud: String,
 }
 
 pub fn hash_password(s: String) -> String {
@@ -27,6 +29,20 @@ pub fn hash_password(s: String) -> String {
         }
         Err(_) => return "Failed to hash".to_string(),
     }
+}
+
+pub fn validate_token(email: String, token: &str) -> bool {
+    let secret_key = b"secret";
+    let mut validation = Validation::new(Algorithm::HS256);
+    // Set to check the audience of the token
+    validation.set_audience(&["www.example.com"]);
+    // Set to check the subject of the token
+    validation.sub = Some(email);
+    let token_data =
+        match decode::<Claims>(&token, &DecodingKey::from_secret(secret_key), &validation) {
+            Ok(c) => return true,
+            Err(_) => return false,
+        };
 }
 
 impl UserService {
@@ -110,9 +126,10 @@ impl UserService {
             }
             let header = Header::new(Algorithm::HS256);
             let claims = Claims {
-                username: user.username.to_owned(),
+                sub: user.username.to_owned(),
                 password: user.password.to_owned(),
                 exp: 10000000000,
+                aud: "www.example.com".to_string(),
             };
             let secret_key = "secret";
             if let Ok(token) = encode(
@@ -135,9 +152,10 @@ impl UserService {
             }
             let header = Header::new(Algorithm::HS256);
             let claims = Claims {
-                username: user.username.to_owned(),
+                sub: user.username.to_owned(),
                 password: user.password.to_owned(),
                 exp: 10000000000,
+                aud: "www.example.com".to_string(),
             };
             let secret_key = "secret";
             if let Ok(token) = encode(
