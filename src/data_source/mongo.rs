@@ -210,7 +210,7 @@ impl CVDataSource for MongoDB {
             description: _input.description,
             tags: _input.tags,
             comments: vec![],
-            cv: bson::Uuid::new(),
+            cv: Some(bson::Uuid::new()),
             created: DateTime::now(),
         };
         
