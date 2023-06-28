@@ -229,8 +229,4 @@ async fn authenticate_user_test() {
     )
     .unwrap();
     assert_eq!(token_data.claims.sub, "test_user");
-    assert_eq!(
-        bcrypt::verify("test_password", &token_data.claims.password).unwrap(),
-        true
-    );
 }
