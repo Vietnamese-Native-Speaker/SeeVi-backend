@@ -14,6 +14,8 @@ async fn main() {
 }
 
 async fn run() {
+    pretty_env_logger::init();
+
     let mongo_ds = mongo::MongoDB::init().await;
 
     let schema = Schema::build(Query, Mutation, EmptySubscription)
@@ -29,6 +31,8 @@ async fn run() {
         },
     );
 
+    let logger = warp::log("seevi_backend");
+
     let graphiql = warp::path::end().and(warp::get()).map(|| {
         HttpResponse::builder()
             .header("content-type", "text/html")
@@ -36,6 +40,7 @@ async fn run() {
     });
 
     let routes = graphiql
+        .with(logger)
         .or(graphql_post)
         .recover(|err: Rejection| async move {
             if let Some(GraphQLBadRequest(err)) = err.find() {
@@ -50,6 +55,5 @@ async fn run() {
                 StatusCode::INTERNAL_SERVER_ERROR,
             ))
         });
-
     warp::serve(routes).run(([127, 0, 0, 1], 8000)).await;
 }
