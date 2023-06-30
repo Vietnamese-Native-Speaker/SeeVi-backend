@@ -40,7 +40,7 @@ impl From<CreateCVInput> for CV {
             tags: input.tags,
             comments: Vec::default(),
             created: DateTime::now(),
-            cv: None,
+            cv: Uuid::new().into(),
         }
     }
 }
