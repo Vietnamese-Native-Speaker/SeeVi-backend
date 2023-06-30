@@ -66,5 +66,5 @@ fn test_cv_from_input() {
     assert_eq!(test_cv.tags, vec!["tag".to_string()]);
     assert_eq!(test_cv.description, None);
     assert_eq!(test_cv.comments, Vec::default());
-    assert_eq!(test_cv.cv, None);
+    assert!(test_cv.cv.is_some());
 }
