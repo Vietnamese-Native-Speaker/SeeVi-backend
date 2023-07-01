@@ -2644,6 +2644,7 @@ dependencies = [
  "google-cloud-storage",
  "jsonwebtoken",
  "lazy_static",
+ "log",
  "mongodb",
  "pretty_env_logger",
  "serde",
