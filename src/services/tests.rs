@@ -8,7 +8,6 @@ use crate::services::user_service::Claims;
 use crate::services::user_service::UserService;
 use async_trait::async_trait;
 use mongodb::bson::Uuid;
-use std::cell::Cell;
 use std::sync::Mutex;
 struct MockDatabase {
     users: Mutex<Vec<User>>,
@@ -127,14 +126,8 @@ impl UserDataSource for MockDatabase {
     }
 }
 
-#[tokio::test]
-async fn register_user_test() {
-    dotenv::dotenv().ok();
-    let mut db = MockDatabase {
-        users: Mutex::new(Vec::new()),
-    };
-    let uuid = Uuid::new();
-    let user = CreateUserInputBuilder::default()
+pub fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
+    let demo = CreateUserInputBuilder::default()
         .with_username("test_user")
         .with_password("test_password")
         .with_first_name("test_first_name")
@@ -146,8 +139,8 @@ async fn register_user_test() {
         .with_other_mail("test_mail1")
         .with_other_mail("test_mail2")
         .with_about("test_about")
-        .with_avatar(uuid.clone())
-        .with_cover_photo(uuid.clone())
+        .with_avatar(test_uuid)
+        .with_cover_photo(test_uuid)
         .with_education(Education {
             institution: "University of Example 1".to_string(),
             course: Some("Computer Science".to_string()),
@@ -155,6 +148,17 @@ async fn register_user_test() {
         })
         .build()
         .unwrap();
+    demo
+}
+
+#[tokio::test]
+async fn register_user_test() {
+    dotenv::dotenv().ok();
+    let mut db = MockDatabase {
+        users: Mutex::new(Vec::new()),
+    };
+    let uuid = Uuid::new();
+    let user = create_demo_user_input(uuid);
     let user2 = UserService::register(&mut db, user).await.unwrap();
     assert_eq!(user2.username, "test_user");
     assert_eq!(
@@ -193,27 +197,7 @@ async fn authenticate_user_test() {
         users: Mutex::new(Vec::new()),
     };
     let uuid = Uuid::new();
-    let user = CreateUserInputBuilder::default()
-        .with_username("test_user")
-        .with_password("test_password")
-        .with_first_name("test_first_name")
-        .with_last_name("test_last_name")
-        .with_country("test_country")
-        .with_skill("test_skill_1")
-        .with_skill("test_skill_2")
-        .with_primary_email("test_primary_email")
-        .with_other_mail("test_mail1")
-        .with_other_mail("test_mail2")
-        .with_about("test_about")
-        .with_avatar(uuid.clone())
-        .with_cover_photo(uuid.clone())
-        .with_education(Education {
-            institution: "University of Example 1".to_string(),
-            course: Some("Computer Science".to_string()),
-            degree: Some("Bachelor's Degree".to_string()),
-        })
-        .build()
-        .unwrap();
+    let user = create_demo_user_input(uuid);
     let user2 = UserService::register(&mut db, user).await.unwrap();
     let key = b"secret";
     let token = UserService::authenticate(
