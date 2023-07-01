@@ -54,11 +54,20 @@ pub fn graphql_handler(schema: Schema<Query, Mutation, EmptySubscription>) -> im
 
 /// The filter which serve the GraphQL Playground.
 pub fn graphql_playground(
-) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone
-{
+) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
     warp::path::end().and(warp::get()).map(|| {
         http::Response::builder()
             .header("content-type", "text/html")
             .body(GraphiQLSource::build().endpoint("/graphql").finish())
+    })
+}
+
+pub fn graphql_sdl(
+    schema: Schema<Query, Mutation, EmptySubscription>,
+) -> impl Filter<Extract = (impl warp::Reply,), Error = Infallible> + Clone {
+    warp::any().map(move || {
+        http::Response::builder()
+            .header("content-type", "text/plain")
+            .body(schema.sdl())
     })
 }

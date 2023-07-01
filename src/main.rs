@@ -1,6 +1,6 @@
 use async_graphql::ParseRequestError;
 use async_graphql::{http::GraphiQLSource, EmptySubscription, Schema};
-use seevi_backend::filters::{self, with_auth_header};
+use seevi_backend::filters::{self, with_auth_header, graphql_sdl};
 use seevi_backend::{data_source::mongo, graphql::mutation::Mutation};
 use std::convert::Infallible;
 use warp::path;
@@ -27,7 +27,7 @@ async fn run() {
         .finish();
 
     let graphql_post = with_auth_header()
-        .and(async_graphql_warp::graphql(schema))
+        .and(async_graphql_warp::graphql(schema.clone()))
         .and_then(
             |header,
              (schema, request): (
@@ -43,6 +43,8 @@ async fn run() {
 
     let routes = warp::path!("graphql" / "playground")
         .and(filters::graphql_playground())
+        .with(logger)
+        .or(warp::path!("graphql" / "schema").and(graphql_sdl(schema)))
         .with(logger)
         .or(warp::path!("graphql").and(graphql_post))
         .with(logger)
