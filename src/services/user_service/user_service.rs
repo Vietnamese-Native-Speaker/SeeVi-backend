@@ -1,4 +1,4 @@
-use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
+use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -12,21 +12,61 @@ use crate::{
 use super::super::ResourceIdentifier;
 
 pub struct UserService;
+
+/// The struct Claims is used to store
+/// the data of the token needed to authenticate services
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
-    pub username: String,
-    pub password: String,
+    /// sub is the subject of the token,
+    /// here we choose to use the username since it is unique
+    pub sub: String,
+    /// exp is the expiration time of the token
+    /// from 1-1-1970, count in seconds
     pub exp: usize,
+    /// aud is the audience of the token,
+    /// here we choose to use the website url
+    pub aud: String,
 }
 
+/// Function will receive a password as a string
+/// and return a hashed password as a string for security
 pub fn hash_password(s: String) -> String {
-    let result = bcrypt::hash(s, bcrypt::DEFAULT_COST);
+    let hash_cost = std::env::var("HASH_COST");
+    let hash_cost = match hash_cost {
+        Ok(hash_cost) => hash_cost.parse::<u32>().unwrap(),
+        Err(_) => panic!("Cannot found hash cost"),
+    };
+    let result = bcrypt::hash(s, hash_cost);
     match result {
         Ok(result) => {
             return result;
         }
         Err(_) => return "Failed to hash".to_string(),
     }
+}
+
+//Function used to fetch the secret key from the environment variable
+pub fn fetch_secret_key() -> String {
+    let secret_key = std::env::var("SECRET_KEY");
+    match secret_key {
+        Ok(_) => return secret_key.unwrap(),
+        Err(_) => panic!("Cannot found secret key"),
+    }
+}
+
+pub fn validate_token(username: String, token: &str) -> bool {
+    let binding = fetch_secret_key();
+    let secret_key = binding.as_bytes();
+    let mut validation = Validation::new(Algorithm::HS256);
+    // Set to check the audience of the token
+    validation.set_audience(&["www.example.com"]);
+    // Set to check the subject of the token
+    validation.sub = Some(username);
+    let token_data =
+        match decode::<Claims>(&token, &DecodingKey::from_secret(secret_key), &validation) {
+            Ok(_) => return true,
+            Err(_) => return false,
+        };
 }
 
 impl UserService {
@@ -110,11 +150,13 @@ impl UserService {
             }
             let header = Header::new(Algorithm::HS256);
             let claims = Claims {
-                username: user.username.to_owned(),
-                password: user.password.to_owned(),
+                sub: user.username.to_owned(),
+                // TODO: change the expiration time time request + amount of time and add audience address
                 exp: 10000000000,
+                aud: "www.example.com".to_string(),
             };
-            let secret_key = "secret";
+            let binding = fetch_secret_key();
+            let secret_key = binding.as_bytes();
             if let Ok(token) = encode(
                 &header,
                 &claims,
@@ -135,11 +177,13 @@ impl UserService {
             }
             let header = Header::new(Algorithm::HS256);
             let claims = Claims {
-                username: user.username.to_owned(),
-                password: user.password.to_owned(),
+                sub: user.username.to_owned(),
+                // TODO: change the expiration time to time request + amount of time and add audience address
                 exp: 10000000000,
+                aud: "www.example.com".to_string(),
             };
-            let secret_key = "secret";
+            let binding = fetch_secret_key();
+            let secret_key = binding.as_bytes();
             if let Ok(token) = encode(
                 &header,
                 &claims,
