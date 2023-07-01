@@ -153,6 +153,7 @@ pub fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
 
 #[tokio::test]
 async fn register_user_test() {
+    dotenv::dotenv().ok();
     let mut db = MockDatabase {
         users: Mutex::new(Vec::new()),
     };
@@ -191,6 +192,7 @@ async fn register_user_test() {
 
 #[tokio::test]
 async fn authenticate_user_test() {
+    dotenv::dotenv().ok();
     let mut db = MockDatabase {
         users: Mutex::new(Vec::new()),
     };
@@ -212,9 +214,5 @@ async fn authenticate_user_test() {
         &jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::HS256),
     )
     .unwrap();
-    assert_eq!(token_data.claims.username, "test_user");
-    assert_eq!(
-        bcrypt::verify("test_password", &token_data.claims.password).unwrap(),
-        true
-    );
+    assert_eq!(token_data.claims.sub, "test_user");
 }
