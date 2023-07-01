@@ -8,6 +8,7 @@ pub mod data_source;
 pub mod graphql;
 pub mod models;
 pub mod services;
+pub mod filters;
 
 #[derive(Clone)]
 pub struct State {
