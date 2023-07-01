@@ -13,20 +13,30 @@ use super::super::ResourceIdentifier;
 
 pub struct UserService;
 
-//The struct Claims is used to store the data of the token needed to authenticate services
+/// The struct Claims is used to store
+/// the data of the token needed to authenticate services
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
-    // sub is the subject of the token, here we choose to use the username since it is unique
+    /// sub is the subject of the token,
+    /// here we choose to use the username since it is unique
     pub sub: String,
-    // exp is the expiration time of the token from 1-1-1970, count in seconds
+    /// exp is the expiration time of the token
+    /// from 1-1-1970, count in seconds
     pub exp: usize,
-    // aud is the audience of the token, here we choose to use the website url
+    /// aud is the audience of the token,
+    /// here we choose to use the website url
     pub aud: String,
 }
 
-//Function will receive a password as a string and return a hashed password as a string for security
+/// Function will receive a password as a string
+/// and return a hashed password as a string for security
 pub fn hash_password(s: String) -> String {
-    let result = bcrypt::hash(s, bcrypt::DEFAULT_COST);
+    let hash_cost = std::env::var("HASH_COST");
+    let hash_cost = match hash_cost {
+        Ok(hash_cost) => hash_cost.parse::<u32>().unwrap(),
+        Err(_) => panic!("Cannot found hash cost"),
+    };
+    let result = bcrypt::hash(s, hash_cost);
     match result {
         Ok(result) => {
             return result;
@@ -141,6 +151,7 @@ impl UserService {
             let header = Header::new(Algorithm::HS256);
             let claims = Claims {
                 sub: user.username.to_owned(),
+                // TODO: change the expiration time time request + amount of time and add audience address
                 exp: 10000000000,
                 aud: "www.example.com".to_string(),
             };
@@ -167,6 +178,7 @@ impl UserService {
             let header = Header::new(Algorithm::HS256);
             let claims = Claims {
                 sub: user.username.to_owned(),
+                // TODO: change the expiration time to time request + amount of time and add audience address
                 exp: 10000000000,
                 aud: "www.example.com".to_string(),
             };
