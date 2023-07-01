@@ -12,6 +12,8 @@ use crate::{
 use super::super::ResourceIdentifier;
 
 pub struct UserService;
+
+//The struct Claims is used to store the data of the token needed to authenticate services
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     // sub is the subject of the token, here we choose to use the username since it is unique
@@ -22,6 +24,7 @@ pub struct Claims {
     pub aud: String,
 }
 
+//Function will receive a password as a string and return a hashed password as a string for security
 pub fn hash_password(s: String) -> String {
     let result = bcrypt::hash(s, bcrypt::DEFAULT_COST);
     match result {
@@ -32,8 +35,18 @@ pub fn hash_password(s: String) -> String {
     }
 }
 
+//Function used to fetch the secret key from the environment variable
+pub fn fetch_secret_key() -> String {
+    let secret_key = std::env::var("SECRET_KEY");
+    match secret_key {
+        Ok(_) => return secret_key.unwrap(),
+        Err(_) => panic!("Cannot found secret key"),
+    }
+}
+
 pub fn validate_token(username: String, token: &str) -> bool {
-    let secret_key = b"secret";
+    let binding = fetch_secret_key();
+    let secret_key = binding.as_bytes();
     let mut validation = Validation::new(Algorithm::HS256);
     // Set to check the audience of the token
     validation.set_audience(&["www.example.com"]);
@@ -131,7 +144,8 @@ impl UserService {
                 exp: 10000000000,
                 aud: "www.example.com".to_string(),
             };
-            let secret_key = "secret";
+            let binding = fetch_secret_key();
+            let secret_key = binding.as_bytes();
             if let Ok(token) = encode(
                 &header,
                 &claims,
@@ -156,7 +170,8 @@ impl UserService {
                 exp: 10000000000,
                 aud: "www.example.com".to_string(),
             };
-            let secret_key = "secret";
+            let binding = fetch_secret_key();
+            let secret_key = binding.as_bytes();
             if let Ok(token) = encode(
                 &header,
                 &claims,

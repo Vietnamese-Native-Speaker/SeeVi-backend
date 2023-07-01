@@ -187,6 +187,7 @@ async fn register_user_test() {
 
 #[tokio::test]
 async fn authenticate_user_test() {
+    dotenv::dotenv().ok();
     let mut db = MockDatabase {
         users: Mutex::new(Vec::new()),
     };
