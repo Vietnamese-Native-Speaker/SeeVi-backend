@@ -1,16 +1,13 @@
-use async_graphql::ParseRequestError;
-use async_graphql::{http::GraphiQLSource, EmptySubscription, Schema};
-use seevi_backend::filters::{self, with_auth_header, graphql_sdl};
+use async_graphql::{EmptySubscription, Schema};
+use seevi_backend::filters::{self, graphql_sdl, with_auth_header};
 use seevi_backend::{data_source::mongo, graphql::mutation::Mutation};
-use std::convert::Infallible;
-use warp::path;
-use warp::reject::{self, Reject};
-
 use seevi_backend::graphql::query::Query;
+use std::convert::Infallible;
+
 
 use async_graphql_warp::{GraphQLBadRequest, GraphQLResponse};
 use warp::http::StatusCode;
-use warp::{http::Response as HttpResponse, Filter, Rejection};
+use warp::{Filter, Rejection};
 
 #[tokio::main]
 async fn main() {

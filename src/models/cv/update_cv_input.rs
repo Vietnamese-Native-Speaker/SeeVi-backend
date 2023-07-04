@@ -2,8 +2,6 @@ use async_graphql::InputObject;
 use mongodb::bson::Uuid;
 use serde::{Deserialize, Serialize};
 
-use crate::models::{education::Education, ResourceIdentifier};
-
 #[derive(Serialize, Deserialize, Clone, InputObject, Builder, Default)]
 #[builder(
     pattern = "owned",
@@ -11,7 +9,7 @@ use crate::models::{education::Education, ResourceIdentifier};
 )]
 pub struct UpdateCVInput {
     #[builder(default)]
-    pub _id: Uuid,
+    pub id: Uuid,
     #[builder(default)]
     pub author_id: Uuid,
     #[builder(default)]

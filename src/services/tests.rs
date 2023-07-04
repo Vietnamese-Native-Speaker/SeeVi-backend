@@ -3,7 +3,7 @@ use crate::data_source::user_data_source_error::UserDataSourceError;
 use crate::models::education::Education;
 use crate::models::users::create_user_input::CreateUserInputBuilder;
 use crate::models::users::user::Level;
-use crate::models::users::{self, CreateUserInput, UpdateUserInput, User};
+use crate::models::users::{CreateUserInput, UpdateUserInput, User};
 use crate::services::user_service::Claims;
 use crate::services::user_service::UserService;
 use async_trait::async_trait;
@@ -34,7 +34,7 @@ impl UserDataSource for MockDatabase {
         Err(UserDataSourceError::EmailNotFound(email.to_string()))
     }
     async fn get_user_by_id(&self, id: Uuid) -> Result<User, UserDataSourceError> {
-        let mut users = self.users.lock().unwrap();
+        let users = self.users.lock().unwrap();
         for user in users.iter() {
             if user.user_id == id {
                 return Ok(user.clone());

@@ -2,7 +2,6 @@ use async_graphql::*;
 
 use crate::{
     data_source::mongo::MongoDB,
-    models::users::User,
     services::{temp::temp_function, user_service::UserService},
 };
 

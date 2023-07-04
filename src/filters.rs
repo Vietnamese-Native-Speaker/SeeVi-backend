@@ -1,10 +1,10 @@
 use std::convert::Infallible;
 
 use async_graphql::{
-    http::GraphiQLSource, EmptySubscription, ObjectType, Schema, SubscriptionType,
+    http::GraphiQLSource, EmptySubscription, Schema,
 };
-use async_graphql_warp::{GraphQLBadRequest, GraphQLResponse};
-use warp::{http, hyper::StatusCode, reject::Reject, Filter, Rejection};
+use async_graphql_warp::GraphQLResponse;
+use warp::{http, reject::Reject, Filter, Rejection};
 
 use crate::graphql::{mutation::Mutation, query::Query};
 

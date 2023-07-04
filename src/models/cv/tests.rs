@@ -67,14 +67,14 @@ fn test_update_cv() {
     let id = Uuid::new();
     let author_id = Uuid::new();
     let test_cv_update = UpdateCVInputBuilder::default()
-        .with__id(id)
+        .with_id(id)
         .with_author_id(author_id)
         .with_description("description".to_string())
         .with_tags(vec!["tag1".to_string(), "tag2".to_string()])
         .with_title("title".to_string())
         .build()
         .unwrap();
-    assert_eq!(test_cv_update._id, id);
+    assert_eq!(test_cv_update.id, id);
     assert_eq!(test_cv_update.author_id, author_id);
     assert_eq!(test_cv_update.description, Some("description".to_string()));
 
@@ -84,4 +84,3 @@ fn test_update_cv() {
     );
     assert_eq!(test_cv_update.title, Some("title".to_string()));
 }
-
