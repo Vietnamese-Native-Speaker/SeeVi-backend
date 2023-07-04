@@ -131,7 +131,7 @@ impl UserService {
     }
     //Function will return a token as a string that can be used for authentication
     pub async fn authenticate(
-        database: &mut (impl UserDataSource + std::marker::Sync),
+        database: &(impl UserDataSource + std::marker::Sync),
         username: Option<String>,
         email: Option<String>,
         password: String,
