@@ -89,28 +89,7 @@ impl UserDataSource for MongoDB {
         input: users::CreateUserInput,
     ) -> Result<users::User, UserDataSourceError> {
         let collection = self.db.collection("users");
-        let user: users::User = users::User {
-            user_id: bson::Uuid::new(),
-            password: input.password,
-            username: input.username.clone(),
-            first_name: input.first_name,
-            last_name: input.last_name,
-            country: input.country,
-            skills: input.skills,
-            primary_email: input.primary_email,
-            other_mails: input.other_mails,
-            about: input.about,
-            avatar: input.avatar,
-            cover_photo: input.cover_photo,
-            education: input.education,
-            cv: vec![],
-            friends_list: vec![],
-            rating: None,
-            level: None,
-            shared_cvs: vec![],
-            saved_cvs: vec![],
-            liked_cvs: vec![],
-        };
+        let user: users::User = users::User::from(input.clone());
         let user_clone = user.clone();
         let filter = bson::doc! {"username" : input.username.clone()};
         let check_username_already_exist = collection.find_one(filter, None).await.expect("find one user failed");
