@@ -86,8 +86,6 @@ mod user_tests {
 
     #[test]
     fn test_user_id_not_found() {
-        use mongodb::bson::Uuid;
-
         let uuid = Uuid::new();
         let err = UserDataSourceError::UuidNotFound(uuid);
         assert_eq!(format!("{}", err), format!("Uuid {:?} not found", uuid));
@@ -186,5 +184,8 @@ fn test_wrong_email_username_or_password() {
     use super::user_data_source_error::UserDataSourceError;
 
     let err = UserDataSourceError::WrongEmailUsernameOrPassword;
-    assert_eq!(format!("{}", err), format!("Wrong email/username or password"));
+    assert_eq!(
+        format!("{}", err),
+        format!("Wrong email/username or password")
+    );
 }

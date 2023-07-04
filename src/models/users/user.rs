@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::models::{education::Education, ResourceIdentifier};
 
+use super::CreateUserInput;
+
 #[non_exhaustive]
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Enum, PartialEq, Eq)]
 pub enum Level {
@@ -34,5 +36,32 @@ pub struct User {
     pub shared_cvs: Vec<Uuid>,
     pub saved_cvs: Vec<Uuid>,
     pub liked_cvs: Vec<Uuid>,
+}
+
+impl From<CreateUserInput> for User {
+    fn from(input: CreateUserInput) -> Self {
+        Self {
+            user_id: Uuid::new(),
+            username: input.username,
+            password: input.password,
+            first_name: input.first_name,
+            last_name: input.last_name,
+            country: input.country,
+            skills: input.skills,
+            primary_email: input.primary_email,
+            other_mails: input.other_mails,
+            about: input.about,
+            avatar: input.avatar,
+            cover_photo: input.cover_photo,
+            education: input.education,
+            rating: input.rating,
+            level: input.level,
+            cv: Vec::default(),
+            shared_cvs: Vec::default(),
+            saved_cvs: Vec::default(),
+            liked_cvs: Vec::default(),
+            friends_list: Vec::default(),
+        }
+    }
 }
 
