@@ -34,7 +34,7 @@ pub fn hash_password(s: String) -> String {
     let hash_cost = std::env::var("HASH_COST");
     let hash_cost = match hash_cost {
         Ok(hash_cost) => hash_cost.parse::<u32>().unwrap(),
-        Err(_) => panic!("Cannot found hash cost"),
+        Err(_) => bcrypt::DEFAULT_COST,
     };
     let result = bcrypt::hash(s, hash_cost);
     match result {
