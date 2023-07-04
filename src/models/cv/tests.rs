@@ -1,9 +1,7 @@
 use mongodb::bson::Uuid;
 
-use crate::models::cv::{create_cv_input::CreateCVInputBuilder};
-use super::{CreateCVInput, update_cv_input::UpdateCVInputBuilder};
+use super::{update_cv_input::UpdateCVInputBuilder, CreateCVInput};
 use crate::models::cv::create_cv_input::CreateCVInputBuilder;
-use super::CreateCVInput;
 
 fn create_demo_cv_input(test_uuid: Uuid) -> CreateCVInput {
     CreateCVInputBuilder::default()
@@ -43,10 +41,10 @@ fn test_create_cv_input_tag() {
     assert_eq!(test_cv_input.tags, vec!["tag".to_string()]);
 }
 
-#[test] 
+#[test]
 fn test_cv_from_input() {
-    use mongodb::bson::Uuid;
     use crate::models::cv::cv::CV;
+    use mongodb::bson::Uuid;
     let uuid = Uuid::new();
     let test_cv_input = CreateCVInputBuilder::default()
         .with_author_id(uuid)
@@ -54,12 +52,12 @@ fn test_cv_from_input() {
         .with_tag("tag".to_string())
         .build()
         .unwrap();
-      let test_cv = CV::from(test_cv_input);
+    assert_eq!(test_cv_input.tags, vec!["tag".to_string()]);
+    let test_cv = CV::from(test_cv_input);
     assert_eq!(test_cv.author_id, uuid);
     assert_eq!(test_cv.title, "title".to_string());
     assert_eq!(test_cv.tags, vec!["tag".to_string()]);
     assert_eq!(test_cv.description, None);
-    assert_eq!(test_cv_input.tags, vec!["tag".to_string()]);
     assert_eq!(test_cv.comments, Vec::default());
     assert!(test_cv.cv.is_some());
 }
@@ -79,7 +77,11 @@ fn test_update_cv() {
     assert_eq!(test_cv_update._id, id);
     assert_eq!(test_cv_update.author_id, author_id);
     assert_eq!(test_cv_update.description, Some("description".to_string()));
-  
-    assert_eq!(test_cv_update.tags, Some(vec!["tag1".to_string(), "tag2".to_string()]));
+
+    assert_eq!(
+        test_cv_update.tags,
+        Some(vec!["tag1".to_string(), "tag2".to_string()])
+    );
     assert_eq!(test_cv_update.title, Some("title".to_string()));
 }
+
