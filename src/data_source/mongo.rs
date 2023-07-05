@@ -38,9 +38,7 @@ impl MongoDB {
         MongoDB { client, db }
     }
 
-    #[cfg(test)]
     pub async fn init_test() -> MongoDB {
-
         let mut client_options = ClientOptions::parse("mongodb://127.0.0.1:27017")
             .await
             .expect("Failed to parse options!");
