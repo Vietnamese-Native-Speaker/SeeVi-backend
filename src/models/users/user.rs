@@ -18,6 +18,7 @@ pub enum Level {
 pub struct User {
     pub user_id: Uuid,
     pub username: String,
+    #[graphql(skip)]
     pub password: String,
     pub first_name: String,
     pub last_name: String,
