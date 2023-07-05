@@ -99,28 +99,7 @@ impl UserDataSource for MockDatabase {
 
     async fn create_user(&self, _input: CreateUserInput) -> Result<User, UserDataSourceError> {
         let mut users = self.users.lock().unwrap();
-        let user = User {
-            user_id: Uuid::new(),
-            username: _input.username,
-            password: _input.password,
-            first_name: _input.first_name,
-            last_name: _input.last_name,
-            country: _input.country,
-            skills: _input.skills,
-            primary_email: _input.primary_email,
-            other_mails: _input.other_mails,
-            about: _input.about,
-            avatar: _input.avatar,
-            cover_photo: _input.cover_photo,
-            friends_list: Vec::new(),
-            education: _input.education,
-            cv: vec![Uuid::new()],
-            rating: _input.rating,
-            level: Some(Level::Fresher),
-            shared_cvs: vec![Uuid::new()],
-            saved_cvs: vec![Uuid::new()],
-            liked_cvs: vec![Uuid::new()],
-        };
+        let user = User::from(_input);
         users.push(user.clone());
         Ok(user)
     }

@@ -13,8 +13,11 @@ use super::user::Level;
 pub struct CreateUserInput {
     pub username: String,
     pub password: String,
-    pub first_name: String,
-    pub last_name: String,
+    #[builder(default)]
+    pub first_name: Option<String>,
+    #[builder(default)]
+    pub last_name: Option<String>,
+    #[builder(default)]
     pub country: Option<String>,
     #[builder(setter(custom), field(type = "Vec<String>"))]
     pub skills: Vec<String>,

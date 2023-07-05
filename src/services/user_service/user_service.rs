@@ -34,7 +34,7 @@ pub fn hash_password(s: String) -> String {
     let hash_cost = std::env::var("HASH_COST");
     let hash_cost = match hash_cost {
         Ok(hash_cost) => hash_cost.parse::<u32>().unwrap(),
-        Err(_) => panic!("Cannot found hash cost"),
+        Err(_) => bcrypt::DEFAULT_COST,
     };
     let result = bcrypt::hash(s, hash_cost);
     match result {
@@ -45,7 +45,7 @@ pub fn hash_password(s: String) -> String {
     }
 }
 
-/// Function used to fetch the secret key from the environment variable
+/// Fetch the secret key from the environment variable
 pub fn fetch_secret_key() -> String {
     let secret_key = std::env::var("SECRET_KEY");
     match secret_key {
@@ -54,6 +54,8 @@ pub fn fetch_secret_key() -> String {
     }
 }
 
+/// Receive a username as a string and a token as a string
+/// and return a boolean value to indicate whether the token is valid
 pub fn validate_token(username: String, token: &str) -> bool {
     let binding = fetch_secret_key();
     let secret_key = binding.as_bytes();
@@ -81,10 +83,15 @@ pub fn decode_token(token: &str) -> Option<Claims> {
 }
 
 impl UserService {
+    /// Receive user input as CreateUserInput struct
+    /// to register a new user on the database and return the user
+    // TODO: add register by email, add checking for invalid characters
     pub async fn register(
         database: &(impl UserDataSource + std::marker::Sync),
         user_input: CreateUserInput,
     ) -> Result<User, UserDataSourceError> {
+        /// Function will check whether the input string contains invalid characters
+        // TODO: re-consider the invalid characters
         fn check_invalid_characters(s: &str) -> bool {
             if s.len() == 0 {
                 return true;
@@ -141,7 +148,9 @@ impl UserService {
         }
     }
 
-    /// Function will return a token as a string that can be used for authentication
+    /// Authenticate a user
+    /// Return a token as a string if the authentication is successful
+    /// otherwise return an error
     pub async fn authenticate(
         database: &(impl UserDataSource + std::marker::Sync),
         username: Option<String>,
@@ -209,7 +218,8 @@ impl UserService {
         return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
     }
 
-    /// Forget password = change password
+    /// Change the password of the user with the given id
+    /// and return the user with the new password
     pub async fn change_password(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -266,6 +276,9 @@ impl UserService {
         }
     }
 
+    /// Receive a user id and a new email as a string
+    /// and will change the email of the user with the given id
+    /// and return the user with the new email
     pub async fn change_primary_email(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -291,6 +304,9 @@ impl UserService {
         }
     }
 
+    /// Receive a user id and new other mails as a vector of strings
+    /// and update the other mails of the user with the given id
+    /// and return the user with the new other mails
     pub async fn change_other_mails(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -316,6 +332,9 @@ impl UserService {
         }
     }
 
+    /// Receive a user id and a new username as a string
+    /// and will change the username of the user with the given id
+    /// and return the user with the new username
     pub async fn change_username(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -341,6 +360,9 @@ impl UserService {
         }
     }
 
+    /// Receive a user id and a new first name + last name as a string
+    /// and will change the name of the user with the given id
+    /// and return the user with the new name
     pub async fn change_name(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -368,6 +390,9 @@ impl UserService {
         }
     }
 
+    /// Receive a user id and a new country as a string
+    /// and will change the country of the user with the given id
+    /// and return the user with the new country
     pub async fn change_country(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -418,6 +443,9 @@ impl UserService {
         }
     }
 
+    /// Receive a user id and a new cv Uuid
+    /// and will add the cv to the user with the given id
+    /// and return the user with the new cv
     pub async fn add_cv(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -426,6 +454,9 @@ impl UserService {
         todo!()
     }
 
+    /// Receive a user id and a cv Uuid
+    /// and will remove the cv from the user with the given id
+    /// and return the user without the cv
     pub async fn remove_cv(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -434,6 +465,9 @@ impl UserService {
         todo!()
     }
 
+    /// Receive a user id and a new about as a string
+    /// and will change the about of the user with the given id
+    /// and return the user with the new about
     pub async fn change_about(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -459,6 +493,9 @@ impl UserService {
         }
     }
 
+    /// Receive a user id and a new avatar Uuid
+    /// and will change the avatar of the user with the given id
+    /// and return the user with the new avatar
     pub async fn change_avatar(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -484,6 +521,9 @@ impl UserService {
         }
     }
 
+    /// Receive a user id and a new cover photo Uuid
+    /// and will change the cover photo of the user with the given id
+    /// and return the user with the new cover photo
     pub async fn change_cover_photo(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -509,6 +549,9 @@ impl UserService {
         }
     }
 
+    /// Receive a user id and a new friend list
+    /// and will change the friend list of the user with the given id
+    /// and return the user with the new friend list
     pub async fn update_friend_list(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -534,6 +577,9 @@ impl UserService {
         }
     }
 
+    /// Receive a user id and a new education list
+    /// and will change the education list of the user with the given id
+    /// and return the user with the new education list
     pub async fn update_education(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
