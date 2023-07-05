@@ -1,108 +1,10 @@
-use crate::data_source::user_data_source::UserDataSource;
-use crate::data_source::user_data_source_error::UserDataSourceError;
+use super::super::tests::MockDatabase;
 use crate::models::education::Education;
 use crate::models::users::create_user_input::CreateUserInputBuilder;
 use crate::models::users::{CreateUserInput, UpdateUserInput, User};
 use crate::services::auth_service::{AuthService, Claims};
-use async_trait::async_trait;
 use mongodb::bson::Uuid;
 use std::sync::Mutex;
-
-struct MockDatabase {
-    users: Mutex<Vec<User>>,
-}
-
-#[async_trait]
-impl UserDataSource for MockDatabase {
-    async fn get_user_by_username(&self, username: &str) -> Result<User, UserDataSourceError> {
-        let users = self.users.lock().unwrap();
-        for user in users.iter() {
-            if user.username == username {
-                return Ok(user.clone());
-            }
-        }
-        Err(UserDataSourceError::UsernameNotFound(username.to_string()))
-    }
-    async fn get_user_by_email(&self, email: &str) -> Result<User, UserDataSourceError> {
-        let users = self.users.lock().unwrap();
-        for user in users.iter() {
-            if user.primary_email == email {
-                return Ok(user.clone());
-            }
-        }
-        Err(UserDataSourceError::EmailNotFound(email.to_string()))
-    }
-    async fn get_user_by_id(&self, id: Uuid) -> Result<User, UserDataSourceError> {
-        let users = self.users.lock().unwrap();
-        for user in users.iter() {
-            if user.user_id == id {
-                return Ok(user.clone());
-            }
-        }
-        Err(UserDataSourceError::UuidNotFound(id.clone()))
-    }
-    async fn update_user_info(
-        &self,
-        updated_user: UpdateUserInput,
-    ) -> Result<User, UserDataSourceError> {
-        let mut users = self.users.lock().unwrap();
-        for user in users.iter_mut() {
-            if user.user_id == updated_user.user_id {
-                user.username = updated_user
-                    .username
-                    .clone()
-                    .unwrap_or(user.username.clone());
-                user.password = updated_user
-                    .password
-                    .clone()
-                    .unwrap_or(user.password.clone());
-                user.first_name = updated_user
-                    .first_name
-                    .clone()
-                    .unwrap_or(user.first_name.clone());
-                user.last_name = updated_user
-                    .last_name
-                    .clone()
-                    .unwrap_or(user.last_name.clone());
-                user.country = updated_user.country.clone().or(user.country.clone());
-                user.skills = updated_user.skills.clone().unwrap_or(user.skills.clone());
-                user.primary_email = updated_user
-                    .primary_email
-                    .clone()
-                    .unwrap_or(user.primary_email.clone());
-                user.other_mails = updated_user
-                    .other_mails
-                    .clone()
-                    .unwrap_or(user.other_mails.clone());
-                user.about = updated_user.about.clone().or(user.about.clone());
-                user.avatar = updated_user.avatar.clone().or(user.avatar.clone());
-                user.cover_photo = updated_user
-                    .cover_photo
-                    .clone()
-                    .or(user.cover_photo.clone());
-                user.friends_list = updated_user
-                    .friends_list
-                    .clone()
-                    .unwrap_or(user.friends_list.clone());
-                user.education = updated_user
-                    .education
-                    .clone()
-                    .unwrap_or(user.education.clone());
-                return Ok(user.clone());
-            }
-        }
-        return Err(UserDataSourceError::UuidNotFound(
-            updated_user.user_id.clone(),
-        ));
-    }
-
-    async fn create_user(&self, _input: CreateUserInput) -> Result<User, UserDataSourceError> {
-        let mut users = self.users.lock().unwrap();
-        let user = User::from(_input);
-        users.push(user.clone());
-        Ok(user)
-    }
-}
 
 pub fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
     let demo = CreateUserInputBuilder::default()
@@ -130,11 +32,20 @@ pub fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
 }
 
 #[tokio::test]
+async fn duplicate_register_user_test() {
+    dotenv::dotenv().ok();
+    let mut db = MockDatabase::new();
+    let uuid = Uuid::new();
+    let user = create_demo_user_input(uuid);
+    let user_clone = user.clone();
+    AuthService::register(&mut db, user).await.unwrap();
+    AuthService::register(&mut db, user_clone).await.expect_err("Should fail to register duplicate user");
+}
+
+#[tokio::test]
 async fn register_user_test() {
     dotenv::dotenv().ok();
-    let mut db = MockDatabase {
-        users: Mutex::new(Vec::new()),
-    };
+    let mut db = MockDatabase::new();
     let uuid = Uuid::new();
     let user = create_demo_user_input(uuid);
     let user2 = AuthService::register(&mut db, user).await.unwrap();
@@ -171,9 +82,7 @@ async fn register_user_test() {
 #[tokio::test]
 async fn authenticate_user_test() {
     dotenv::dotenv().ok();
-    let mut db = MockDatabase {
-        users: Mutex::new(Vec::new()),
-    };
+    let mut db = MockDatabase::new();
     let uuid = Uuid::new();
     let user = create_demo_user_input(uuid);
     let user2 = AuthService::register(&mut db, user).await.unwrap();
@@ -193,4 +102,23 @@ async fn authenticate_user_test() {
     )
     .unwrap();
     assert_eq!(token_data.claims.sub, "test_user");
+}
+
+#[tokio::test]
+async fn invalid_authenticate() {
+    dotenv::dotenv().ok();
+    let mut db = MockDatabase::new();
+    let uuid = Uuid::new();
+    let user = create_demo_user_input(uuid);
+    let user2 = AuthService::register(&mut db, user).await.unwrap();
+    let _key = b"secret";
+    let _token = AuthService::authenticate(
+        &mut db,
+        Some(user2.username),
+        None,
+        // Introduce wrong password
+        "test_password123".to_string(),
+    )
+    .await
+    .expect_err("Should return error due to wrong password");
 }
