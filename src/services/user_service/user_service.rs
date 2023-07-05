@@ -45,7 +45,7 @@ pub fn hash_password(s: String) -> String {
     }
 }
 
-//Function used to fetch the secret key from the environment variable
+/// Function used to fetch the secret key from the environment variable
 pub fn fetch_secret_key() -> String {
     let secret_key = std::env::var("SECRET_KEY");
     match secret_key {
@@ -67,6 +67,17 @@ pub fn validate_token(username: String, token: &str) -> bool {
             Ok(_) => return true,
             Err(_) => return false,
         };
+}
+
+pub fn decode_token(token: &str) -> Option<Claims> {
+    let binding = fetch_secret_key();
+    let secret_key = binding.as_bytes();
+    let mut validation = Validation::new(Algorithm::HS256);
+    validation.set_audience(&["www.example.com"]);
+    match decode::<Claims>(&token, &DecodingKey::from_secret(secret_key), &validation) {
+        Ok(token) => Some(token.claims),
+        Err(_) => None,
+    }
 }
 
 impl UserService {
@@ -129,7 +140,8 @@ impl UserService {
             }
         }
     }
-    //Function will return a token as a string that can be used for authentication
+
+    /// Function will return a token as a string that can be used for authentication
     pub async fn authenticate(
         database: &(impl UserDataSource + std::marker::Sync),
         username: Option<String>,
@@ -196,7 +208,8 @@ impl UserService {
         }
         return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
     }
-    //Forget password = change password
+
+    /// Forget password = change password
     pub async fn change_password(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -222,6 +235,37 @@ impl UserService {
             }
         }
     }
+
+    pub async fn get_user_by_id(
+        database: &(impl UserDataSource + std::marker::Sync),
+        user_id: ResourceIdentifier,
+    ) -> Result<User, UserDataSourceError> {
+        let user = database.get_user_by_id(user_id).await;
+        match user {
+            Ok(user) => {
+                return Ok(user);
+            }
+            Err(_) => {
+                return Err(UserDataSourceError::UuidNotFound(user_id));
+            }
+        }
+    }
+
+    pub async fn get_user_by_username(
+        database: &(impl UserDataSource + std::marker::Sync),
+        username: String,
+    ) -> Result<User, UserDataSourceError> {
+        let user = database.get_user_by_username(&username).await;
+        match user {
+            Ok(user) => {
+                return Ok(user);
+            }
+            Err(_) => {
+                return Err(UserDataSourceError::UsernameNotFound(username));
+            }
+        }
+    }
+
     pub async fn change_primary_email(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -246,6 +290,7 @@ impl UserService {
             }
         }
     }
+
     pub async fn change_other_mails(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -270,6 +315,7 @@ impl UserService {
             }
         }
     }
+
     pub async fn change_username(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -294,6 +340,7 @@ impl UserService {
             }
         }
     }
+
     pub async fn change_name(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -320,6 +367,7 @@ impl UserService {
             }
         }
     }
+
     pub async fn change_country(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -344,6 +392,7 @@ impl UserService {
             }
         }
     }
+
     pub async fn change_skills(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -368,6 +417,7 @@ impl UserService {
             }
         }
     }
+
     pub async fn add_cv(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -375,6 +425,7 @@ impl UserService {
     ) -> Result<User, UserDataSourceError> {
         todo!()
     }
+
     pub async fn remove_cv(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -382,6 +433,7 @@ impl UserService {
     ) -> Result<User, UserDataSourceError> {
         todo!()
     }
+
     pub async fn change_about(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -406,6 +458,7 @@ impl UserService {
             }
         }
     }
+
     pub async fn change_avatar(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -430,6 +483,7 @@ impl UserService {
             }
         }
     }
+
     pub async fn change_cover_photo(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -454,6 +508,7 @@ impl UserService {
             }
         }
     }
+
     pub async fn update_friend_list(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
@@ -478,6 +533,7 @@ impl UserService {
             }
         }
     }
+
     pub async fn update_education(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
