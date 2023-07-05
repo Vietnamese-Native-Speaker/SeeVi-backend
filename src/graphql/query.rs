@@ -3,13 +3,8 @@ use async_graphql::*;
 use crate::{
     data_source::mongo::MongoDB,
     models::users::User,
-    services::{
-        temp::temp_function,
-        user_service::{self, UserService},
-    },
+    services::{user_service::UserService, auth_service::AuthService},
 };
-
-use log::info;
 
 pub struct Query;
 
@@ -24,7 +19,7 @@ impl Query {
     async fn login(&self, ctx: &Context<'_>, login_info: LoginInfo) -> Result<String> {
         let db = ctx.data_unchecked::<MongoDB>();
         let rs =
-            UserService::authenticate(db, Some(login_info.username), None, login_info.password)
+            AuthService::authenticate(db, Some(login_info.username), None, login_info.password)
                 .await;
         match rs {
             Ok(token) => Ok(token),
@@ -39,7 +34,7 @@ impl Query {
             Some(token) => token,
             None => return Err("No token provided".into()),
         };
-        let rs = user_service::decode_token(token);
+        let rs = AuthService::decode_token(token);
         let claims = match rs {
             Some(claims) => claims,
             None => return Err("Invalid token".into()),
@@ -49,15 +44,5 @@ impl Query {
             Ok(user) => Ok(user),
             Err(e) => Err(e.into()),
         }
-    }
-
-    async fn placeholder_query(&self, ctx: &Context<'_>) -> Result<String> {
-        let auth = ctx.data::<String>();
-        match auth {
-            Ok(auth) => println!("Auth: {}", auth),
-            Err(e) => info!("Error: {:?}", e),
-        }
-        let db = ctx.data_unchecked::<MongoDB>().db.clone();
-        temp_function(db).await
     }
 }
