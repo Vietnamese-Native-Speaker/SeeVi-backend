@@ -71,6 +71,17 @@ pub fn validate_token(username: String, token: &str) -> bool {
         };
 }
 
+pub fn decode_token(token: &str) -> Option<Claims> {
+    let binding = fetch_secret_key();
+    let secret_key = binding.as_bytes();
+    let mut validation = Validation::new(Algorithm::HS256);
+    validation.set_audience(&["www.example.com"]);
+    match decode::<Claims>(&token, &DecodingKey::from_secret(secret_key), &validation) {
+        Ok(token) => Some(token.claims),
+        Err(_) => None,
+    }
+}
+
 impl UserService {
     /// Receive user input as CreateUserInput struct
     /// to register a new user on the database and return the user
@@ -235,6 +246,36 @@ impl UserService {
         }
     }
 
+    pub async fn get_user_by_id(
+        database: &(impl UserDataSource + std::marker::Sync),
+        user_id: ResourceIdentifier,
+    ) -> Result<User, UserDataSourceError> {
+        let user = database.get_user_by_id(user_id).await;
+        match user {
+            Ok(user) => {
+                return Ok(user);
+            }
+            Err(_) => {
+                return Err(UserDataSourceError::UuidNotFound(user_id));
+            }
+        }
+    }
+
+    pub async fn get_user_by_username(
+        database: &(impl UserDataSource + std::marker::Sync),
+        username: String,
+    ) -> Result<User, UserDataSourceError> {
+        let user = database.get_user_by_username(&username).await;
+        match user {
+            Ok(user) => {
+                return Ok(user);
+            }
+            Err(_) => {
+                return Err(UserDataSourceError::UsernameNotFound(username));
+            }
+        }
+    }
+
     /// Receive a user id and a new email as a string
     /// and will change the email of the user with the given id
     /// and return the user with the new email
@@ -376,6 +417,7 @@ impl UserService {
             }
         }
     }
+
     pub async fn change_skills(
         database: &mut (impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,

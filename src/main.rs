@@ -4,7 +4,6 @@ use seevi_backend::{data_source::mongo, graphql::mutation::Mutation};
 use seevi_backend::graphql::query::Query;
 use std::convert::Infallible;
 
-
 use async_graphql_warp::{GraphQLBadRequest, GraphQLResponse};
 use warp::http::StatusCode;
 use warp::{Filter, Rejection};
