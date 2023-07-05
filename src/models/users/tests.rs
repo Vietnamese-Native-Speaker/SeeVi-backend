@@ -36,28 +36,7 @@ fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
 }
 
 fn create_demo_user(test_user_input: CreateUserInput) -> User {
-    User {
-        user_id: Uuid::new(),
-        username: test_user_input.username,
-        password: test_user_input.password,
-        first_name: test_user_input.first_name,
-        last_name: test_user_input.last_name,
-        country: test_user_input.country,
-        skills: test_user_input.skills,
-        primary_email: test_user_input.primary_email,
-        other_mails: test_user_input.other_mails,
-        about: test_user_input.about,
-        education: test_user_input.education,
-        avatar: test_user_input.avatar,
-        cover_photo: test_user_input.cover_photo,
-        rating: test_user_input.rating,
-        level: test_user_input.level,
-        shared_cvs: Vec::default(),
-        saved_cvs: Vec::default(),
-        liked_cvs: Vec::default(),
-        friends_list: Vec::default(),
-        cv: Vec::default(),
-    }
+    User::from(test_user_input)
 }
 
 #[test]
