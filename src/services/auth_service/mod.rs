@@ -173,8 +173,15 @@ impl AuthService {
                 return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
             }
             let user = user.unwrap();
-            if let Err(_) = bcrypt::verify(password, user.password.as_str()) {
-                return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
+            let result = bcrypt::verify(password, &user.password);
+            match result {
+                Ok(true) => {}
+                Ok(false) => {
+                    return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
+                }
+                Err(_) => {
+                    return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
+                }
             }
             let header = jsonwebtoken::Header::new(Algorithm::HS256);
             let claims = Claims {
