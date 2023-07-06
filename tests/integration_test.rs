@@ -21,7 +21,7 @@ async fn register_and_login() {
     let routes = default_route(schema);
 
     make_register_request("ltp", "ltp", &routes).await;
-    let token = make_login_request("ltp", "ltp1405", &routes).await;
+    let token = make_login_request("ltp", "ltp", &routes).await;
     print_json(&token);
     let token = token
         .get("data")
