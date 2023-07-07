@@ -37,13 +37,8 @@ impl AuthService {
             Ok(hash_cost) => hash_cost.parse::<u32>().unwrap(),
             Err(_) => bcrypt::DEFAULT_COST,
         };
-        let result = bcrypt::hash(s, hash_cost);
-        match result {
-            Ok(result) => {
-                return result;
-            }
-            Err(_) => return "Failed to hash".to_string(),
-        }
+        let result = bcrypt::hash(s, hash_cost).expect("Hashing failed");
+        result
     }
 
     /// Fetch the secret key from the environment variable
@@ -173,7 +168,9 @@ impl AuthService {
                 return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
             }
             let user = user.unwrap();
-            if let Err(_) = bcrypt::verify(password, user.password.as_str()) {
+            let correct =
+                bcrypt::verify(password, &user.password).expect("Error verifying password");
+            if !correct {
                 return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
             }
             let header = jsonwebtoken::Header::new(Algorithm::HS256);

@@ -39,7 +39,9 @@ async fn duplicate_register_user_test() {
     let user = create_demo_user_input(uuid);
     let user_clone = user.clone();
     AuthService::register(&mut db, user).await.unwrap();
-    AuthService::register(&mut db, user_clone).await.expect_err("Should fail to register duplicate user");
+    AuthService::register(&mut db, user_clone)
+        .await
+        .expect_err("Should fail to register duplicate user");
 }
 
 #[tokio::test]
@@ -111,7 +113,6 @@ async fn invalid_authenticate() {
     let uuid = Uuid::new();
     let user = create_demo_user_input(uuid);
     let user2 = AuthService::register(&mut db, user).await.unwrap();
-    let _key = b"secret";
     let _token = AuthService::authenticate(
         &mut db,
         Some(user2.username),
