@@ -25,18 +25,18 @@ async fn register_and_login() {
     let login_result = make_login_request("ltp", "ltp", &routes).await;
     let access_token = login_result
         .get("data")
-        .unwrap()
+        .expect("should have error data")
         .get("access")
-        .unwrap()
+        .expect("should have error access token")
         .as_str()
         .unwrap()
         .to_string();
     
     let refresh_token = login_result
         .get("data")
-        .unwrap()
+        .expect("should have error data")
         .get("refresh")
-        .unwrap()
+        .expect("should have error refresh token")
         .as_str()
         .unwrap()
         .to_string();
