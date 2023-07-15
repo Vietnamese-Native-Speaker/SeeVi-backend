@@ -46,8 +46,11 @@ pub enum UserDataSourceError {
     // Error when password is invalid
     InvalidPassword,
 
+    // Error when update user fails
     UpdateUserFailed,
 
+    // Token is invalid
+    InvalidToken,
 }
 
 impl fmt::Display for UserDataSourceError {
@@ -118,17 +121,17 @@ impl fmt::Display for UserDataSourceError {
                 } else {
                     write!(f, "Name {:?} is invalid", name)
                 }
-            },
+            }
 
             // Display message for create user failed
             UserDataSourceError::CreateUserFailed => {
                 write!(f, "Create user failed")
-            },
+            }
 
             // Display message for wrong email/username or password
             UserDataSourceError::WrongEmailUsernameOrPassword => {
                 write!(f, "Wrong email/username or password")
-            },
+            }
 
             UserDataSourceError::InvalidPassword => {
                 write!(f, "Password is invalid")
@@ -136,6 +139,10 @@ impl fmt::Display for UserDataSourceError {
 
             UserDataSourceError::UpdateUserFailed => {
                 write!(f, "Update user failed")
+            }
+
+            UserDataSourceError::InvalidToken => {
+                write!(f, "Token is invalid")
             }
         }
     }

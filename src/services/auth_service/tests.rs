@@ -98,7 +98,7 @@ async fn authenticate_user_test() {
     .await
     .unwrap();
     let token_data = jsonwebtoken::decode::<Claims>(
-        &token,
+        &token.0,
         &jsonwebtoken::DecodingKey::from_secret(key.as_ref()),
         &jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::HS256),
     )
