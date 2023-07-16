@@ -1,6 +1,11 @@
+use std::pin::Pin;
+
+use futures_core::stream::BoxStream;
+use futures_core::Stream;
 use mongodb::bson::DateTime;
 use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Database};
+use tokio_stream::StreamExt;
 
 use crate::data_source::user_data_source::UserDataSource;
 
@@ -11,7 +16,7 @@ use async_trait::async_trait;
 
 use mongodb::bson;
 
-use crate::models::cv;
+use crate::models::cv::{self, CV};
 use crate::models::users;
 
 use super::cv_data_source::CVDataSource;
@@ -90,17 +95,19 @@ impl UserDataSource for MongoDB {
         let user: users::User = users::User::from(input.clone());
         let user_clone = user.clone();
         let filter = bson::doc! {"username" : input.username.clone()};
-        let check_username_already_exist = collection.find_one(filter, None).await.expect("find one user failed");
-        match check_username_already_exist
-        {
+        let check_username_already_exist = collection
+            .find_one(filter, None)
+            .await
+            .expect("find one user failed");
+        match check_username_already_exist {
             Some(_) => Err(UserDataSourceError::UsernameTaken(input.username)),
-            None =>{
+            None => {
                 let result = collection.insert_one(user, None).await;
                 match result {
                     Ok(_) => Ok(user_clone),
                     Err(_) => Err(UserDataSourceError::InvalidUsername(input.username.clone())),
                 }
-            },
+            }
         }
     }
 
@@ -122,14 +129,23 @@ impl UserDataSource for MongoDB {
             // TODO: load the struct "education" into the document
             "education": bson::to_bson::<Vec<Education>>(&input.education.unwrap()).unwrap(),
         }};
-        println!("{}",update.get("$set").unwrap());
-        let result = collection.find_one_and_update(filter.clone(), update, FindOneAndUpdateOptions::builder().return_document(ReturnDocument::After).build()).await.expect("update user failed");
-        
+        println!("{}", update.get("$set").unwrap());
+        let result = collection
+            .find_one_and_update(
+                filter.clone(),
+                update,
+                FindOneAndUpdateOptions::builder()
+                    .return_document(ReturnDocument::After)
+                    .build(),
+            )
+            .await
+            .expect("update user failed");
+
         // let updated_user = collection.find_one(filter.clone(), None).await.unwrap();
         // .expect("could not find user after updating");
-        match result{
+        match result {
             Some(user) => Ok(user),
-            None => Err(UserDataSourceError::UuidNotFound(input.user_id))
+            None => Err(UserDataSourceError::UuidNotFound(input.user_id)),
         }
     }
 
@@ -167,13 +183,23 @@ impl UserDataSource for MongoDB {
 
 #[async_trait]
 impl CVDataSource for MongoDB {
+    async fn get_recommended_cvs(&self) -> BoxStream<Result<cv::CV, CVDataSourceError>> {
+        let collection: mongodb::Collection<cv::CV> = self.db.collection("cvs");
+        let filter = bson::doc! {};
+        let cursor = collection.find(filter, None).await.unwrap();
+        Pin::from(Box::new(cursor.map(|result| Ok(result.unwrap()))))
+    }
+
     async fn get_cv_by_id(&self, id: bson::Uuid) -> Result<cv::CV, CVDataSourceError> {
         let collection: mongodb::Collection<cv::CV> = self.db.collection("cvs");
         let filter = bson::doc! {"_id": id};
-        let result = collection.find_one(filter, None).await.expect("get cv failed");
+        let result = collection
+            .find_one(filter, None)
+            .await
+            .expect("get cv failed");
         match result {
             Some(cv) => Ok(cv),
-            None => Err(CVDataSourceError::UuidNotFound(id))
+            None => Err(CVDataSourceError::UuidNotFound(id)),
         }
     }
 
@@ -190,15 +216,21 @@ impl CVDataSource for MongoDB {
             cv: Some(bson::Uuid::new()),
             created: DateTime::now(),
         };
-        
-        let filter = bson::doc!{"user_id": _input.author_id};
-        let result = collection_user.find_one(filter, None).await.expect("find author cv failed");
+
+        let filter = bson::doc! {"user_id": _input.author_id};
+        let result = collection_user
+            .find_one(filter, None)
+            .await
+            .expect("find author cv failed");
         match result {
             Some(_) => {
                 let cv_clone = cv.clone();
-                collection.insert_one(cv, None).await.expect("insert CV failed");
+                collection
+                    .insert_one(cv, None)
+                    .await
+                    .expect("insert CV failed");
                 Ok(cv_clone)
-            },  
+            }
             None => Err(CVDataSourceError::AuthorIdNotFound(_input.author_id)),
         }
     }
