@@ -45,7 +45,7 @@ impl AuthService {
     }
 
     /// Fetch the secret key from the environment variable
-    pub fn fetch_secret_key(is_access: bool) -> String {
+    fn fetch_secret_key(is_access: bool) -> String {
         if is_access == true {
             let secret_key = std::env::var("SECRET_KEY_ACCESS");
             match secret_key {
@@ -81,21 +81,7 @@ impl AuthService {
     }
 
     pub fn decode_token(token: &str, is_access: bool) -> Option<Claims> {
-        if is_access == true {
-            let binding = AuthService::fetch_secret_key(true);
-            let secret_key = binding.as_bytes();
-            let mut validation = Validation::new(Algorithm::HS256);
-            validation.set_audience(&["www.example.com"]);
-            match jsonwebtoken::decode::<Claims>(
-                &token,
-                &DecodingKey::from_secret(secret_key),
-                &validation,
-            ) {
-                Ok(token) => return Some(token.claims),
-                Err(_) => return None,
-            }
-        }
-        let binding = AuthService::fetch_secret_key(false);
+        let binding = AuthService::fetch_secret_key(is_access);
         let secret_key = binding.as_bytes();
         let mut validation = Validation::new(Algorithm::HS256);
         validation.set_audience(&["www.example.com"]);
