@@ -1,3 +1,6 @@
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+use google_cloud_auth::token_source::TokenSource;
 use jsonwebtoken::{Algorithm, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
 
@@ -42,8 +45,15 @@ impl AuthService {
     }
 
     /// Fetch the secret key from the environment variable
-    pub fn fetch_secret_key() -> String {
-        let secret_key = std::env::var("SECRET_KEY");
+    fn fetch_secret_key(is_access: bool) -> String {
+        if is_access == true {
+            let secret_key = std::env::var("SECRET_KEY_ACCESS");
+            match secret_key {
+                Ok(_) => return secret_key.unwrap(),
+                Err(_) => panic!("Cannot found secret key"),
+            }
+        }
+        let secret_key = std::env::var("SECRET_KEY_REFRESH");
         match secret_key {
             Ok(_) => return secret_key.unwrap(),
             Err(_) => panic!("Cannot found secret key"),
@@ -53,7 +63,7 @@ impl AuthService {
     /// Receive a username as a string and a token as a string
     /// and return a boolean value to indicate whether the token is valid
     pub fn validate_token(username: String, token: &str) -> bool {
-        let binding = AuthService::fetch_secret_key();
+        let binding = AuthService::fetch_secret_key(true);
         let secret_key = binding.as_bytes();
         let mut validation = Validation::new(Algorithm::HS256);
         // Set to check the audience of the token
@@ -70,8 +80,8 @@ impl AuthService {
         };
     }
 
-    pub fn decode_token(token: &str) -> Option<Claims> {
-        let binding = AuthService::fetch_secret_key();
+    pub fn decode_token(token: &str, is_access: bool) -> Option<Claims> {
+        let binding = AuthService::fetch_secret_key(is_access);
         let secret_key = binding.as_bytes();
         let mut validation = Validation::new(Algorithm::HS256);
         validation.set_audience(&["www.example.com"]);
@@ -80,8 +90,8 @@ impl AuthService {
             &DecodingKey::from_secret(secret_key),
             &validation,
         ) {
-            Ok(token) => Some(token.claims),
-            Err(_) => None,
+            Ok(token) => return Some(token.claims),
+            Err(_) => return None,
         }
     }
 
@@ -151,14 +161,14 @@ impl AuthService {
     }
 
     /// Authenticate a user
-    /// Return a token as a string if the authentication is successful
+    /// Return an access token + refresh token as a string if the authentication is successful
     /// otherwise return an error
     pub async fn authenticate(
         database: &(impl UserDataSource + std::marker::Sync),
         username: Option<String>,
         email: Option<String>,
         password: String,
-    ) -> Result<String, UserDataSourceError> {
+    ) -> Result<(String, String), UserDataSourceError> {
         if username.is_none() && email.is_none() {
             return Err(UserDataSourceError::EmptyUsername);
         }
@@ -174,22 +184,50 @@ impl AuthService {
                 return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
             }
             let header = jsonwebtoken::Header::new(Algorithm::HS256);
+            let time_now = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs();
+            let expiration_time_access = time_now + 300;
             let claims = Claims {
                 sub: user.username.to_owned(),
-                // TODO: change the expiration time time request + amount of time and add audience address
-                exp: 10000000000,
+                // TODO: change audience address
+                exp: expiration_time_access as usize,
                 aud: "www.example.com".to_string(),
             };
-            let binding = AuthService::fetch_secret_key();
-            let secret_key = binding.as_bytes();
-            if let Ok(token) = jsonwebtoken::encode(
+            let binding = AuthService::fetch_secret_key(true);
+            let secret_key_access = binding.as_bytes();
+            let access_token = jsonwebtoken::encode(
                 &header,
                 &claims,
-                &jsonwebtoken::EncodingKey::from_secret(secret_key.as_ref()),
-            ) {
-                return Ok(token);
-            } else {
-                return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
+                &jsonwebtoken::EncodingKey::from_secret(secret_key_access.as_ref()),
+            );
+            let binding_refresh = AuthService::fetch_secret_key(false);
+            let secret_key_refresh = binding_refresh.as_bytes();
+            let expiration_time_refresh = time_now + 86400;
+            let refresh_claims = Claims {
+                sub: user.username.to_owned(),
+                // TODO: change audience address
+                exp: expiration_time_refresh as usize,
+                aud: "www.example.com".to_string(),
+            };
+            let refresh_token = jsonwebtoken::encode(
+                &header,
+                &refresh_claims,
+                &jsonwebtoken::EncodingKey::from_secret(secret_key_refresh.as_ref()),
+            );
+            match access_token {
+                Ok(access_token) => match refresh_token {
+                    Ok(refresh_token) => {
+                        return Ok((access_token, refresh_token));
+                    }
+                    Err(_) => {
+                        return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
+                    }
+                },
+                Err(_) => {
+                    return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
+                }
             }
         } else if let Some(email) = email.clone() {
             let user = database.get_user_by_email(&email).await;
@@ -200,23 +238,51 @@ impl AuthService {
             if let Err(_) = bcrypt::verify(password, user.password.as_str()) {
                 return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
             }
+            let time_now = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs();
+            let expiration_time_access = time_now + 300;
             let header = jsonwebtoken::Header::new(Algorithm::HS256);
             let claims = Claims {
                 sub: user.username.to_owned(),
-                // TODO: change the expiration time to time request + amount of time and add audience address
-                exp: 10000000000,
+                // TODO: change audience address
+                exp: expiration_time_access as usize,
                 aud: "www.example.com".to_string(),
             };
-            let binding = AuthService::fetch_secret_key();
-            let secret_key = binding.as_bytes();
-            if let Ok(token) = jsonwebtoken::encode(
+            let binding = AuthService::fetch_secret_key(true);
+            let secret_key_access = binding.as_bytes();
+            let access_token = jsonwebtoken::encode(
                 &header,
                 &claims,
-                &jsonwebtoken::EncodingKey::from_secret(secret_key.as_ref()),
-            ) {
-                return Ok(token);
-            } else {
-                return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
+                &jsonwebtoken::EncodingKey::from_secret(secret_key_access.as_ref()),
+            );
+            let binding_refresh = AuthService::fetch_secret_key(false);
+            let secret_key_refresh = binding_refresh.as_bytes();
+            let expiration_time_refresh = time_now + 86400;
+            let refresh_claims = Claims {
+                sub: user.username.to_owned(),
+                // TODO: change audience address
+                exp: expiration_time_refresh as usize,
+                aud: "www.example.com".to_string(),
+            };
+            let refresh_token = jsonwebtoken::encode(
+                &header,
+                &refresh_claims,
+                &jsonwebtoken::EncodingKey::from_secret(secret_key_refresh.as_ref()),
+            );
+            match access_token {
+                Ok(access_token) => match refresh_token {
+                    Ok(refresh_token) => {
+                        return Ok((access_token, refresh_token));
+                    }
+                    Err(_) => {
+                        return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
+                    }
+                },
+                Err(_) => {
+                    return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
+                }
             }
         }
         return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
@@ -246,6 +312,44 @@ impl AuthService {
             }
             Err(_) => {
                 return Err(UserDataSourceError::UpdateUserFailed);
+            }
+        }
+    }
+
+    /// Function to generate a new access token from a refresh token
+    pub async fn generate_new_access_token(
+        database: &(impl UserDataSource + std::marker::Sync),
+        refresh_token: String,
+    ) -> Result<String, UserDataSourceError> {
+        let token_data = AuthService::decode_token(&refresh_token, false);
+        if token_data.is_none() {
+            return Err(UserDataSourceError::InvalidToken);
+        }
+        let token_data = token_data.unwrap();
+        let binding = AuthService::fetch_secret_key(true);
+        let secret_key_access = binding.as_bytes();
+        let header = jsonwebtoken::Header::new(Algorithm::HS256);
+        let time_now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let expiration_time_access = time_now + 300;
+        let claims = Claims {
+            sub: token_data.sub,
+            exp: expiration_time_access as usize,
+            aud: "www.example.com".to_string(),
+        };
+        let access_token = jsonwebtoken::encode(
+            &header,
+            &claims,
+            &jsonwebtoken::EncodingKey::from_secret(secret_key_access.as_ref()),
+        );
+        match access_token {
+            Ok(access_token) => {
+                return Ok(access_token);
+            }
+            Err(_) => {
+                return Err(UserDataSourceError::InvalidToken);
             }
         }
     }

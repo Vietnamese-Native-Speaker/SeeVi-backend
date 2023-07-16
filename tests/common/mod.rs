@@ -50,6 +50,22 @@ pub fn default_route(
     routes
 }
 
+pub async fn make_refresh_token_request(
+    refresh_token: &str,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::graphql_refresh_token(refresh_token);
+    println!("query: {}", query);
+
+    let refresh_token_request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .body(query);
+    let reply = refresh_token_request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply
+}
+
 /// The field of return value is either "data" or "errors"
 pub async fn make_register_request(
     username: &str,
