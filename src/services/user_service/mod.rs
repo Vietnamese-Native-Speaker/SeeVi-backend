@@ -45,7 +45,7 @@ impl UserService {
     /// and will change the email of the user with the given id
     /// and return the user with the new email
     pub async fn change_primary_email(
-        database: &mut (impl UserDataSource + std::marker::Sync),
+        database: &(impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
         new_email: String,
     ) -> Result<User, UserDataSourceError> {
@@ -73,7 +73,7 @@ impl UserService {
     /// and update the other mails of the user with the given id
     /// and return the user with the new other mails
     pub async fn change_other_mails(
-        database: &mut (impl UserDataSource + std::marker::Sync),
+        database: &(impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
         new_other_mails: Vec<String>,
     ) -> Result<User, UserDataSourceError> {
@@ -101,7 +101,7 @@ impl UserService {
     /// and will change the username of the user with the given id
     /// and return the user with the new username
     pub async fn change_username(
-        database: &mut (impl UserDataSource + std::marker::Sync),
+        database: &(impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
         new_username: String,
     ) -> Result<User, UserDataSourceError> {
@@ -129,7 +129,7 @@ impl UserService {
     /// and will change the name of the user with the given id
     /// and return the user with the new name
     pub async fn change_name(
-        database: &mut (impl UserDataSource + std::marker::Sync),
+        database: &(impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
         new_first_name: Option<String>,
         new_last_name: Option<String>,
@@ -159,7 +159,7 @@ impl UserService {
     /// and will change the country of the user with the given id
     /// and return the user with the new country
     pub async fn change_country(
-        database: &mut (impl UserDataSource + std::marker::Sync),
+        database: &(impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
         new_country: String,
     ) -> Result<User, UserDataSourceError> {
@@ -184,7 +184,7 @@ impl UserService {
     }
 
     pub async fn change_skills(
-        database: &mut (impl UserDataSource + std::marker::Sync),
+        database: &(impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
         new_skills: Vec<String>,
     ) -> Result<User, UserDataSourceError> {
@@ -212,7 +212,7 @@ impl UserService {
     /// and will add the cv to the user with the given id
     /// and return the user with the new cv
     pub async fn add_cv(
-        database: &mut (impl UserDataSource + std::marker::Sync),
+        database: &(impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
         new_cv: ResourceIdentifier,
     ) -> Result<User, UserDataSourceError> {
@@ -223,7 +223,7 @@ impl UserService {
     /// and will remove the cv from the user with the given id
     /// and return the user without the cv
     pub async fn remove_cv(
-        database: &mut (impl UserDataSource + std::marker::Sync),
+        database: &(impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
         to_remove_cv: ResourceIdentifier,
     ) -> Result<User, UserDataSourceError> {
@@ -234,7 +234,7 @@ impl UserService {
     /// and will change the about of the user with the given id
     /// and return the user with the new about
     pub async fn change_about(
-        database: &mut (impl UserDataSource + std::marker::Sync),
+        database: &(impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
         new_about: String,
     ) -> Result<User, UserDataSourceError> {
@@ -262,7 +262,7 @@ impl UserService {
     /// and will change the avatar of the user with the given id
     /// and return the user with the new avatar
     pub async fn change_avatar(
-        database: &mut (impl UserDataSource + std::marker::Sync),
+        database: &(impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
         new_avatar: ResourceIdentifier,
     ) -> Result<User, UserDataSourceError> {
@@ -290,7 +290,7 @@ impl UserService {
     /// and will change the cover photo of the user with the given id
     /// and return the user with the new cover photo
     pub async fn change_cover_photo(
-        database: &mut (impl UserDataSource + std::marker::Sync),
+        database: &(impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
         new_cover_photo: ResourceIdentifier,
     ) -> Result<User, UserDataSourceError> {
@@ -318,7 +318,7 @@ impl UserService {
     /// and will change the friend list of the user with the given id
     /// and return the user with the new friend list
     pub async fn update_friend_list(
-        database: &mut (impl UserDataSource + std::marker::Sync),
+        database: &(impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
         friend_list: Vec<ResourceIdentifier>,
     ) -> Result<User, UserDataSourceError> {
@@ -346,7 +346,7 @@ impl UserService {
     /// and will change the education list of the user with the given id
     /// and return the user with the new education list
     pub async fn update_education(
-        database: &mut (impl UserDataSource + std::marker::Sync),
+        database: &(impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
         new_education: Vec<Education>,
     ) -> Result<User, UserDataSourceError> {
