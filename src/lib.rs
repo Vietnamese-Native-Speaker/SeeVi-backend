@@ -15,6 +15,7 @@ pub mod graphql;
 pub mod models;
 pub mod services;
 pub mod filters;
+pub mod error;
 
 #[derive(Clone)]
 pub struct State {

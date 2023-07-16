@@ -1,3 +1,4 @@
+use async_graphql::ErrorExtensions;
 use mongodb::bson::Uuid;
 use std::fmt;
 
@@ -145,5 +146,12 @@ impl fmt::Display for UserDataSourceError {
                 write!(f, "Token is invalid")
             }
         }
+    }
+}
+
+impl ErrorExtensions for UserDataSourceError {
+    fn extend(&self) -> async_graphql::Error {
+        async_graphql::Error::new(self.to_string())
+            .extend_with(|_, e| e.set("code", "INVALID_USER"))
     }
 }
