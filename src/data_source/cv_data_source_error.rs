@@ -1,3 +1,4 @@
+use async_graphql::ErrorExtensions;
 use mongodb::bson::Uuid;
 use std::fmt;
 
@@ -60,3 +61,8 @@ impl fmt::Display for CVDataSourceError {
     }
 }
 
+impl ErrorExtensions for CVDataSourceError {
+    fn extend(&self) -> async_graphql::Error {
+        async_graphql::Error::new(self.to_string()).extend_with(|_, e| e.set("code", "INVALID_CV"))
+    }
+}

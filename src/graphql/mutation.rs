@@ -1,4 +1,4 @@
-use async_graphql::{Context, Object};
+use async_graphql::{Context, Object, ErrorExtensions};
 
 use crate::{
     data_source::mongo::MongoDB,
@@ -16,7 +16,7 @@ impl Mutation {
         let rs = AuthService::register(ctx.data_unchecked::<MongoDB>(), new_user).await;
         match rs {
             Ok(user) => Ok(user),
-            Err(e) => Err(e.into()),
+            Err(e) => Err(e.extend()),
         }
     }
 }
