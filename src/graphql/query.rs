@@ -54,4 +54,13 @@ impl Query {
             Err(e) => Err(e.into()),
         }
     }
+
+    async fn refresh_token(&self, ctx: &Context<'_>, refresh_token: String) -> Result<String> {
+        let db = ctx.data_unchecked::<MongoDB>();
+        let rs = AuthService::generate_new_access_token(db, refresh_token).await;
+        match rs {
+            Ok(token) => Ok(token),
+            Err(e) => Err(e.into()),
+        }
+    }
 }
