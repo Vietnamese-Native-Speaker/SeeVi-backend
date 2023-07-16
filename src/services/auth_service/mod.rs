@@ -225,7 +225,7 @@ impl AuthService {
     /// Change the password of the user with the given id
     /// and return the user with the new password
     pub async fn change_password(
-        database: &mut (impl UserDataSource + std::marker::Sync),
+        database: &(impl UserDataSource + std::marker::Sync),
         user_id: ResourceIdentifier,
         new_password: String,
     ) -> Result<User, UserDataSourceError> {
