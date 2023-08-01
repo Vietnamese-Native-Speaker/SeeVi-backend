@@ -33,9 +33,9 @@ impl CVService {
     }
 
     pub async fn find_suggested_cvs(
-        database: &(impl CVDataSource + std::marker::Sync),
+        database: &(impl CVDataSource + std::marker::Sync), cv: CV
     ) -> BoxStream<CV> {
-        let stream = database.get_recommended_cvs().await;
+        let stream = database.get_recommended_cvs(cv).await;
         Pin::from(Box::new(stream.map(|rs| rs.unwrap())))
     }
 }

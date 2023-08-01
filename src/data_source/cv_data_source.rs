@@ -2,7 +2,7 @@ use async_graphql::async_trait::async_trait;
 use futures_core::stream::{Stream, BoxStream};
 use mongodb::bson::Uuid;
 
-use crate::models::cv::{CreateCVInput, CV};
+use crate::models::{cv::{CreateCVInput, CV}, users::User};
 
 use super::cv_data_source_error::CVDataSourceError;
 
@@ -20,7 +20,7 @@ pub trait CVDataSource {
         unimplemented!()
     }
 
-    async fn get_recommended_cvs(&self) -> BoxStream<Result<CV, CVDataSourceError>> {
+    async fn get_recommended_cvs(&self, cv: CV) -> BoxStream<Result<CV, CVDataSourceError>> {
         unimplemented!()
     }
 
