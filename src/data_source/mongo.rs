@@ -185,7 +185,7 @@ impl UserDataSource for MongoDB {
 impl CVDataSource for MongoDB {
     async fn get_recommended_cvs(&self, cv: cv::CV) -> BoxStream<Result<cv::CV, CVDataSourceError>> {
         let collection: mongodb::Collection<cv::CV> = self.db.collection("cvs");
-        let filter = bson::doc! {"tags": {$all: cv.tags}};
+        let filter = bson::doc! {"tags": {"$all": cv.tags}};
         let cursor = collection.find(filter, None).await.unwrap();
         Pin::from(Box::new(cursor.map(|result| Ok(result.unwrap()))))
     }
