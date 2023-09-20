@@ -1,4 +1,4 @@
-use mongodb::bson::Uuid;
+use mongodb::bson::{self, oid::ObjectId, Uuid};
 
 use crate::models::{
     education::Education,
@@ -7,7 +7,8 @@ use crate::models::{
 
 use super::{CreateUserInput, User};
 
-fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
+fn create_demo_user_input(test_id: ObjectId) -> CreateUserInput {
+    let dummy_uuid = Uuid::new();
     CreateUserInputBuilder::default()
         .with_username("username")
         .with_password("password")
@@ -29,8 +30,8 @@ fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
             degree: Some("Bachelor's Degree".to_string()),
         })
         .with_about("about".to_string())
-        .with_avatar(test_uuid)
-        .with_cover_photo(test_uuid)
+        .with_avatar(dummy_uuid)
+        .with_cover_photo(dummy_uuid)
         .build()
         .unwrap()
 }
@@ -41,7 +42,7 @@ fn create_demo_user(test_user_input: CreateUserInput) -> User {
 
 #[test]
 fn test_create_user_input_to_user() {
-    let uuid = Uuid::new();
+    let uuid = bson::oid::ObjectId::new();
     let test_user_input = create_demo_user_input(uuid);
 
     let _user = create_demo_user(test_user_input);
@@ -49,18 +50,18 @@ fn test_create_user_input_to_user() {
 
 #[test]
 fn test_update_user() {
-    let uuid = Uuid::new();
-    let test_user_input = create_demo_user_input(uuid);
+    let id = bson::oid::ObjectId::new();
+    let test_user_input = create_demo_user_input(id);
 
     let _user = create_demo_user(test_user_input);
 
     let update_user_input = UpdateUserInputBuilder::default()
-        .with_user_id(uuid)
+        .with_user_id(id)
         .with_about("Updated about")
         .build()
         .unwrap();
     let _updated_user = User {
-        user_id: update_user_input.user_id,
+        id: update_user_input.user_id,
         about: update_user_input.about,
         .._user
     };
@@ -103,7 +104,10 @@ fn test_user_from_input() {
     assert_eq!(user.country, Some("country".to_string()));
     assert_eq!(user.skills, vec!["skill".to_string()]);
     assert_eq!(user.primary_email, "primary_email".to_string());
-    assert_eq!(user.other_mails, vec!["other_mails".to_string(), "other_mails2".to_string()]);
+    assert_eq!(
+        user.other_mails,
+        vec!["other_mails".to_string(), "other_mails2".to_string()]
+    );
     assert_eq!(user.about, Some("about".to_string()));
     assert_eq!(user.avatar, Some(uuid));
     assert_eq!(user.cover_photo, Some(uuid));

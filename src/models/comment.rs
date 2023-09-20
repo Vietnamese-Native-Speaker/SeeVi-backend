@@ -1,11 +1,11 @@
 use async_graphql::{ComplexObject, SimpleObject};
-use mongodb::bson::{DateTime, Uuid};
+use mongodb::bson::{DateTime, Uuid, self};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, SimpleObject, Builder)]
 #[graphql(complex)]
 struct Comment {
-    pub author: Uuid,
+    pub author: bson::oid::ObjectId,
     pub commented_on: Uuid,
     pub content: String,
 

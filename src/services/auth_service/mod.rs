@@ -2,14 +2,13 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use google_cloud_auth::token_source::TokenSource;
 use jsonwebtoken::{Algorithm, DecodingKey, Validation};
+use mongodb::bson;
 use serde::{Deserialize, Serialize};
 
 use crate::{
     data_source::{user_data_source::UserDataSource, user_data_source_error::UserDataSourceError},
     models::users::{CreateUserInput, UpdateUserInput, User},
 };
-
-use super::ResourceIdentifier;
 
 #[cfg(test)]
 mod tests;
@@ -292,12 +291,12 @@ impl AuthService {
     /// and return the user with the new password
     pub async fn change_password(
         database: &(impl UserDataSource + std::marker::Sync),
-        user_id: ResourceIdentifier,
+        user_id: bson::oid::ObjectId,
         new_password: String,
     ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
-            return Err(UserDataSourceError::UuidNotFound(user_id));
+            return Err(UserDataSourceError::IdNotFound(user_id));
         }
         let new_hashed_password = AuthService::hash_password(new_password);
         let new_user = UpdateUserInput::builder()
