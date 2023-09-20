@@ -5,7 +5,7 @@ use super::make_graphql;
 pub static USER_DETAIL: &str = r#"
 query getUser() {
     userDetail {
-        userId,
+        id,
         username
     }
 }"#;
@@ -26,7 +26,7 @@ query refreshToken($token: String!) {
 pub static USER_REGISTER: &str = r#"
 mutation userRegister($user: CreateUserInput!) {
     userRegister(newUser: $user) {
-        userId,
+        id,
         username
     }
 }"#;

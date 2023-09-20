@@ -55,6 +55,35 @@ impl MongoDB {
     }
 }
 
+fn update_input_to_bson(input: users::UpdateUserInput) -> bson::Document {
+    let mut update = bson::doc! {};
+    input
+        .username
+        .map(|username| update.insert("username", username));
+    input
+        .first_name
+        .map(|first_name| update.insert("first_name", first_name));
+    input
+        .last_name
+        .map(|last_name| update.insert("last_name", last_name));
+    input
+        .country
+        .map(|country| update.insert("country", country));
+    input.skills.map(|skills| update.insert("skills", skills));
+    input
+        .primary_email
+        .map(|primary_email| update.insert("primary_email", primary_email));
+    input.about.map(|about| update.insert("about", about));
+    input.education.map(|education| {
+        update.insert(
+            "education",
+            bson::to_bson::<Vec<Education>>(&education).unwrap(),
+        )
+    });
+    let update = bson::doc! {"$set": update};
+    update
+}
+
 // Implement datasource for MongoDB
 #[async_trait]
 impl UserDataSource for MongoDB {
@@ -120,19 +149,8 @@ impl UserDataSource for MongoDB {
     ) -> Result<users::User, UserDataSourceError> {
         let collection: mongodb::Collection<users::User> = self.db.collection(USER_COLLECTION);
         let filter = bson::doc! {"_id": input.user_id};
-        let update = bson::doc! {"$set": {
-            "user_id": input.user_id,
-            "username": input.username.clone(),
-            "first_name": input.first_name,
-            "last_name": input.last_name,
-            "country": input.country,
-            "skills": input.skills,
-            "primary_email": input.primary_email,
-            "about": input.about,
-            // TODO: load the struct "education" into the document
-            "education": bson::to_bson::<Vec<Education>>(&input.education.unwrap()).unwrap(),
-        }};
-        println!("{}", update.get("$set").unwrap());
+        let user_id = input.user_id.clone();
+        let update = update_input_to_bson(input);
         let result = collection
             .find_one_and_update(
                 filter.clone(),
@@ -148,7 +166,7 @@ impl UserDataSource for MongoDB {
         // .expect("could not find user after updating");
         match result {
             Some(user) => Ok(user),
-            None => Err(UserDataSourceError::IdNotFound(input.user_id)),
+            None => Err(UserDataSourceError::IdNotFound(user_id)),
         }
     }
 

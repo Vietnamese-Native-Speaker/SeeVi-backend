@@ -16,7 +16,6 @@ pub enum Level {
 /// The User Model struct.
 #[derive(Debug, Serialize, Deserialize, Clone, SimpleObject, PartialEq)]
 pub struct User {
-    #[graphql(skip)]
     #[serde(rename = "_id")]
     pub id: bson::oid::ObjectId,
     pub username: String,
