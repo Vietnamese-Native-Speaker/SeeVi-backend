@@ -75,4 +75,65 @@ pub trait UserDataSource {
     async fn delete_other_email(&self, _email: String) -> Result<(), UserDataSourceError> {
         unimplemented!()
     }
+
+    /// Add new friend request to the database.
+    async fn new_friend_request(
+        &self,
+        _user_id: bson::oid::ObjectId,
+        _friend_id: bson::oid::ObjectId,
+        _message: impl Into<String> + Send,
+    ) -> Result<(), UserDataSourceError> {
+        unimplemented!()
+    }
+
+    /// Accept the friend request.
+    async fn accept_friend_request(
+        &self,
+        _user_id: bson::oid::ObjectId,
+        _friend_id: bson::oid::ObjectId,
+    ) -> Result<(), UserDataSourceError> {
+        unimplemented!()
+    }
+
+    /// Reject the friend request.
+    async fn reject_friend_request(
+        &self,
+        _user_id: bson::oid::ObjectId,
+        _friend_id: bson::oid::ObjectId,
+    ) -> Result<(), UserDataSourceError> {
+        unimplemented!()
+    }
+
+    /// Delete the friend.
+    async fn delete_friend(
+        &self,
+        _user_id: bson::oid::ObjectId,
+        _friend_id: bson::oid::ObjectId,
+    ) -> Result<(), UserDataSourceError> {
+        unimplemented!()
+    }
+
+    /// Return the list of friends of the user.
+    async fn friends_list(
+        &self,
+        _user_id: bson::oid::ObjectId,
+    ) -> Result<Vec<User>, UserDataSourceError> {
+        unimplemented!()
+    }
+
+    /// Return the list of friend requests of the user.
+    async fn friend_requests(
+        &self,
+        _user_id: bson::oid::ObjectId,
+    ) -> Result<Vec<User>, UserDataSourceError> {
+        unimplemented!()
+    }
+
+    /// Return the list of friend requests sent by the user.
+    async fn friend_requests_sent(
+        &self,
+        _user_id: bson::oid::ObjectId,
+    ) -> Result<Vec<User>, UserDataSourceError> {
+        unimplemented!()
+    }
 }
