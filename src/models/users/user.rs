@@ -1,5 +1,5 @@
 use async_graphql::{Enum, SimpleObject};
-use mongodb::bson::Uuid;
+use mongodb::bson::{self, Uuid};
 use serde::{Deserialize, Serialize};
 
 use crate::models::{education::Education, ResourceIdentifier};
@@ -16,7 +16,9 @@ pub enum Level {
 /// The User Model struct.
 #[derive(Debug, Serialize, Deserialize, Clone, SimpleObject, PartialEq)]
 pub struct User {
-    pub user_id: Uuid,
+    #[graphql(skip)]
+    #[serde(rename = "_id")]
+    pub id: bson::oid::ObjectId,
     pub username: String,
     #[graphql(skip)]
     pub password: String,
@@ -42,7 +44,7 @@ pub struct User {
 impl From<CreateUserInput> for User {
     fn from(input: CreateUserInput) -> Self {
         Self {
-            user_id: Uuid::new(),
+            id: mongodb::bson::oid::ObjectId::new(),
             username: input.username,
             password: input.password,
             first_name: input.first_name.unwrap_or("None".to_string()),
@@ -65,4 +67,3 @@ impl From<CreateUserInput> for User {
         }
     }
 }
-
