@@ -6,10 +6,12 @@ use crate::models::cv::CreateCVInput;
 use crate::models::education::Education;
 use crate::models::users::create_user_input::CreateUserInputBuilder;
 use crate::models::users::CreateUserInput;
+use mongodb::bson::oid::ObjectId;
 use mongodb::bson::Uuid;
 use serial_test::serial;
 
-fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
+fn create_demo_user_input() -> CreateUserInput {
+    let id = Uuid::new();
     CreateUserInputBuilder::default()
         .with_password("password")
         .with_username("username")
@@ -31,15 +33,15 @@ fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
             degree: Some("Bachelor's Degree".to_string()),
         })
         .with_about("about".to_string())
-        .with_avatar(test_uuid)
-        .with_cover_photo(test_uuid)
+        .with_avatar(id)
+        .with_cover_photo(id)
         .build()
         .unwrap()
 }
 
-fn create_demo_cv_input(test_uuid: Uuid) -> CreateCVInput {
+fn create_demo_cv_input(author_id: ObjectId) -> CreateCVInput {
     CreateCVInputBuilder::default()
-        .with_author_id(test_uuid)
+        .with_author_id(author_id)
         .with_title("title")
         .with_description("description")
         .with_tag("tag")
@@ -52,13 +54,12 @@ fn create_demo_cv_input(test_uuid: Uuid) -> CreateCVInput {
 #[serial]
 async fn test_create_cv() {
     let mongodb = MongoDB::init_test().await;
-    let uuid = Uuid::new();
-    let user = create_demo_user_input(uuid);
-    let input_user = mongodb.create_user(user).await.unwrap();
-    let input = create_demo_cv_input(input_user.user_id);
+    let input = create_demo_user_input();
+    let user = mongodb.create_user(input).await.unwrap();
+    let input = create_demo_cv_input(user.id);
     let check_input = mongodb.create_cv(input).await.unwrap();
 
-    assert_eq!(check_input.author_id, input_user.user_id);
+    assert_eq!(check_input.author_id, user.id);
     assert_eq!(check_input.title, "title".to_string());
     assert_eq!(check_input.description, Some("description".to_string()));
     assert_eq!(
@@ -72,15 +73,20 @@ async fn test_create_cv() {
 #[serial]
 async fn get_cv_by_id() {
     let mongodb = MongoDB::init_test().await;
-    let uuid = Uuid::new();
-    let user = create_demo_user_input(uuid);
-    let input_user = mongodb.create_user(user).await.unwrap();
-    let input = create_demo_cv_input(input_user.user_id);
-    let check_input = mongodb.get_cv_by_id(uuid).await;
-    assert_eq!(check_input, Err(CVDataSourceError::UuidNotFound(uuid)));
-    let check_id = mongodb.create_cv(input).await.unwrap()._id;
-    let check_input2 = mongodb.get_cv_by_id(check_id).await.unwrap();
-    assert_eq!(check_input2.author_id, input_user.user_id);
+    let user_input = create_demo_user_input();
+    let user = mongodb.create_user(user_input).await.unwrap();
+    println!("{}", user.id);
+    println!("{}", mongodb.get_user_by_id(user.id).await.unwrap().id);
+    let cv_input = create_demo_cv_input(user.id);
+
+    let fake_id = ObjectId::new();
+    let check_input = mongodb.get_cv_by_id(fake_id).await;
+    assert_eq!(check_input, Err(CVDataSourceError::IdNotFound(fake_id)));
+
+    let cv_id = mongodb.create_cv(cv_input).await.unwrap().id;
+    println!("{}", cv_id);
+    let check_input2 = mongodb.get_cv_by_id(cv_id).await.unwrap();
+    assert_eq!(check_input2.author_id, user.id);
     assert_eq!(check_input2.title, "title".to_string());
     assert_eq!(check_input2.description, Some("description".to_string()));
     assert_eq!(
@@ -89,8 +95,3 @@ async fn get_cv_by_id() {
     );
     assert_eq!(check_input2.comments, vec![]);
 }
-
-// #[tokio::test]
-// fn test_delete_cv(){
-
-// }

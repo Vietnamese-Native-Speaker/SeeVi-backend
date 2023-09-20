@@ -1,17 +1,14 @@
 use async_graphql::InputObject;
-use mongodb::bson::Uuid;
+use mongodb::bson;
 use serde::{Deserialize, Serialize};
 
 use crate::models::{education::Education, ResourceIdentifier};
 
 /// An InputObject for User update query in GraphQL
 #[derive(Serialize, Deserialize, Clone, InputObject, Builder, Default)]
-#[builder(
-    pattern = "owned",
-    setter(into, prefix = "with", strip_option),
-)]
+#[builder(pattern = "owned", setter(into, prefix = "with", strip_option))]
 pub struct UpdateUserInput {
-    pub user_id: Uuid,
+    pub user_id: bson::oid::ObjectId,
     #[builder(default)]
     pub username: Option<String>,
     #[builder(default)]
