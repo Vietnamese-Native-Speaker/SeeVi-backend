@@ -17,6 +17,11 @@ use crate::models::users::{self, User};
 use super::cv_data_source::CVDataSource;
 use super::cv_data_source_error::CVDataSourceError;
 
+const FRIEND_REQUEST_COLLECTION: &str = "friend_requests";
+const CV_COLLECTION: &str = "cvs";
+const USER_COLLECTION: &str = "users";
+const APP_NAME: &str = "SeeVi";
+
 pub struct MongoDB {
     client: Client,
     pub db: Database,
@@ -32,7 +37,7 @@ impl MongoDB {
         let mut client_options = ClientOptions::parse("mongodb://127.0.0.1:27017")
             .await
             .expect("Failed to parse options!");
-        client_options.app_name = Some("SeeVi".to_string());
+        client_options.app_name = Some(APP_NAME.to_string());
         let client = Client::with_options(client_options).expect("Failed to initialize database!");
         let db = client.database("tmp");
         MongoDB { client, db }
@@ -57,7 +62,7 @@ impl UserDataSource for MongoDB {
         &self,
         id: bson::oid::ObjectId,
     ) -> Result<users::User, UserDataSourceError> {
-        let collection: mongodb::Collection<users::User> = self.db.collection("users");
+        let collection: mongodb::Collection<users::User> = self.db.collection(USER_COLLECTION);
         let filter = bson::doc! {"_id": id};
         let result = collection.find_one(filter, None).await;
         match result {
@@ -73,7 +78,7 @@ impl UserDataSource for MongoDB {
         &self,
         username: &str,
     ) -> Result<users::User, UserDataSourceError> {
-        let collection: mongodb::Collection<users::User> = self.db.collection("users");
+        let collection: mongodb::Collection<users::User> = self.db.collection(USER_COLLECTION);
         let filter = bson::doc! {"username": username.clone()};
         let result = collection.find_one(filter, None).await;
         match result {
@@ -89,7 +94,7 @@ impl UserDataSource for MongoDB {
         &self,
         input: users::CreateUserInput,
     ) -> Result<users::User, UserDataSourceError> {
-        let collection = self.db.collection::<User>("users");
+        let collection = self.db.collection::<User>(USER_COLLECTION);
         let username = input.username.clone();
         let user: users::User = users::User::from(input);
         let filter = bson::doc! {"username" : &username};
@@ -113,7 +118,7 @@ impl UserDataSource for MongoDB {
         &self,
         input: users::UpdateUserInput,
     ) -> Result<users::User, UserDataSourceError> {
-        let collection: mongodb::Collection<users::User> = self.db.collection("users");
+        let collection: mongodb::Collection<users::User> = self.db.collection(USER_COLLECTION);
         let filter = bson::doc! {"_id": input.user_id};
         let update = bson::doc! {"$set": {
             "user_id": input.user_id,
@@ -151,7 +156,7 @@ impl UserDataSource for MongoDB {
         &self,
         id: bson::oid::ObjectId,
     ) -> Result<users::User, UserDataSourceError> {
-        let collection: mongodb::Collection<users::User> = self.db.collection("users");
+        let collection: mongodb::Collection<users::User> = self.db.collection(USER_COLLECTION);
         let filter = bson::doc! {"_id": id};
         let user = self.get_user_by_id(id).await;
         let result = collection.delete_one(filter, None).await;
@@ -185,7 +190,7 @@ impl UserDataSource for MongoDB {
 #[async_trait]
 impl CVDataSource for MongoDB {
     async fn get_cv_by_id(&self, id: bson::oid::ObjectId) -> Result<cv::CV, CVDataSourceError> {
-        let collection: mongodb::Collection<cv::CV> = self.db.collection("cvs");
+        let collection: mongodb::Collection<cv::CV> = self.db.collection(CV_COLLECTION);
         let filter = bson::doc! {"_id": id};
         let result = collection
             .find_one(filter, None)
@@ -198,8 +203,8 @@ impl CVDataSource for MongoDB {
     }
 
     async fn create_cv(&self, _input: cv::CreateCVInput) -> Result<cv::CV, CVDataSourceError> {
-        let collection: mongodb::Collection<cv::CV> = self.db.collection("cvs");
-        let collection_user: mongodb::Collection<users::User> = self.db.collection("users");
+        let collection: mongodb::Collection<cv::CV> = self.db.collection(CV_COLLECTION);
+        let collection_user: mongodb::Collection<users::User> = self.db.collection(USER_COLLECTION);
         let cv: cv::CV = cv::CV {
             id: bson::oid::ObjectId::new(),
             author_id: _input.author_id,
@@ -234,7 +239,7 @@ impl CVDataSource for MongoDB {
     }
 
     async fn delete_cv(&self, id: bson::oid::ObjectId) -> Result<(), CVDataSourceError> {
-        let collection: mongodb::Collection<cv::CV> = self.db.collection("cvs");
+        let collection: mongodb::Collection<cv::CV> = self.db.collection(CV_COLLECTION);
         let filter = bson::doc! {"_id": id};
         let result = collection.delete_one(filter, None).await;
         match result {
