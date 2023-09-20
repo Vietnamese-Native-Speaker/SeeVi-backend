@@ -1,7 +1,7 @@
 use async_graphql::async_trait::async_trait;
-use mongodb::bson::Uuid;
+use mongodb::bson::{oid::ObjectId, Uuid};
 
-use crate::models::cv::{CreateCVInput, CV};
+use crate::models::cv::{CreateCVInput, UpdateCVInput, CV};
 
 use super::cv_data_source_error::CVDataSourceError;
 
@@ -10,7 +10,7 @@ use super::cv_data_source_error::CVDataSourceError;
 #[async_trait]
 pub trait CVDataSource {
     /// Return the CV with the provided id.
-    async fn get_cv_by_id(&self, _id: Uuid) -> Result<CV, CVDataSourceError> {
+    async fn get_cv_by_id(&self, _id: ObjectId) -> Result<CV, CVDataSourceError> {
         unimplemented!()
     }
 
@@ -21,12 +21,12 @@ pub trait CVDataSource {
 
     /// Update the CV with the provided input, using the id in the input as
     /// finder.
-    async fn update_cv_info(&self, _input: CV) -> Result<CV, CVDataSourceError> {
+    async fn update_cv_info(&self, _input: UpdateCVInput) -> Result<CV, CVDataSourceError> {
         unimplemented!()
     }
 
     /// Delete the CV with the provided id.
-    async fn delete_cv(&self, _id: Uuid) -> Result<(), CVDataSourceError> {
+    async fn delete_cv(&self, _id: ObjectId) -> Result<(), CVDataSourceError> {
         unimplemented!()
     }
 }
