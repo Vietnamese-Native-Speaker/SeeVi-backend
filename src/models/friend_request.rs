@@ -12,18 +12,18 @@ pub enum FriendRequestStatus {
 pub struct FriendRequest {
     pub from: ObjectId,
     pub to: ObjectId,
-    pub message: String,
+    pub message: Option<String>,
     pub status: FriendRequestStatus,
     pub created_at: bson::DateTime,
     pub updated_at: bson::DateTime,
 }
 
 impl FriendRequest {
-    pub fn new(from: ObjectId, to: ObjectId, message: impl Into<String>) -> Self {
+    pub fn new(from: ObjectId, to: ObjectId, message: Option<impl Into<String>>) -> Self {
         Self {
             from,
             to,
-            message: message.into(),
+            message: message.map(|m| m.into()),
             status: FriendRequestStatus::Pending,
             created_at: bson::DateTime::now(),
             updated_at: bson::DateTime::now(),
@@ -42,4 +42,3 @@ impl FriendRequest {
         self
     }
 }
-

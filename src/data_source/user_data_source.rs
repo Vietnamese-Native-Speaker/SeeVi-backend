@@ -1,8 +1,10 @@
 use super::user_data_source_error::UserDataSourceError;
+use async_graphql::futures_util::stream::BoxStream;
 use async_trait::async_trait;
 use mongodb::bson::{self, Uuid};
 
 use crate::models::{
+    friend_request::FriendRequest,
     users::{CreateUserInput, UpdateUserInput, User},
     ResourceIdentifier,
 };
@@ -73,67 +75,6 @@ pub trait UserDataSource {
 
     /// Delete a email from the `other_email` list.
     async fn delete_other_email(&self, _email: String) -> Result<(), UserDataSourceError> {
-        unimplemented!()
-    }
-
-    /// Add new friend request to the database.
-    async fn new_friend_request(
-        &self,
-        _user_id: bson::oid::ObjectId,
-        _friend_id: bson::oid::ObjectId,
-        _message: impl Into<String> + Send,
-    ) -> Result<(), UserDataSourceError> {
-        unimplemented!()
-    }
-
-    /// Accept the friend request.
-    async fn accept_friend_request(
-        &self,
-        _user_id: bson::oid::ObjectId,
-        _friend_id: bson::oid::ObjectId,
-    ) -> Result<(), UserDataSourceError> {
-        unimplemented!()
-    }
-
-    /// Reject the friend request.
-    async fn reject_friend_request(
-        &self,
-        _user_id: bson::oid::ObjectId,
-        _friend_id: bson::oid::ObjectId,
-    ) -> Result<(), UserDataSourceError> {
-        unimplemented!()
-    }
-
-    /// Delete the friend.
-    async fn delete_friend(
-        &self,
-        _user_id: bson::oid::ObjectId,
-        _friend_id: bson::oid::ObjectId,
-    ) -> Result<(), UserDataSourceError> {
-        unimplemented!()
-    }
-
-    /// Return the list of friends of the user.
-    async fn friends_list(
-        &self,
-        _user_id: bson::oid::ObjectId,
-    ) -> Result<Vec<User>, UserDataSourceError> {
-        unimplemented!()
-    }
-
-    /// Return the list of friend requests of the user.
-    async fn friend_requests(
-        &self,
-        _user_id: bson::oid::ObjectId,
-    ) -> Result<Vec<User>, UserDataSourceError> {
-        unimplemented!()
-    }
-
-    /// Return the list of friend requests sent by the user.
-    async fn friend_requests_sent(
-        &self,
-        _user_id: bson::oid::ObjectId,
-    ) -> Result<Vec<User>, UserDataSourceError> {
         unimplemented!()
     }
 }
