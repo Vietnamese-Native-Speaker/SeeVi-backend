@@ -19,7 +19,7 @@ async fn test_get_user_by_id() {
     let db = MockDatabase::new();
     let input = mock_user_input();
     let rs = UserService::create_user(&db, input).await.unwrap();
-    let user = UserService::get_user_by_id(&db, rs.id).await.unwrap();
+    let user = UserService::get_user_by_id(&db, *rs.id).await.unwrap();
     assert_eq!("test", user.username);
     assert_eq!("test", user.password);
 }

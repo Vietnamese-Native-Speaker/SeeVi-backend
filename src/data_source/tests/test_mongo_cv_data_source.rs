@@ -56,10 +56,10 @@ async fn test_create_cv() {
     let mongodb = MongoDB::init_test().await;
     let input = create_demo_user_input();
     let user = mongodb.create_user(input).await.unwrap();
-    let input = create_demo_cv_input(user.id);
+    let input = create_demo_cv_input(user.id.into());
     let check_input = mongodb.create_cv(input).await.unwrap();
 
-    assert_eq!(check_input.author_id, user.id);
+    assert_eq!(check_input.author_id, user.id.into());
     assert_eq!(check_input.title, "title".to_string());
     assert_eq!(check_input.description, Some("description".to_string()));
     assert_eq!(
@@ -75,17 +75,17 @@ async fn get_cv_by_id() {
     let mongodb = MongoDB::init_test().await;
     let user_input = create_demo_user_input();
     let user = mongodb.create_user(user_input).await.unwrap();
-    println!("{}", user.id);
-    println!("{}", mongodb.get_user_by_id(user.id).await.unwrap().id);
-    let cv_input = create_demo_cv_input(user.id);
+    println!("{}", *user.id);
+    println!("{}", *mongodb.get_user_by_id(user.id.into()).await.unwrap().id);
+    let cv_input = create_demo_cv_input(user.id.into());
 
     let fake_id = ObjectId::new();
     let check_input = mongodb.get_cv_by_id(fake_id).await;
     assert_eq!(check_input, Err(CVDataSourceError::IdNotFound(fake_id)));
 
     let cv_id = mongodb.create_cv(cv_input).await.unwrap().id;
-    println!("{}", cv_id);
-    let check_input2 = mongodb.get_cv_by_id(cv_id).await.unwrap();
+    println!("{}", *cv_id);
+    let check_input2 = mongodb.get_cv_by_id(cv_id.into()).await.unwrap();
     assert_eq!(check_input2.author_id, user.id);
     assert_eq!(check_input2.title, "title".to_string());
     assert_eq!(check_input2.description, Some("description".to_string()));

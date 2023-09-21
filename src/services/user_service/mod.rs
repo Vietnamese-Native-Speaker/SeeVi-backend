@@ -1,10 +1,18 @@
 #[cfg(test)]
 mod tests;
+use async_graphql::futures_util::stream::BoxStream;
 use mongodb::bson::oid::ObjectId;
 
 use crate::{
-    data_source::{user_data_source::UserDataSource, user_data_source_error::UserDataSourceError},
-    models::users::{CreateUserInput, UpdateUserInput, User},
+    data_source::{
+        friends_list_datasource::{FriendsListDataSource, FriendsListError},
+        user_data_source::UserDataSource,
+        user_data_source_error::UserDataSourceError,
+    },
+    models::{
+        friend_request::FriendRequest,
+        users::{CreateUserInput, UpdateUserInput, User},
+    },
 };
 
 pub struct UserService;
@@ -68,5 +76,38 @@ impl UserService {
                 return Err(UserDataSourceError::UsernameNotFound(username));
             }
         }
+    }
+
+    pub async fn add_friend(
+        database: &(impl UserDataSource + FriendsListDataSource + std::marker::Sync),
+        user_id: ObjectId,
+        friend_id: ObjectId,
+        message: Option<impl Into<String>>,
+    ) -> Result<(), FriendsListError> {
+        let user = database.get_user_by_id(user_id).await;
+        if user.is_err() {
+            return Err(FriendsListError::UserNotFound);
+        }
+        let friend = database.get_user_by_id(friend_id).await;
+        if friend.is_err() {
+            return Err(FriendsListError::UserNotFound);
+        }
+        let friend_request = FriendRequest::new(user_id, friend_id, message);
+        let friend_request = database.add_friend_request(friend_request).await;
+        match friend_request {
+            Ok(_) => {
+                return Ok(());
+            }
+            Err(_) => {
+                return Err(FriendsListError::AddFriendFailed);
+            }
+        }
+    }
+
+    pub async fn friend_lists(
+        database: &(impl UserDataSource + FriendsListDataSource + std::marker::Sync),
+        user_id: ObjectId,
+    ) -> BoxStream<Result<FriendRequest, FriendsListError>> {
+        database.accepted_friend_requests(user_id).await
     }
 }

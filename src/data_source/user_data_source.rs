@@ -1,8 +1,10 @@
 use super::user_data_source_error::UserDataSourceError;
+use async_graphql::futures_util::stream::BoxStream;
 use async_trait::async_trait;
 use mongodb::bson::{self, Uuid};
 
 use crate::models::{
+    friend_request::FriendRequest,
     users::{CreateUserInput, UpdateUserInput, User},
     ResourceIdentifier,
 };

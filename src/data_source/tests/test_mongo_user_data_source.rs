@@ -109,7 +109,7 @@ async fn test_get_user_by_id() {
     let input = create_demo_user_input(uuid);
     mongodb.create_user(input).await.unwrap();
     let uuid2 = mongodb.get_user_by_username("username").await.unwrap().id;
-    let check_input = mongodb.get_user_by_id(uuid2).await.unwrap();
+    let check_input = mongodb.get_user_by_id(*uuid2).await.unwrap();
     assert_eq!(check_input.username, "username".to_string());
     assert_eq!(check_input.first_name, "first_name".to_string());
     assert_eq!(check_input.last_name, "last_name".to_string());
@@ -171,9 +171,9 @@ async fn test_delete_user() {
     let uuid3 = ObjectId::new();
     let error = mongodb.delete_user(uuid3).await;
     assert_eq!(error, Err(UserDataSourceError::IdNotFound(uuid3)));
-    mongodb.delete_user(uuid2).await.unwrap();
-    let error2 = mongodb.get_user_by_id(uuid2).await;
-    assert_eq!(error2, Err(UserDataSourceError::IdNotFound(uuid2)))
+    mongodb.delete_user(*uuid2).await.unwrap();
+    let error2 = mongodb.get_user_by_id(*uuid2).await;
+    assert_eq!(error2, Err(UserDataSourceError::IdNotFound(*uuid2)))
 }
 
 #[tokio::test]
