@@ -1,6 +1,6 @@
 use mongodb::bson::{Uuid, oid::ObjectId};
 
-use super::{update_cv_input::UpdateCVInputBuilder, CreateCVInput};
+use super::{update_cv_input::UpdateCVInputBuilder};
 use crate::models::cv::create_cv_input::CreateCVInputBuilder;
 
 #[test]
@@ -15,7 +15,7 @@ fn test_cv_from_input() {
         .unwrap();
     assert_eq!(test_cv_input.tags, vec!["tag".to_string()]);
     let test_cv = CV::from(test_cv_input);
-    assert_eq!(test_cv.author_id, id);
+    assert_eq!(*test_cv.author_id, id);
     assert_eq!(test_cv.title, "title".to_string());
     assert_eq!(test_cv.tags, vec!["tag".to_string()]);
     assert_eq!(test_cv.description, None);

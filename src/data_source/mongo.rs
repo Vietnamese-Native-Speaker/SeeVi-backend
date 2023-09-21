@@ -5,11 +5,10 @@ use std::pin::Pin;
 
 use crate::data_source::user_data_source::UserDataSource;
 
-use crate::data_source::user_data_source_error::UserDataSourceError;
-use crate::models::education::Education;
-
 use crate::data_source::friends_list_datasource::FriendsListDataSource;
 use crate::data_source::friends_list_datasource::FriendsListError;
+use crate::data_source::user_data_source_error::UserDataSourceError;
+use crate::models::education::Education;
 use crate::models::friend_request::FriendRequest;
 
 use async_graphql::futures_util::stream::BoxStream;
@@ -232,8 +231,8 @@ impl CVDataSource for MongoDB {
         let collection: mongodb::Collection<cv::CV> = self.db.collection(CV_COLLECTION);
         let collection_user: mongodb::Collection<users::User> = self.db.collection(USER_COLLECTION);
         let cv: cv::CV = cv::CV {
-            id: bson::oid::ObjectId::new(),
-            author_id: _input.author_id,
+            id: bson::oid::ObjectId::new().into(),
+            author_id: _input.author_id.into(),
             title: _input.title,
             description: _input.description,
             tags: _input.tags,
@@ -342,7 +341,7 @@ impl FriendsListDataSource for MongoDB {
         let collection: mongodb::Collection<FriendRequest> =
             self.db.collection(FRIEND_REQUEST_COLLECTION);
         let filter = bson::doc! {"to" : _user_id};
-        let mut cursor = collection.find(filter, None).await.unwrap();
+        let cursor = collection.find(filter, None).await.unwrap();
         Pin::from(Box::new(cursor.map(|result| Ok(result.unwrap()))))
     }
 

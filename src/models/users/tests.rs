@@ -61,7 +61,7 @@ fn test_update_user() {
         .build()
         .unwrap();
     let _updated_user = User {
-        id: update_user_input.user_id,
+        id: update_user_input.user_id.into(),
         about: update_user_input.about,
         .._user
     };
