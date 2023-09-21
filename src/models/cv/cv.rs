@@ -18,7 +18,7 @@ pub struct CV {
     pub title: String,
     pub description: Option<String>,
     pub tags: Vec<String>,
-    pub comments: Vec<Uuid>,
+    pub comments: Vec<bson::oid::ObjectId>,
     #[graphql(skip)]
     pub created: DateTime,
     pub cv: Option<ResourceIdentifier>,
