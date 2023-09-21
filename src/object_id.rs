@@ -1,11 +1,11 @@
 use std::str::FromStr;
 
-use async_graphql::{connection::CursorType, OutputType, Scalar, ScalarType};
+use async_graphql::{connection::CursorType, Scalar, ScalarType};
 use mongodb::bson;
 use serde::{Deserialize, Serialize};
 
 /// A wrapper around `bson::oid::ObjectId` to make it work with async-graphql.
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ScalarObjectId(bson::oid::ObjectId);
 
 #[Scalar]
