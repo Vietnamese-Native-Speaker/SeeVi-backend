@@ -1,6 +1,7 @@
 use mongodb::bson::DateTime;
 use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Database};
+use std::pin::Pin;
 
 use crate::data_source::user_data_source::UserDataSource;
 
@@ -338,7 +339,11 @@ impl FriendsListDataSource for MongoDB {
         &self,
         _user_id: bson::oid::ObjectId,
     ) -> BoxStream<Result<FriendRequest, FriendsListError>> {
-        unimplemented!()
+        let collection: mongodb::Collection<FriendRequest> =
+            self.db.collection(FRIEND_REQUEST_COLLECTION);
+        let filter = bson::doc! {"to" : _user_id};
+        let mut cursor = collection.find(filter, None).await.unwrap();
+        Pin::from(Box::new(cursor.map(|result| Ok(result.unwrap()))))
     }
 
     /// Return the list of friend requests sent by the user.
@@ -346,13 +351,24 @@ impl FriendsListDataSource for MongoDB {
         &self,
         _user_id: bson::oid::ObjectId,
     ) -> BoxStream<Result<FriendRequest, FriendsListError>> {
-        unimplemented!()
+        let collection: mongodb::Collection<FriendRequest> =
+            self.db.collection(FRIEND_REQUEST_COLLECTION);
+        let filter = bson::doc! {"from" : _user_id};
+        let mut cursor = collection.find(filter, None).await.unwrap();
+        Pin::from(Box::new(cursor.map(|result| Ok(result.unwrap()))))
     }
 
     async fn accepted_friend_requests(
         &self,
         _friend_request_id: bson::oid::ObjectId,
     ) -> BoxStream<Result<FriendRequest, FriendsListError>> {
-        unimplemented!()
+        let collection: mongodb::Collection<FriendRequest> =
+            self.db.collection(FRIEND_REQUEST_COLLECTION);
+        let filter = bson::doc! {"$or" : [
+            {"from": _friend_request_id, "status": "accepted"},
+            {"to": _friend_request_id, "status": "accepted"}
+        ]};
+        let mut cursor = collection.find(filter, None).await.unwrap();
+        Pin::from(Box::new(cursor.map(|result| Ok(result.unwrap()))))
     }
 }
