@@ -57,10 +57,6 @@ pub enum UserDataSourceError {
 impl fmt::Display for UserDataSourceError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            AddFriendFailed => {
-                write!(f, "Failed to add friend")
-            }
-
             // Display message for Uuid not found
             UserDataSourceError::IdNotFound(id) => {
                 write!(f, "Id {:?} not found", id)
