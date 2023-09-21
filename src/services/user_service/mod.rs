@@ -79,12 +79,29 @@ impl UserService {
     }
 
     pub async fn add_friend(
-        database: &(impl UserDataSource + std::marker::Sync),
+        database: &(impl UserDataSource + FriendsListDataSource + std::marker::Sync),
         user_id: ObjectId,
         friend_id: ObjectId,
         message: Option<impl Into<String>>,
-    ) -> Result<(), UserDataSourceError> {
-        todo!()
+    ) -> Result<(), FriendsListError> {
+        let user = database.get_user_by_id(user_id).await;
+        if user.is_err() {
+            return Err(FriendsListError::UserNotFound);
+        }
+        let friend = database.get_user_by_id(friend_id).await;
+        if friend.is_err() {
+            return Err(FriendsListError::UserNotFound);
+        }
+        let friend_request = FriendRequest::new(user_id, friend_id, message);
+        let friend_request = database.add_friend_request(friend_request).await;
+        match friend_request {
+            Ok(_) => {
+                return Ok(());
+            }
+            Err(_) => {
+                return Err(FriendsListError::AddFriendFailed);
+            }
+        }
     }
 
     pub async fn friend_lists(
