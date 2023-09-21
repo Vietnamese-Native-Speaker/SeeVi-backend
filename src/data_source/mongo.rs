@@ -7,6 +7,13 @@ use crate::data_source::user_data_source::UserDataSource;
 use crate::data_source::user_data_source_error::UserDataSourceError;
 use crate::models::education::Education;
 
+use crate::data_source::friends_list_datasource::FriendsListDataSource;
+use crate::data_source::friends_list_datasource::FriendsListError;
+use crate::models::friend_request::FriendRequest;
+
+use async_graphql::futures_util::stream::BoxStream;
+use async_graphql::futures_util::stream::StreamExt;
+
 use async_trait::async_trait;
 
 use mongodb::bson;
@@ -264,5 +271,88 @@ impl CVDataSource for MongoDB {
             Ok(_) => Ok(()),
             Err(_) => Err(CVDataSourceError::IdNotFound(id)),
         }
+    }
+}
+
+#[async_trait]
+impl FriendsListDataSource for MongoDB {
+    async fn add_friend_request(
+        &self,
+        _friend_request: FriendRequest,
+    ) -> Result<(), FriendsListError> {
+        let collection: mongodb::Collection<FriendRequest> =
+            self.db.collection(FRIEND_REQUEST_COLLECTION);
+        let filter = bson::doc! {"$or" : [
+            {"from": _friend_request.from, "to": _friend_request.to},
+            {"from": _friend_request.to, "to": _friend_request.from}
+        ]};
+        let result = collection
+            .find_one(filter, None)
+            .await
+            .expect("find friend request failed");
+        match result {
+            Some(_) => Err(FriendsListError::FriendRequestAlreadyExist),
+            None => {
+                collection
+                    .insert_one(_friend_request, None)
+                    .await
+                    .expect("insert friend request failed");
+                Ok(())
+            }
+        }
+    }
+
+    async fn update_friend_request(
+        &self,
+        _friend_request: FriendRequest,
+    ) -> Result<(), FriendsListError> {
+        let collection: mongodb::Collection<FriendRequest> =
+            self.db.collection(FRIEND_REQUEST_COLLECTION);
+        let filter = bson::doc! {"$or" : [
+            {"from": _friend_request.from, "to": _friend_request.to},
+            {"from": _friend_request.to, "to": _friend_request.from}
+        ]};
+        let result = collection
+            .find_one(filter, None)
+            .await
+            .expect("find friend request failed");
+        match result {
+            Some(_) => {
+                let filter = bson::doc! {"$or" : [
+                    {"from": _friend_request.from, "to": _friend_request.to},
+                    {"from": _friend_request.to, "to": _friend_request.from}
+                ]};
+                let update = bson::doc! {"$set": {"status": _friend_request.status.to_string()}};
+                collection
+                    .find_one_and_update(filter, update, None)
+                    .await
+                    .expect("update friend request failed");
+                Ok(())
+            }
+            None => Err(FriendsListError::FriendRequestAlreadyExist),
+        }
+    }
+
+    /// Return the list of friend requests of the user.
+    async fn friend_requests(
+        &self,
+        _user_id: bson::oid::ObjectId,
+    ) -> BoxStream<Result<FriendRequest, FriendsListError>> {
+        unimplemented!()
+    }
+
+    /// Return the list of friend requests sent by the user.
+    async fn friend_requests_sent(
+        &self,
+        _user_id: bson::oid::ObjectId,
+    ) -> BoxStream<Result<FriendRequest, FriendsListError>> {
+        unimplemented!()
+    }
+
+    async fn accepted_friend_requests(
+        &self,
+        _friend_request_id: bson::oid::ObjectId,
+    ) -> BoxStream<Result<FriendRequest, FriendsListError>> {
+        unimplemented!()
     }
 }

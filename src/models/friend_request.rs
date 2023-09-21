@@ -1,5 +1,6 @@
 use mongodb::bson::{self, oid::ObjectId};
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub enum FriendRequestStatus {
@@ -40,5 +41,15 @@ impl FriendRequest {
         self.status = FriendRequestStatus::Rejected;
         self.updated_at = bson::DateTime::now();
         self
+    }
+}
+
+impl fmt::Display for FriendRequestStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Pending => write!(f, "Pending"),
+            Self::Accepted => write!(f, "Accepted"),
+            Self::Rejected => write!(f, "Rejected"),
+        }
     }
 }

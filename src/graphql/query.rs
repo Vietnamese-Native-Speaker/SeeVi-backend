@@ -4,6 +4,7 @@ use gql::{connection, ErrorExtensions};
 
 use crate::error::ServerError;
 use crate::{
+    data_source::friends_list_datasource::FriendsListDataSource,
     data_source::mongo::MongoDB,
     models::users::User,
     services::{auth_service::AuthService, user_service::UserService},
@@ -103,7 +104,10 @@ impl Query {
                     friends_list.into_iter().collect::<Vec<_>>()
                 };
                 let friends_list = if let Some(first) = first {
-                    friends_list.into_iter().take(first as usize).collect::<Vec<_>>()
+                    friends_list
+                        .into_iter()
+                        .take(first as usize)
+                        .collect::<Vec<_>>()
                 } else if let Some(last) = last {
                     friends_list
                         .into_iter()
@@ -120,6 +124,7 @@ impl Query {
                 );
                 Ok::<_, async_graphql::Error>(connection)
             },
-        ).await
+        )
+        .await
     }
 }

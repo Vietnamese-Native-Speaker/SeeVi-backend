@@ -5,6 +5,9 @@ pub enum FriendsListError {
 
     // Error when add friend fails
     AddFriendFailed,
+
+    // Friend request already exists
+    FriendRequestAlreadyExist,
 }
 
 impl fmt::Display for FriendsListError {
@@ -17,6 +20,11 @@ impl fmt::Display for FriendsListError {
             // Display message for add friend failed
             FriendsListError::AddFriendFailed => {
                 write!(f, "Failed to add friend")
+            }
+
+            // Display message for friend request already exists
+            FriendsListError::FriendRequestAlreadyExist => {
+                write!(f, "Friend request already exists")
             }
         }
     }
