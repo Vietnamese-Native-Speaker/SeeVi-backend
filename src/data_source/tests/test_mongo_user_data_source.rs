@@ -8,6 +8,7 @@ use crate::{
         update_user_input::UpdateUserInputBuilder,
     },
 };
+use mongodb::bson::oid::ObjectId;
 use mongodb::bson::Uuid;
 use serial_test::serial;
 
@@ -107,12 +108,8 @@ async fn test_get_user_by_id() {
     let uuid = Uuid::new();
     let input = create_demo_user_input(uuid);
     mongodb.create_user(input).await.unwrap();
-    let uuid2 = mongodb
-        .get_user_by_username("username")
-        .await
-        .unwrap()
-        .user_id;
-    let check_input = mongodb.get_user_by_id(uuid2).await.unwrap();
+    let uuid2 = mongodb.get_user_by_username("username").await.unwrap().id;
+    let check_input = mongodb.get_user_by_id(*uuid2).await.unwrap();
     assert_eq!(check_input.username, "username".to_string());
     assert_eq!(check_input.first_name, "first_name".to_string());
     assert_eq!(check_input.last_name, "last_name".to_string());
@@ -158,9 +155,9 @@ async fn test_get_user_by_id() {
     assert_eq!(check_input.shared_cvs, vec![]);
     assert_eq!(check_input.saved_cvs, vec![]);
     assert_eq!(check_input.liked_cvs, vec![]);
-    let uuid3 = Uuid::new();
+    let uuid3 = ObjectId::new();
     let check_input2 = mongodb.get_user_by_id(uuid3).await;
-    assert_eq!(check_input2, Err(UserDataSourceError::UuidNotFound(uuid3)));
+    assert_eq!(check_input2, Err(UserDataSourceError::IdNotFound(uuid3)));
 }
 
 #[tokio::test]
@@ -170,17 +167,13 @@ async fn test_delete_user() {
     let uuid = Uuid::new();
     let input = create_demo_user_input(uuid);
     mongodb.create_user(input).await.unwrap();
-    let uuid2 = mongodb
-        .get_user_by_username("username")
-        .await
-        .unwrap()
-        .user_id;
-    let uuid3 = Uuid::new();
+    let uuid2 = mongodb.get_user_by_username("username").await.unwrap().id;
+    let uuid3 = ObjectId::new();
     let error = mongodb.delete_user(uuid3).await;
-    assert_eq!(error, Err(UserDataSourceError::UuidNotFound(uuid3)));
-    mongodb.delete_user(uuid2).await.unwrap();
-    let error2 = mongodb.get_user_by_id(uuid2).await;
-    assert_eq!(error2, Err(UserDataSourceError::UuidNotFound(uuid2)))
+    assert_eq!(error, Err(UserDataSourceError::IdNotFound(uuid3)));
+    mongodb.delete_user(*uuid2).await.unwrap();
+    let error2 = mongodb.get_user_by_id(*uuid2).await;
+    assert_eq!(error2, Err(UserDataSourceError::IdNotFound(*uuid2)))
 }
 
 #[tokio::test]
@@ -191,7 +184,7 @@ async fn test_update_user_info() {
     let input = create_demo_user_input(uuid);
     let check_input = mongodb.create_user(input).await.unwrap();
     let updateinput = UpdateUserInputBuilder::default()
-        .with_user_id(check_input.user_id)
+        .with_user_id(check_input.id)
         .with_username("username2".to_string())
         .with_first_name("first_name2".to_string())
         .with_last_name("last_name2".to_string())

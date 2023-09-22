@@ -5,23 +5,39 @@ use super::make_graphql;
 pub static USER_DETAIL: &str = r#"
 query getUser() {
     userDetail {
-        userId,
+        id,
         username
     }
 }"#;
 
 pub static USER_LOGIN: &str = r#"
 query login($info: LoginInfo!) {
-    login(loginInfo: $info)
+    login(loginInfo: $info) {
+        accessToken,
+        refreshToken,
+    }
+}"#;
+
+pub static USER_REFRESH_TOKEN: &str = r#"
+query refreshToken($token: String!) {
+    refreshToken(refreshToken: $token)
 }"#;
 
 pub static USER_REGISTER: &str = r#"
 mutation userRegister($user: CreateUserInput!) {
     userRegister(newUser: $user) {
-        userId,
+        id,
         username
     }
 }"#;
+
+pub fn graphql_refresh_token(refresh_token: &str) -> String {
+    make_graphql(
+        USER_REFRESH_TOKEN,
+        "refreshToken",
+        serde_json::json!({ "token": refresh_token }),
+    )
+}
 
 pub fn graphql_user_register(username: &str, password: &str) -> String {
     make_graphql(

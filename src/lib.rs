@@ -10,11 +10,13 @@ use filters::{with_auth_header, graphql_sdl};
 use graphql::{mutation::Mutation, query::Query};
 use warp::{Filter, Rejection, hyper::StatusCode};
 
+pub mod object_id;
 pub mod data_source;
 pub mod graphql;
 pub mod models;
 pub mod services;
 pub mod filters;
+pub mod error;
 
 #[derive(Clone)]
 pub struct State {

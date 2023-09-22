@@ -4,7 +4,6 @@ use crate::models::users::create_user_input::CreateUserInputBuilder;
 use crate::models::users::{CreateUserInput, UpdateUserInput, User};
 use crate::services::auth_service::{AuthService, Claims};
 use mongodb::bson::Uuid;
-use std::sync::Mutex;
 
 pub fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
     let demo = CreateUserInputBuilder::default()
@@ -98,7 +97,7 @@ async fn authenticate_user_test() {
     .await
     .unwrap();
     let token_data = jsonwebtoken::decode::<Claims>(
-        &token,
+        &token.0,
         &jsonwebtoken::DecodingKey::from_secret(key.as_ref()),
         &jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::HS256),
     )
