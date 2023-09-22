@@ -1,3 +1,5 @@
+use std::fmt::Pointer;
+
 use super::super::{cv_data_source::CVDataSource, cv_data_source_error::CVDataSourceError};
 use crate::data_source::mongo::MongoDB;
 use crate::data_source::user_data_source::UserDataSource;
@@ -7,6 +9,8 @@ use crate::models::education::Education;
 use crate::models::users::create_user_input::CreateUserInputBuilder;
 use crate::models::users::CreateUserInput;
 use mongodb::bson::oid::ObjectId;
+use futures_core::stream::BoxStream;
+use tokio_stream::StreamExt;
 use mongodb::bson::Uuid;
 use serial_test::serial;
 
@@ -71,7 +75,7 @@ async fn test_create_cv() {
 
 #[tokio::test]
 #[serial]
-async fn get_cv_by_id() {
+async fn test_get_cv_by_id() {
     let mongodb = MongoDB::init_test().await;
     let user_input = create_demo_user_input();
     let user = mongodb.create_user(user_input).await.unwrap();
@@ -94,4 +98,23 @@ async fn get_cv_by_id() {
         vec!["tag".to_string(), "tag2".to_string()]
     );
     assert_eq!(check_input2.comments, vec![]);
+}
+
+// #[tokio::test]
+// fn test_delete_cv(){
+
+// }
+
+#[tokio::test]
+#[serial]
+async fn test_get_recommended_cvs(){
+    let mongodb = MongoDB::init_test().await;
+    let user = create_demo_user_input();
+    let input_user = mongodb.create_user(user).await.unwrap();
+    let input = create_demo_cv_input(input_user.id.into());
+    let check_input = mongodb.create_cv(input).await.unwrap();
+    let mut stream_cv = mongodb.get_recommended_cvs(check_input).await;
+    while let Some(stream_test) = stream_cv.next().await{
+        assert_eq!(stream_test.unwrap().tags, vec!["tag".to_string(), "tag2".to_string()]);
+    }
 }
