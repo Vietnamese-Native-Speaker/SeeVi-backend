@@ -3,7 +3,7 @@ use async_graphql::{Context, Object, ErrorExtensions};
 use crate::{
     data_source::mongo::MongoDB,
     models::users::{CreateUserInput, User},
-    services::{auth_service::AuthService, user_service::UserService},
+    services::{auth_service::AuthService, user_service::UserService}, object_id::ScalarObjectId,
 };
 
 use super::GqlResult;
@@ -17,6 +17,30 @@ impl Mutation {
         match rs {
             Ok(user) => Ok(user),
             Err(e) => Err(e.extend()),
+        }
+    }
+    
+    async fn send_friend_request(&self, ctx: &Context<'_>, user_id: ScalarObjectId, friend_id: ScalarObjectId, message: Option<String>) -> GqlResult<bool> {
+        let rs = UserService::send_friend_request(ctx.data_unchecked::<MongoDB>(), user_id.into(), friend_id.into(), message).await;
+        match rs {
+            Ok(_) => Ok(true),
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    async fn accept_friend_request(&self, ctx: &Context<'_>, user_id: ScalarObjectId, friend_id: ScalarObjectId) -> GqlResult<bool> {
+        let rs = UserService::accept_friend_request(ctx.data_unchecked::<MongoDB>(), user_id.into(), friend_id.into()).await;
+        match rs {
+            Ok(_) => Ok(true),
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    async fn decline_friend_request(&self, ctx: &Context<'_>, user_id: ScalarObjectId, friend_id: ScalarObjectId) -> GqlResult<bool> {
+        let rs = UserService::reject_friend_request(ctx.data_unchecked::<MongoDB>(), user_id.into(), friend_id.into()).await;
+        match rs {
+            Ok(_) => Ok(true),
+            Err(e) => Err(e.into()),
         }
     }
 }
