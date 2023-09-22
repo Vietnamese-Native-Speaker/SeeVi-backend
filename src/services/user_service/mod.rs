@@ -129,7 +129,7 @@ impl UserService {
     pub async fn friend_lists(
         database: &(impl UserDataSource + FriendsListDataSource + std::marker::Sync),
         user_id: ObjectId,
-    ) -> BoxStream<Result<FriendRequest, FriendsListError>> {
-        database.accepted_friend_requests(user_id).await
+    ) -> BoxStream<Result<User, FriendsListError>> {
+        unimplemented!();  
     }
 }
