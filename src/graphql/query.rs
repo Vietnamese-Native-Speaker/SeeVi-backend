@@ -72,7 +72,7 @@ impl Query {
     async fn friendslist(
         &self,
         ctx: &Context<'_>,
-        UserId: ObjectId,
+        user_id: ObjectId,
         after: Option<String>,
         before: Option<String>,
         first: Option<i32>,
@@ -81,7 +81,7 @@ impl Query {
         connection::Connection<ScalarObjectId, User, connection::EmptyFields, connection::EmptyFields>,
     > {
         let db = ctx.data_unchecked::<MongoDB>();
-        let friends_list = UserService::friend_lists(db, UserId).await.collect::<Vec<_>>().await;
+        let friends_list = UserService::friend_lists(db, user_id).await.collect::<Vec<_>>().await;
         connection::query(
             after,
             before,
