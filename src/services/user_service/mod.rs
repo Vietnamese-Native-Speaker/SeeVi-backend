@@ -78,7 +78,7 @@ impl UserService {
         }
     }
 
-    pub async fn add_friend(
+    pub async fn send_friend_request(
         database: &(impl UserDataSource + FriendsListDataSource + std::marker::Sync),
         user_id: ObjectId,
         friend_id: ObjectId,
@@ -102,6 +102,28 @@ impl UserService {
                 return Err(FriendsListError::AddFriendFailed);
             }
         }
+    }
+
+    pub async fn accept_friend_request(
+        database: &(impl UserDataSource + FriendsListDataSource + std::marker::Sync),
+        user_id: ObjectId,
+        friend_id: ObjectId,
+    ) -> Result<(), FriendsListError> {
+        let friend_request = database.get_friend_request(friend_id, user_id).await;
+        let friend_request = friend_request?.accept();
+        database.update_friend_request(friend_request).await?;
+        Ok(())
+    }
+
+    pub async fn reject_friend_request(
+        database: &(impl UserDataSource + FriendsListDataSource + std::marker::Sync),
+        user_id: ObjectId,
+        friend_id: ObjectId,
+    ) -> Result<(), FriendsListError> {
+        let friend_request = database.get_friend_request(friend_id, user_id).await;
+        let friend_request = friend_request?.reject();
+        database.update_friend_request(friend_request).await?;
+        Ok(())
     }
 
     pub async fn friend_lists(
