@@ -1,5 +1,5 @@
 use super::super::{cv_data_source::CVDataSource, cv_data_source_error::CVDataSourceError};
-use crate::data_source::mongo::MongoDB;
+use crate::data_source::mongo::MongoForTesting;
 use crate::data_source::user_data_source::UserDataSource;
 use crate::models::cv::create_cv_input::CreateCVInputBuilder;
 use crate::models::cv::CreateCVInput;
@@ -53,7 +53,7 @@ fn create_demo_cv_input(author_id: ObjectId) -> CreateCVInput {
 #[tokio::test]
 #[serial]
 async fn test_create_cv() {
-    let mongodb = MongoDB::init_test().await;
+    let mongodb = MongoForTesting::init().await;
     let input = create_demo_user_input();
     let user = mongodb.create_user(input).await.unwrap();
     let input = create_demo_cv_input(user.id.into());
@@ -72,7 +72,7 @@ async fn test_create_cv() {
 #[tokio::test]
 #[serial]
 async fn get_cv_by_id() {
-    let mongodb = MongoDB::init_test().await;
+    let mongodb = MongoForTesting::init().await;
     let user_input = create_demo_user_input();
     let user = mongodb.create_user(user_input).await.unwrap();
     println!("{}", *user.id);
