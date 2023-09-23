@@ -289,14 +289,17 @@ impl FriendsListDataSource for MongoDB {
 
         let find = collection.find_one(filter, None).await;
         match find {
-            Ok(_) => Err(FriendsListError::FriendRequestAlreadyExist),
-            Err(_) => {
-                let result = collection.insert_one(&_friend_request, None).await;
-                match result {
-                    Ok(_) => Ok(()),
-                    Err(_) => Err(FriendsListError::AddFriendFailed),
+            Ok(_) => match find.unwrap() {
+                Some(_) => Err(FriendsListError::FriendRequestAlreadyExist),
+                None => {
+                    let result = collection.insert_one(&_friend_request, None).await;
+                    match result {
+                        Ok(_) => Ok(()),
+                        Err(_) => Err(FriendsListError::DatabaseError),
+                    }
                 }
-            }
+            },
+            Err(_) => Err(FriendsListError::DatabaseError),
         }
     }
 
@@ -316,23 +319,27 @@ impl FriendsListDataSource for MongoDB {
 
         let find = collection.find_one(filter.clone(), None).await;
         match find {
-            Ok(_) => {
-                let update = bson::doc! {"$set": {"status": _friend_request.status.to_string()}};
-                let result = collection
-                    .find_one_and_update(
-                        filter.clone(),
-                        update,
-                        FindOneAndUpdateOptions::builder()
-                            .return_document(ReturnDocument::After)
-                            .build(),
-                    )
-                    .await;
-                match result {
-                    Ok(_) => Ok(()),
-                    Err(_) => Err(FriendsListError::UpdateFriendRequestFailed),
+            Ok(_) => match find.unwrap() {
+                Some(_) => {
+                    let update =
+                        bson::doc! {"$set": {"status": _friend_request.status.to_string()}};
+                    let result = collection
+                        .find_one_and_update(
+                            filter,
+                            update,
+                            FindOneAndUpdateOptions::builder()
+                                .return_document(ReturnDocument::After)
+                                .build(),
+                        )
+                        .await;
+                    match result {
+                        Ok(_) => Ok(()),
+                        Err(_) => Err(FriendsListError::DatabaseError),
+                    }
                 }
-            }
-            Err(_) => Err(FriendsListError::FriendRequestNotFound),
+                None => Err(FriendsListError::FriendRequestNotFound),
+            },
+            Err(_) => Err(FriendsListError::DatabaseError),
         }
     }
 
