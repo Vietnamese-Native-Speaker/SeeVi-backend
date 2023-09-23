@@ -314,7 +314,7 @@ impl FriendsListDataSource for MongoDB {
             ]
         };
 
-        let find = collection.find_one(filter, None).await;
+        let find = collection.find_one(filter.clone(), None).await;
         match find {
             Ok(_) => {
                 let update = bson::doc! {"$set": {"status": _friend_request.status.to_string()}};
