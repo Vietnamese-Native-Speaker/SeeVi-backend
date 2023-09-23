@@ -1,6 +1,8 @@
+use crate::data_source::friends_list_datasource::FriendsListDataSource;
 use crate::data_source::user_data_source::UserDataSource;
 use crate::data_source::user_data_source_error::UserDataSourceError;
 use crate::models::education::Education;
+use crate::models::friend_request::FriendRequest;
 use crate::{
     data_source::mongo::MongoDB,
     models::users::{
@@ -236,4 +238,51 @@ async fn test_update_user_info() {
     assert_eq!(check_input2.shared_cvs, vec![]);
     assert_eq!(check_input2.saved_cvs, vec![]);
     assert_eq!(check_input2.liked_cvs, vec![]);
+}
+
+#[tokio::test]
+#[serial_test::serial]
+async fn test_create_friend_request() {
+    let mongodb = MongoDB::init_test().await;
+    let user1: ObjectId = ObjectId::new();
+    let user2: ObjectId = ObjectId::new();
+    let friend_request = FriendRequest::new(user1, user2, Some("test_friend_request".to_string()));
+    mongodb
+        .add_friend_request(friend_request.clone())
+        .await
+        .unwrap();
+    let friend_request2 = mongodb.get_friend_request(user1, user2).await.unwrap();
+    assert_eq!(friend_request2.from, user1);
+    assert_eq!(friend_request2.to, user2);
+    assert_eq!(
+        friend_request2.message,
+        Some("test_friend_request".to_string())
+    );
+    assert_eq!(friend_request2.status.to_string(), "Pending".to_string());
+}
+
+#[tokio::test]
+#[serial_test::serial]
+async fn test_accept_friend_request() {
+    let mongodb = MongoDB::init_test().await;
+    let user1: ObjectId = ObjectId::new();
+    let user2: ObjectId = ObjectId::new();
+    let friend_request = FriendRequest::new(user1, user2, Some("test_friend_request".to_string()));
+    let accepted_friend_request = friend_request.clone().accept();
+    mongodb
+        .add_friend_request(accepted_friend_request.clone())
+        .await
+        .unwrap();
+    mongodb
+        .update_friend_request(accepted_friend_request)
+        .await
+        .unwrap();
+    let friend_request2 = mongodb.get_friend_request(user1, user2).await.unwrap();
+    assert_eq!(friend_request2.from, user1);
+    assert_eq!(friend_request2.to, user2);
+    assert_eq!(
+        friend_request2.message,
+        Some("test_friend_request".to_string())
+    );
+    assert_eq!(friend_request2.status.to_string(), "Accepted".to_string());
 }
