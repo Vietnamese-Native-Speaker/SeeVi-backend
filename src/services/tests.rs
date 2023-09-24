@@ -43,7 +43,9 @@ impl FriendsListDataSource for MockDatabase {
     ) -> Result<(), FriendsListError> {
         let mut friend_requests = self.friend_requests.lock().unwrap();
         for request in friend_requests.iter_mut() {
-            if request.from == friend_request.from && request.to == friend_request.to {
+            if request._id.from == friend_request._id.from
+                && request._id.to == friend_request._id.to
+            {
                 *request = friend_request.clone();
                 return Ok(());
             }
@@ -60,7 +62,7 @@ impl FriendsListDataSource for MockDatabase {
         let stream = futures_util::stream::iter(friend_requests.into_iter());
         let stream = stream.filter(move |friend_request| {
             let friend_request = friend_request.clone();
-            async move { friend_request.to == user_id }
+            async move { friend_request._id.to == user_id }
         });
         stream
             .map(|friend_request| Ok(friend_request.clone()))
@@ -76,7 +78,7 @@ impl FriendsListDataSource for MockDatabase {
         let mut stream = futures_util::stream::iter(friend_requests.into_iter());
         let stream = stream.filter(move |friend_request| {
             let friend_request = friend_request.clone();
-            async move { friend_request.from == user_id }
+            async move { friend_request._id.from == user_id }
         });
         stream.map(|friend_request| Ok(friend_request)).boxed()
     }
@@ -91,7 +93,7 @@ impl FriendsListDataSource for MockDatabase {
             let friend_request = friend_request.clone();
             async move {
                 friend_request.status == FriendRequestStatus::Accepted
-                    && (friend_request.from == user_id || friend_request.to == user_id)
+                    && (friend_request._id.from == user_id || friend_request._id.to == user_id)
             }
         });
         stream.map(|friend_request| Ok(friend_request)).boxed()
@@ -104,7 +106,7 @@ impl FriendsListDataSource for MockDatabase {
     ) -> Result<FriendRequest, FriendsListError> {
         let friend_requests = self.friend_requests.lock().unwrap();
         for request in friend_requests.iter() {
-            if request.from == from && request.to == to {
+            if request._id.from == from && request._id.to == to {
                 return Ok(request.clone());
             }
         }

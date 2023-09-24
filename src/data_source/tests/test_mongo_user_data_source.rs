@@ -4,16 +4,12 @@ use crate::data_source::user_data_source::UserDataSource;
 use crate::data_source::user_data_source_error::UserDataSourceError;
 use crate::models::education::Education;
 use crate::models::friend_request::FriendRequest;
-use crate::{
-    data_source::mongo::MongoDB,
-    models::users::{
-        create_user_input::{CreateUserInput, CreateUserInputBuilder},
-        update_user_input::UpdateUserInputBuilder,
-    },
+use crate::models::users::{
+    create_user_input::{CreateUserInput, CreateUserInputBuilder},
+    update_user_input::UpdateUserInputBuilder,
 };
 use mongodb::bson::oid::ObjectId;
 use mongodb::bson::Uuid;
-use serial_test::serial;
 
 fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
     CreateUserInputBuilder::default()
@@ -238,9 +234,8 @@ async fn test_update_user_info() {
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn test_create_friend_request() {
-    let mongodb = MongoDB::init_test().await;
+    let mongodb = MongoForTesting::init().await;
     let user1: ObjectId = ObjectId::new();
     let user2: ObjectId = ObjectId::new();
     let friend_request = FriendRequest::new(user1, user2, Some("test_friend_request".to_string()));
@@ -249,8 +244,8 @@ async fn test_create_friend_request() {
         .await
         .unwrap();
     let friend_request2 = mongodb.get_friend_request(user1, user2).await.unwrap();
-    assert_eq!(friend_request2.from, user1);
-    assert_eq!(friend_request2.to, user2);
+    assert_eq!(friend_request2._id.from, user1);
+    assert_eq!(friend_request2._id.to, user2);
     assert_eq!(
         friend_request2.message,
         Some("test_friend_request".to_string())
@@ -259,9 +254,8 @@ async fn test_create_friend_request() {
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn test_accept_friend_request() {
-    let mongodb = MongoDB::init_test().await;
+    let mongodb = MongoForTesting::init().await;
     let user1: ObjectId = ObjectId::new();
     let user2: ObjectId = ObjectId::new();
     let friend_request = FriendRequest::new(user1, user2, Some("test_friend_request".to_string()));
@@ -275,8 +269,8 @@ async fn test_accept_friend_request() {
         .await
         .unwrap();
     let friend_request2 = mongodb.get_friend_request(user1, user2).await.unwrap();
-    assert_eq!(friend_request2.from, user1);
-    assert_eq!(friend_request2.to, user2);
+    assert_eq!(friend_request2._id.from, user1);
+    assert_eq!(friend_request2._id.to, user2);
     assert_eq!(
         friend_request2.message,
         Some("test_friend_request".to_string())
