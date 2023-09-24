@@ -373,7 +373,7 @@ impl FriendsListDataSource for MongoDB {
     ) -> BoxStream<Result<FriendRequest, FriendsListError>> {
         let collection: mongodb::Collection<FriendRequest> =
             self.db.collection(FRIEND_REQUEST_COLLECTION);
-        let filter = bson::doc! {"to" : _user_id};
+        let filter = bson::doc! {"_id.to" : _user_id};
 
         let cursor = collection.find(filter, None).await.unwrap();
         let stream = cursor
@@ -411,8 +411,8 @@ impl FriendsListDataSource for MongoDB {
         let collection: mongodb::Collection<FriendRequest> =
             self.db.collection(FRIEND_REQUEST_COLLECTION);
         let filter = bson::doc! {"$or" : [
-            {"_id.from": _friend_request_id, "status": "accepted"},
-            {"_id.to": _friend_request_id, "status": "accepted"}
+            {"_id.from": _friend_request_id, "status": "Accepted"},
+            {"_id.to": _friend_request_id, "status": "Accepted"}
         ]};
 
         let cursor = collection.find(filter, None).await.unwrap();
