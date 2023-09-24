@@ -1,4 +1,5 @@
 use crate::data_source::friends_list_datasource::FriendsListDataSource;
+use crate::data_source::mongo::MongoForTesting;
 use crate::data_source::user_data_source::UserDataSource;
 use crate::data_source::user_data_source_error::UserDataSourceError;
 use crate::models::education::Education;
@@ -43,9 +44,8 @@ fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_create_user_and_get_user_by_username() {
-    let mongodb = MongoDB::init_test().await;
+    let mongodb = MongoForTesting::init().await;
     let uuid = Uuid::new();
     let input = create_demo_user_input(uuid);
     let username_clone = input.username.clone();
@@ -104,9 +104,8 @@ async fn test_create_user_and_get_user_by_username() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_get_user_by_id() {
-    let mongodb = MongoDB::init_test().await;
+    let mongodb = MongoForTesting::init().await;
     let uuid = Uuid::new();
     let input = create_demo_user_input(uuid);
     mongodb.create_user(input).await.unwrap();
@@ -163,9 +162,8 @@ async fn test_get_user_by_id() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_delete_user() {
-    let mongodb = MongoDB::init_test().await;
+    let mongodb = MongoForTesting::init().await;
     let uuid = Uuid::new();
     let input = create_demo_user_input(uuid);
     mongodb.create_user(input).await.unwrap();
@@ -179,9 +177,8 @@ async fn test_delete_user() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_update_user_info() {
-    let mongodb = MongoDB::init_test().await;
+    let mongodb = MongoForTesting::init().await;
     let uuid = Uuid::new();
     let input = create_demo_user_input(uuid);
     let check_input = mongodb.create_user(input).await.unwrap();

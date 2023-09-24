@@ -1,5 +1,5 @@
 use async_graphql as gql;
-use async_graphql::{Context, InputObject, Object, futures_util::StreamExt};
+use async_graphql::{futures_util::StreamExt, Context, InputObject, Object};
 use gql::{connection, ErrorExtensions};
 use mongodb::bson::oid::ObjectId;
 
@@ -78,10 +78,18 @@ impl Query {
         first: Option<i32>,
         last: Option<i32>,
     ) -> gql::Result<
-        connection::Connection<ScalarObjectId, User, connection::EmptyFields, connection::EmptyFields>,
+        connection::Connection<
+            ScalarObjectId,
+            User,
+            connection::EmptyFields,
+            connection::EmptyFields,
+        >,
     > {
         let db = ctx.data_unchecked::<MongoDB>();
-        let friends_list = UserService::friend_lists(db, UserId).await.collect::<Vec<_>>().await;
+        let friends_list = UserService::friend_lists(db, UserId)
+            .await
+            .collect::<Vec<_>>()
+            .await;
         connection::query(
             after,
             before,
@@ -119,11 +127,11 @@ impl Query {
                     panic!("Must have either 'first' or 'last' argument")
                 };
                 let mut connection = connection::Connection::new(true, false);
-                connection.edges.extend(
-                    friends_list
-                        .into_iter()
-                        .map(|friend| connection::Edge::new(friend.as_ref().unwrap().id, friend.unwrap())),
-                );
+                connection
+                    .edges
+                    .extend(friends_list.into_iter().map(|friend| {
+                        connection::Edge::new(friend.as_ref().unwrap().id, friend.unwrap())
+                    }));
                 Ok::<_, async_graphql::Error>(connection)
             },
         )
