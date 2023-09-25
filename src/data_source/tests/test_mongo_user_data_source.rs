@@ -246,8 +246,8 @@ async fn test_create_friend_request() {
         .await
         .unwrap();
     let friend_request2 = mongodb.get_friend_request(user1, user2).await.unwrap();
-    assert_eq!(friend_request2._id.from, user1);
-    assert_eq!(friend_request2._id.to, user2);
+    assert_eq!(friend_request2.id.from, user1);
+    assert_eq!(friend_request2.id.to, user2);
     assert_eq!(
         friend_request2.message,
         Some("test_friend_request".to_string())
@@ -271,8 +271,8 @@ async fn test_accept_friend_request() {
         .await
         .unwrap();
     let friend_request2 = mongodb.get_friend_request(user1, user2).await.unwrap();
-    assert_eq!(friend_request2._id.from, user1);
-    assert_eq!(friend_request2._id.to, user2);
+    assert_eq!(friend_request2.id.from, user1);
+    assert_eq!(friend_request2.id.to, user2);
     assert_eq!(
         friend_request2.message,
         Some("test_friend_request".to_string())

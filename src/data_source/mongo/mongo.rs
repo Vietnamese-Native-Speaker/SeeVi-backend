@@ -284,8 +284,8 @@ impl FriendsListDataSource for MongoDB {
         let collection: mongodb::Collection<FriendRequest> =
             self.db.collection(FRIEND_REQUEST_COLLECTION);
         let filter = bson::doc! {"$or" : [
-            {"_id.from": _friend_request._id.from, "_id.to": _friend_request._id.to},
-            {"_id.from": _friend_request._id.to, "_id.to": _friend_request._id.from}
+            {"_id.from": _friend_request.id.from, "_id.to": _friend_request.id.to},
+            {"_id.from": _friend_request.id.to, "_id.to": _friend_request.id.from}
         ]};
 
         let find = collection.find_one(filter, None).await;
@@ -313,8 +313,8 @@ impl FriendsListDataSource for MongoDB {
             .collection::<FriendRequest>(FRIEND_REQUEST_COLLECTION);
         let filter = bson::doc! {
             "$or": [
-                {"_id.from": _friend_request._id.from, "_id.to": _friend_request._id.to},
-                {"_id.from": _friend_request._id.to, "_id.to": _friend_request._id.from}
+                {"_id.from": _friend_request.id.from, "_id.to": _friend_request.id.to},
+                {"_id.from": _friend_request.id.to, "_id.to": _friend_request.id.from}
             ]
         };
 

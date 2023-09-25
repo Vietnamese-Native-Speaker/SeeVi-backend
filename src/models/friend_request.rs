@@ -17,7 +17,8 @@ pub struct FriendRequestID {
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct FriendRequest {
-    pub _id: FriendRequestID,
+    #[serde(rename = "_id")]
+    pub id: FriendRequestID,
     pub message: Option<String>,
     pub status: FriendRequestStatus,
     pub created_at: bson::DateTime,
@@ -27,7 +28,7 @@ pub struct FriendRequest {
 impl FriendRequest {
     pub fn new(from: ObjectId, to: ObjectId, message: Option<impl Into<String>>) -> Self {
         Self {
-            _id: FriendRequestID { from, to },
+            id: FriendRequestID { from, to },
             message: message.map(|m| m.into()),
             status: FriendRequestStatus::Pending,
             created_at: bson::DateTime::now(),
