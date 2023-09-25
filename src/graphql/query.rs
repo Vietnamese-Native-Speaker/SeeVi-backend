@@ -1,10 +1,11 @@
 use async_graphql as gql;
-use async_graphql::{Context, InputObject, Object};
+use async_graphql::{futures_util::StreamExt, Context, InputObject, Object};
 use gql::{connection, ErrorExtensions};
+use mongodb::bson::oid::ObjectId;
 
 use crate::error::ServerError;
+use crate::object_id::ScalarObjectId;
 use crate::{
-    data_source::friends_list_datasource::FriendsListDataSource,
     data_source::mongo::MongoDB,
     models::users::User,
     services::{auth_service::AuthService, user_service::UserService},
@@ -66,5 +67,74 @@ impl Query {
             Ok(token) => Ok(token),
             Err(e) => Err(e.extend()),
         }
+    }
+
+    async fn friendslist(
+        &self,
+        ctx: &Context<'_>,
+        UserId: ObjectId,
+        after: Option<String>,
+        before: Option<String>,
+        first: Option<i32>,
+        last: Option<i32>,
+    ) -> gql::Result<
+        connection::Connection<
+            ScalarObjectId,
+            User,
+            connection::EmptyFields,
+            connection::EmptyFields,
+        >,
+    > {
+        let db = ctx.data_unchecked::<MongoDB>();
+        let friends_list = UserService::friend_lists(db, UserId)
+            .await
+            .collect::<Vec<_>>()
+            .await;
+        connection::query(
+            after,
+            before,
+            first,
+            last,
+            |after, before, first, last| async move {
+                let friends_list = if let Some(after) = after {
+                    friends_list
+                        .into_iter()
+                        .skip_while(|friend| friend.as_ref().unwrap().id != after)
+                        .skip(1)
+                        .map(|friend| friend)
+                        .collect::<Vec<_>>()
+                } else if let Some(before) = before {
+                    friends_list
+                        .into_iter()
+                        .take_while(|friend| friend.as_ref().unwrap().id != before)
+                        .map(|friend| friend)
+                        .collect::<Vec<_>>()
+                } else {
+                    friends_list.into_iter().collect::<Vec<_>>()
+                };
+                let friends_list = if let Some(first) = first {
+                    friends_list
+                        .into_iter()
+                        .take(first as usize)
+                        .collect::<Vec<_>>()
+                } else if let Some(last) = last {
+                    let size = friends_list.len() as usize;
+                    friends_list
+                        .into_iter()
+                        .skip(size - last as usize)
+                        .collect::<Vec<_>>()
+                } else {
+                    panic!("Must have either 'first' or 'last' argument")
+                };
+                let mut connection = connection::Connection::new(true, false);
+                connection
+                    .edges
+                    .extend(friends_list.into_iter().map(|friend| {
+                        connection::Edge::new(friend.as_ref().unwrap().id, friend.unwrap())
+                    }));
+                Ok::<_, async_graphql::Error>(connection)
+            },
+        )
+        .await
     }
 }

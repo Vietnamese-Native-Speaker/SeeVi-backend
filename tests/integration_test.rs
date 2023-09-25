@@ -15,7 +15,7 @@ async fn register_and_login() {
     pretty_env_logger::init();
     dotenv::dotenv().ok();
 
-    let mongo_ds = mongo::MongoDB::init_test().await;
+    let mongo_ds = mongo::MongoForTesting::init().await;
 
     let schema = Schema::build(Query, Mutation, EmptySubscription)
         .data(mongo_ds)
@@ -54,7 +54,7 @@ async fn register_and_login() {
 async fn register_login_refresh_access() {
     dotenv::dotenv().ok();
 
-    let mongo_ds = mongo::MongoDB::init_test().await;
+    let mongo_ds = mongo::MongoForTesting::init().await;
 
     let schema = Schema::build(Query, Mutation, EmptySubscription)
         .data(mongo_ds)

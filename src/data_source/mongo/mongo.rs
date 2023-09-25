@@ -10,6 +10,7 @@ use crate::data_source::friends_list_datasource::FriendsListError;
 use crate::data_source::user_data_source_error::UserDataSourceError;
 use crate::models::education::Education;
 use crate::models::friend_request::FriendRequest;
+use crate::mongo::mongo::bson::doc;
 
 use async_graphql::futures_util::stream::BoxStream;
 use async_graphql::futures_util::stream::StreamExt;
@@ -21,8 +22,8 @@ use mongodb::bson;
 use crate::models::cv;
 use crate::models::users::{self, User};
 
-use super::cv_data_source::CVDataSource;
-use super::cv_data_source_error::CVDataSourceError;
+use crate::data_source::cv_data_source::CVDataSource;
+use crate::data_source::cv_data_source_error::CVDataSourceError;
 
 const FRIEND_REQUEST_COLLECTION: &str = "friend_requests";
 const CV_COLLECTION: &str = "cvs";
@@ -50,13 +51,13 @@ impl MongoDB {
         MongoDB { client, db }
     }
 
-    pub async fn init_test() -> MongoDB {
+    pub async fn init_with_database_name(name: &str) -> MongoDB {
         let mut client_options = ClientOptions::parse("mongodb://127.0.0.1:27017")
             .await
             .expect("Failed to parse options!");
         client_options.app_name = Some("SeeVi".to_string());
         let client = Client::with_options(client_options).expect("Failed to initialize database!");
-        let db = client.database("test");
+        let db = client.database(name);
         db.drop(None).await.unwrap();
         MongoDB { client, db }
     }
@@ -283,22 +284,23 @@ impl FriendsListDataSource for MongoDB {
         let collection: mongodb::Collection<FriendRequest> =
             self.db.collection(FRIEND_REQUEST_COLLECTION);
         let filter = bson::doc! {"$or" : [
-            {"from": _friend_request.from, "to": _friend_request.to},
-            {"from": _friend_request.to, "to": _friend_request.from}
+            {"_id.from": _friend_request._id.from, "_id.to": _friend_request._id.to},
+            {"_id.from": _friend_request._id.to, "_id.to": _friend_request._id.from}
         ]};
-        let result = collection
-            .find_one(filter, None)
-            .await
-            .expect("find friend request failed");
-        match result {
-            Some(_) => Err(FriendsListError::FriendRequestAlreadyExist),
-            None => {
-                collection
-                    .insert_one(_friend_request, None)
-                    .await
-                    .expect("insert friend request failed");
-                Ok(())
-            }
+
+        let find = collection.find_one(filter, None).await;
+        match find {
+            Ok(_) => match find.unwrap() {
+                Some(_) => Err(FriendsListError::FriendRequestAlreadyExist),
+                None => {
+                    let result = collection.insert_one(&_friend_request, None).await;
+                    match result {
+                        Ok(_) => Ok(()),
+                        Err(_) => Err(FriendsListError::DatabaseError),
+                    }
+                }
+            },
+            Err(_) => Err(FriendsListError::DatabaseError),
         }
     }
 
@@ -306,30 +308,61 @@ impl FriendsListDataSource for MongoDB {
         &self,
         _friend_request: FriendRequest,
     ) -> Result<(), FriendsListError> {
-        let collection: mongodb::Collection<FriendRequest> =
-            self.db.collection(FRIEND_REQUEST_COLLECTION);
-        let filter = bson::doc! {"$or" : [
-            {"from": _friend_request.from, "to": _friend_request.to},
-            {"from": _friend_request.to, "to": _friend_request.from}
+        let collection = self
+            .db
+            .collection::<FriendRequest>(FRIEND_REQUEST_COLLECTION);
+        let filter = bson::doc! {
+            "$or": [
+                {"_id.from": _friend_request._id.from, "_id.to": _friend_request._id.to},
+                {"_id.from": _friend_request._id.to, "_id.to": _friend_request._id.from}
+            ]
+        };
+
+        let find = collection.find_one(filter.clone(), None).await;
+        match find {
+            Ok(_) => match find.unwrap() {
+                Some(_) => {
+                    let update =
+                        bson::doc! {"$set": {"status": _friend_request.status.to_string()}};
+                    let result = collection
+                        .find_one_and_update(
+                            filter,
+                            update,
+                            FindOneAndUpdateOptions::builder()
+                                .return_document(ReturnDocument::After)
+                                .build(),
+                        )
+                        .await;
+                    match result {
+                        Ok(_) => Ok(()),
+                        Err(_) => Err(FriendsListError::DatabaseError),
+                    }
+                }
+                None => Err(FriendsListError::FriendRequestNotFound),
+            },
+            Err(_) => Err(FriendsListError::DatabaseError),
+        }
+    }
+
+    async fn get_friend_request(
+        &self,
+        from: bson::oid::ObjectId,
+        to: bson::oid::ObjectId,
+    ) -> Result<FriendRequest, FriendsListError> {
+        let collection = self
+            .db
+            .collection::<FriendRequest>(FRIEND_REQUEST_COLLECTION);
+        let filter = bson::doc! {"$or": [
+            {"_id.from": from, "_id.to": to},
+            {"_id.from": to, "_id.to": from}
         ]};
-        let result = collection
-            .find_one(filter, None)
-            .await
-            .expect("find friend request failed");
+        let result = collection.find_one(filter, None).await;
         match result {
-            Some(_) => {
-                let filter = bson::doc! {"$or" : [
-                    {"from": _friend_request.from, "to": _friend_request.to},
-                    {"from": _friend_request.to, "to": _friend_request.from}
-                ]};
-                let update = bson::doc! {"$set": {"status": _friend_request.status.to_string()}};
-                collection
-                    .find_one_and_update(filter, update, None)
-                    .await
-                    .expect("update friend request failed");
-                Ok(())
-            }
-            None => Err(FriendsListError::FriendRequestAlreadyExist),
+            Ok(friend_request) => match friend_request {
+                Some(friend_request) => Ok(friend_request),
+                None => Err(FriendsListError::FriendRequestNotFound),
+            },
+            Err(_) => Err(FriendsListError::DatabaseError),
         }
     }
 
@@ -340,9 +373,16 @@ impl FriendsListDataSource for MongoDB {
     ) -> BoxStream<Result<FriendRequest, FriendsListError>> {
         let collection: mongodb::Collection<FriendRequest> =
             self.db.collection(FRIEND_REQUEST_COLLECTION);
-        let filter = bson::doc! {"to" : _user_id};
+        let filter = bson::doc! {"_id.to" : _user_id};
+
         let cursor = collection.find(filter, None).await.unwrap();
-        Pin::from(Box::new(cursor.map(|result| Ok(result.unwrap()))))
+        let stream = cursor
+            .map(|result| match result {
+                Ok(doc) => Ok(doc),
+                Err(err) => Err(FriendsListError::DatabaseError),
+            })
+            .boxed();
+        stream
     }
 
     /// Return the list of friend requests sent by the user.
@@ -352,9 +392,16 @@ impl FriendsListDataSource for MongoDB {
     ) -> BoxStream<Result<FriendRequest, FriendsListError>> {
         let collection: mongodb::Collection<FriendRequest> =
             self.db.collection(FRIEND_REQUEST_COLLECTION);
-        let filter = bson::doc! {"from" : _user_id};
-        let mut cursor = collection.find(filter, None).await.unwrap();
-        Pin::from(Box::new(cursor.map(|result| Ok(result.unwrap()))))
+        let filter = bson::doc! {"_id.from" : _user_id};
+
+        let cursor = collection.find(filter, None).await.unwrap();
+        let stream = cursor
+            .map(|result| match result {
+                Ok(doc) => Ok(doc),
+                Err(err) => Err(FriendsListError::DatabaseError),
+            })
+            .boxed();
+        stream
     }
 
     async fn accepted_friend_requests(
@@ -364,10 +411,17 @@ impl FriendsListDataSource for MongoDB {
         let collection: mongodb::Collection<FriendRequest> =
             self.db.collection(FRIEND_REQUEST_COLLECTION);
         let filter = bson::doc! {"$or" : [
-            {"from": _friend_request_id, "status": "accepted"},
-            {"to": _friend_request_id, "status": "accepted"}
+            {"_id.from": _friend_request_id, "status": "Accepted"},
+            {"_id.to": _friend_request_id, "status": "Accepted"}
         ]};
-        let mut cursor = collection.find(filter, None).await.unwrap();
-        Pin::from(Box::new(cursor.map(|result| Ok(result.unwrap()))))
+
+        let cursor = collection.find(filter, None).await.unwrap();
+        let stream = cursor
+            .map(|result| match result {
+                Ok(doc) => Ok(doc),
+                Err(err) => Err(FriendsListError::DatabaseError),
+            })
+            .boxed();
+        stream
     }
 }

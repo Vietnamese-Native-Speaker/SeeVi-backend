@@ -25,6 +25,14 @@ pub trait FriendsListDataSource {
         unimplemented!()
     }
 
+    async fn get_friend_request(
+        &self,
+        from: bson::oid::ObjectId,
+        to: bson::oid::ObjectId,
+    ) -> Result<FriendRequest, FriendsListError> {
+        unimplemented!()
+    }
+
     /// Return the list of friend requests of the user.
     async fn friend_requests(
         &self,

@@ -1,16 +1,17 @@
+use crate::data_source::friends_list_datasource::FriendsListDataSource;
+use crate::data_source::mongo::MongoForTesting;
 use crate::data_source::user_data_source::UserDataSource;
 use crate::data_source::user_data_source_error::UserDataSourceError;
 use crate::models::education::Education;
-use crate::{
-    data_source::mongo::MongoDB,
-    models::users::{
-        create_user_input::{CreateUserInput, CreateUserInputBuilder},
-        update_user_input::UpdateUserInputBuilder,
-    },
+use crate::models::friend_request::FriendRequest;
+use crate::models::users::{
+    create_user_input::{CreateUserInput, CreateUserInputBuilder},
+    update_user_input::UpdateUserInputBuilder,
 };
+use async_graphql::futures_util::StreamExt;
+use google_cloud_storage::http::objects::Object;
 use mongodb::bson::oid::ObjectId;
 use mongodb::bson::Uuid;
-use serial_test::serial;
 
 fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
     CreateUserInputBuilder::default()
@@ -41,9 +42,8 @@ fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_create_user_and_get_user_by_username() {
-    let mongodb = MongoDB::init_test().await;
+    let mongodb = MongoForTesting::init().await;
     let uuid = Uuid::new();
     let input = create_demo_user_input(uuid);
     let username_clone = input.username.clone();
@@ -102,9 +102,8 @@ async fn test_create_user_and_get_user_by_username() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_get_user_by_id() {
-    let mongodb = MongoDB::init_test().await;
+    let mongodb = MongoForTesting::init().await;
     let uuid = Uuid::new();
     let input = create_demo_user_input(uuid);
     mongodb.create_user(input).await.unwrap();
@@ -161,9 +160,8 @@ async fn test_get_user_by_id() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_delete_user() {
-    let mongodb = MongoDB::init_test().await;
+    let mongodb = MongoForTesting::init().await;
     let uuid = Uuid::new();
     let input = create_demo_user_input(uuid);
     mongodb.create_user(input).await.unwrap();
@@ -177,9 +175,8 @@ async fn test_delete_user() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_update_user_info() {
-    let mongodb = MongoDB::init_test().await;
+    let mongodb = MongoForTesting::init().await;
     let uuid = Uuid::new();
     let input = create_demo_user_input(uuid);
     let check_input = mongodb.create_user(input).await.unwrap();
@@ -236,4 +233,109 @@ async fn test_update_user_info() {
     assert_eq!(check_input2.shared_cvs, vec![]);
     assert_eq!(check_input2.saved_cvs, vec![]);
     assert_eq!(check_input2.liked_cvs, vec![]);
+}
+
+#[tokio::test]
+async fn test_create_friend_request() {
+    let mongodb = MongoForTesting::init().await;
+    let user1: ObjectId = ObjectId::new();
+    let user2: ObjectId = ObjectId::new();
+    let friend_request = FriendRequest::new(user1, user2, Some("test_friend_request".to_string()));
+    mongodb
+        .add_friend_request(friend_request.clone())
+        .await
+        .unwrap();
+    let friend_request2 = mongodb.get_friend_request(user1, user2).await.unwrap();
+    assert_eq!(friend_request2._id.from, user1);
+    assert_eq!(friend_request2._id.to, user2);
+    assert_eq!(
+        friend_request2.message,
+        Some("test_friend_request".to_string())
+    );
+    assert_eq!(friend_request2.status.to_string(), "Pending".to_string());
+}
+
+#[tokio::test]
+async fn test_accept_friend_request() {
+    let mongodb = MongoForTesting::init().await;
+    let user1: ObjectId = ObjectId::new();
+    let user2: ObjectId = ObjectId::new();
+    let friend_request = FriendRequest::new(user1, user2, Some("test_friend_request".to_string()));
+    let accepted_friend_request = friend_request.clone().accept();
+    mongodb
+        .add_friend_request(accepted_friend_request.clone())
+        .await
+        .unwrap();
+    mongodb
+        .update_friend_request(accepted_friend_request)
+        .await
+        .unwrap();
+    let friend_request2 = mongodb.get_friend_request(user1, user2).await.unwrap();
+    assert_eq!(friend_request2._id.from, user1);
+    assert_eq!(friend_request2._id.to, user2);
+    assert_eq!(
+        friend_request2.message,
+        Some("test_friend_request".to_string())
+    );
+    assert_eq!(friend_request2.status.to_string(), "Accepted".to_string());
+}
+
+#[tokio::test]
+async fn test_find_friend_requests_sent() {
+    let mongodb = MongoForTesting::init().await;
+    let user1: ObjectId = ObjectId::new();
+    let user2: ObjectId = ObjectId::new();
+    let user3: ObjectId = ObjectId::new();
+    let friend_request1 =
+        FriendRequest::new(user1, user2, Some("test_friend_request1".to_string()));
+    let friend_request2 =
+        FriendRequest::new(user1, user3, Some("test_friend_request2".to_string()));
+    mongodb.add_friend_request(friend_request1).await.unwrap();
+    mongodb.add_friend_request(friend_request2).await.unwrap();
+    let request_list = mongodb
+        .friend_requests_sent(user1)
+        .await
+        .collect::<Vec<_>>()
+        .await;
+    assert_eq!(request_list.len(), 2);
+}
+
+#[tokio::test]
+async fn test_find_friend_requests_received() {
+    let mongodb = MongoForTesting::init().await;
+    let user1: ObjectId = ObjectId::new();
+    let user2: ObjectId = ObjectId::new();
+    let user3: ObjectId = ObjectId::new();
+    let friend_request1 =
+        FriendRequest::new(user2, user1, Some("test_friend_request1".to_string()));
+    let friend_request2 =
+        FriendRequest::new(user3, user1, Some("test_friend_request2".to_string()));
+    mongodb.add_friend_request(friend_request1).await.unwrap();
+    mongodb.add_friend_request(friend_request2).await.unwrap();
+    let request_list = mongodb
+        .friend_requests(user1)
+        .await
+        .collect::<Vec<_>>()
+        .await;
+    assert_eq!(request_list.len(), 2);
+}
+
+#[tokio::test]
+async fn test_find_friend_requests_accepted() {
+    let mongodb = MongoForTesting::init().await;
+    let user1: ObjectId = ObjectId::new();
+    let user2: ObjectId = ObjectId::new();
+    let user3: ObjectId = ObjectId::new();
+    let friend_request1 =
+        FriendRequest::new(user1, user2, Some("test_friend_request1".to_string()));
+    let friend_request2 =
+        FriendRequest::new(user1, user3, Some("test_friend_request2".to_string())).accept();
+    mongodb.add_friend_request(friend_request1).await.unwrap();
+    mongodb.add_friend_request(friend_request2).await.unwrap();
+    let request_list = mongodb
+        .accepted_friend_requests(user1)
+        .await
+        .collect::<Vec<_>>()
+        .await;
+    assert_eq!(request_list.len(), 1);
 }

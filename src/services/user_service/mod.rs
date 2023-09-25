@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod tests;
-use async_graphql::futures_util::stream::BoxStream;
+use std::pin::Pin;
+
+use async_graphql::futures_util::{stream::BoxStream, StreamExt};
 use mongodb::bson::oid::ObjectId;
 
 use crate::{
@@ -78,7 +80,7 @@ impl UserService {
         }
     }
 
-    pub async fn add_friend(
+    pub async fn send_friend_request(
         database: &(impl UserDataSource + FriendsListDataSource + std::marker::Sync),
         user_id: ObjectId,
         friend_id: ObjectId,
@@ -104,10 +106,44 @@ impl UserService {
         }
     }
 
+    pub async fn accept_friend_request(
+        database: &(impl UserDataSource + FriendsListDataSource + std::marker::Sync),
+        user_id: ObjectId,
+        friend_id: ObjectId,
+    ) -> Result<(), FriendsListError> {
+        let friend_request = database.get_friend_request(friend_id, user_id).await;
+        let friend_request = friend_request?.accept();
+        database.update_friend_request(friend_request).await?;
+        Ok(())
+    }
+
+    pub async fn reject_friend_request(
+        database: &(impl UserDataSource + FriendsListDataSource + std::marker::Sync),
+        user_id: ObjectId,
+        friend_id: ObjectId,
+    ) -> Result<(), FriendsListError> {
+        let friend_request = database.get_friend_request(friend_id, user_id).await;
+        let friend_request = friend_request?.reject();
+        database.update_friend_request(friend_request).await?;
+        Ok(())
+    }
+
     pub async fn friend_lists(
         database: &(impl UserDataSource + FriendsListDataSource + std::marker::Sync),
         user_id: ObjectId,
-    ) -> BoxStream<Result<FriendRequest, FriendsListError>> {
-        database.accepted_friend_requests(user_id).await
+    ) -> BoxStream<Result<User, UserDataSourceError>> {
+        let users = database
+            .accepted_friend_requests(user_id)
+            .await
+            .map(|f| {
+                let f = f.unwrap();
+                if f._id.from == user_id {
+                    f._id.to
+                } else {
+                    f._id.from
+                }
+            })
+            .boxed();
+        database.get_users_by_ids(users).await
     }
 }
