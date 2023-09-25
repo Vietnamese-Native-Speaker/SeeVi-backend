@@ -1,3 +1,5 @@
+use std::pin::Pin;
+
 use super::user_data_source_error::UserDataSourceError;
 use async_graphql::futures_util::stream::BoxStream;
 use async_trait::async_trait;
@@ -75,6 +77,13 @@ pub trait UserDataSource {
 
     /// Delete a email from the `other_email` list.
     async fn delete_other_email(&self, _email: String) -> Result<(), UserDataSourceError> {
+        unimplemented!()
+    }
+
+    async fn get_users_by_ids(
+        &self,
+        _ids: BoxStream<'async_trait, bson::oid::ObjectId>,
+    ) -> BoxStream<Result<User, UserDataSourceError>> {
         unimplemented!()
     }
 }
