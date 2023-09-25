@@ -204,4 +204,19 @@ impl UserDataSource for MockDatabase {
         users.push(user.clone());
         Ok(user)
     }
+
+    async fn get_users_by_ids(
+        &self,
+        ids: BoxStream<'async_trait, bson::oid::ObjectId>,
+    ) -> BoxStream<Result<User, UserDataSourceError>> {
+        let ids = ids.collect::<Vec<_>>().await;
+        let users = self.users.lock().unwrap().clone();
+        let stream = futures_util::stream::iter(users.into_iter());
+        let stream = stream.filter(move |user| {
+            let user = user.clone();
+            let ids = ids.clone();
+            async move { ids.contains(&user.id) }
+        });
+        stream.map(|user| Ok(user)).boxed()
+    }
 }
