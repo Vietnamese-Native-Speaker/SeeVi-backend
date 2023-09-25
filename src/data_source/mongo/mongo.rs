@@ -23,8 +23,8 @@ use mongodb::bson;
 use crate::models::cv::{self, CV};
 use crate::models::users::{self, User};
 
-use super::cv_data_source::CVDataSource;
-use super::cv_data_source_error::CVDataSourceError;
+use crate::data_source::cv_data_source::CVDataSource;
+use crate::data_source::cv_data_source_error::CVDataSourceError;
 
 const FRIEND_REQUEST_COLLECTION: &str = "friend_requests";
 const CV_COLLECTION: &str = "cvs";
@@ -52,13 +52,13 @@ impl MongoDB {
         MongoDB { client, db }
     }
 
-    pub async fn init_test() -> MongoDB {
+    pub async fn init_with_database_name(name: &str) -> MongoDB {
         let mut client_options = ClientOptions::parse("mongodb://127.0.0.1:27017")
             .await
             .expect("Failed to parse options!");
         client_options.app_name = Some("SeeVi".to_string());
         let client = Client::with_options(client_options).expect("Failed to initialize database!");
-        let db = client.database("test");
+        let db = client.database(name);
         db.drop(None).await.unwrap();
         MongoDB { client, db }
     }
