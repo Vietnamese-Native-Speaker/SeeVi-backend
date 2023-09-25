@@ -210,6 +210,22 @@ impl UserDataSource for MongoDB {
     async fn get_user_by_email(&self, _email: &str) -> Result<users::User, UserDataSourceError> {
         unimplemented!()
     }
+
+    async fn get_users_by_ids(
+        &self,
+        user_ids: Vec<bson::oid::ObjectId>,
+    ) -> BoxStream<Result<User, UserDataSourceError>> {
+        let collection: mongodb::Collection<User> = self.db.collection(USER_COLLECTION);
+        let filter = bson::doc! {"_id": {"$in": user_ids}};
+
+        let cursor = collection.find(filter, None).await.unwrap();
+        cursor
+            .map(|result| match result {
+                Ok(user) => Ok(user),
+                Err(_) => unimplemented!(),
+            })
+            .boxed()
+    }
 }
 
 #[async_trait]

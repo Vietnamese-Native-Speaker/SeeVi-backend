@@ -82,7 +82,7 @@ pub trait UserDataSource {
 
     async fn get_users_by_ids(
         &self,
-        _ids: BoxStream<'async_trait, bson::oid::ObjectId>,
+        _ids: Vec<bson::oid::ObjectId>,
     ) -> BoxStream<Result<User, UserDataSourceError>> {
         unimplemented!()
     }

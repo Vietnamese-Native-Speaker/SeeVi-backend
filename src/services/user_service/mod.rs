@@ -141,7 +141,7 @@ impl UserService {
                     f.id.from
                 }
             })
-            .boxed();
+            .collect::<Vec<_>>().await;
         database.get_users_by_ids(users).await
     }
 }
