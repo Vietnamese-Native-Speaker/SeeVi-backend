@@ -1,9 +1,8 @@
-pub mod cv_data_source;
-pub mod cv_data_source_error;
+mod cv;
+mod friends_list;
 pub mod mongo;
-pub mod user_data_source;
-pub mod user_data_source_error;
-pub mod friends_list_datasource;
+mod user;
 
-#[cfg(test)]
-mod tests;
+pub use cv::{CVDataSource, CVDataSourceError};
+pub use friends_list::{FriendsListDataSource, FriendsListError};
+pub use user::{UserDataSource, UserDataSourceError};

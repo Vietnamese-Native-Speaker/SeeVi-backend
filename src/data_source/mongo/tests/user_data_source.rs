@@ -1,7 +1,7 @@
-use crate::data_source::friends_list_datasource::FriendsListDataSource;
 use crate::data_source::mongo::MongoForTesting;
-use crate::data_source::user_data_source::UserDataSource;
-use crate::data_source::user_data_source_error::UserDataSourceError;
+use crate::data_source::FriendsListDataSource;
+use crate::data_source::UserDataSource;
+use crate::data_source::UserDataSourceError;
 use crate::models::education::Education;
 use crate::models::friend_request::FriendRequest;
 use crate::models::users::{
@@ -9,7 +9,6 @@ use crate::models::users::{
     update_user_input::UpdateUserInputBuilder,
 };
 use async_graphql::futures_util::StreamExt;
-use google_cloud_storage::http::objects::Object;
 use mongodb::bson::oid::ObjectId;
 use mongodb::bson::Uuid;
 

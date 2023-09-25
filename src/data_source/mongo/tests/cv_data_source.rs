@@ -1,6 +1,5 @@
-use super::super::{cv_data_source::CVDataSource, cv_data_source_error::CVDataSourceError};
 use crate::data_source::mongo::MongoForTesting;
-use crate::data_source::user_data_source::UserDataSource;
+use crate::data_source::{CVDataSource, CVDataSourceError, UserDataSource, UserDataSourceError};
 use crate::models::cv::create_cv_input::CreateCVInputBuilder;
 use crate::models::cv::CreateCVInput;
 use crate::models::education::Education;
@@ -76,7 +75,10 @@ async fn get_cv_by_id() {
     let user_input = create_demo_user_input();
     let user = mongodb.create_user(user_input).await.unwrap();
     println!("{}", *user.id);
-    println!("{}", *mongodb.get_user_by_id(user.id.into()).await.unwrap().id);
+    println!(
+        "{}",
+        *mongodb.get_user_by_id(user.id.into()).await.unwrap().id
+    );
     let cv_input = create_demo_cv_input(user.id.into());
 
     let fake_id = ObjectId::new();

@@ -1,15 +1,15 @@
 mod common;
 
-use async_graphql::{EmptySubscription, Schema};
-use mongodb::bson::oid::ObjectId;
-use seevi_backend::graphql::query::Query;
-use seevi_backend::object_id::ScalarObjectId;
-use seevi_backend::graphql::mutation::Mutation;
-use seevi_backend::data_source::mongo::MongoForTesting;
 use crate::common::{
     default_route, make_login_request, make_refresh_token_request, make_register_request,
-    print_json, user_detail, 
+    print_json, user_detail,
 };
+use async_graphql::{EmptySubscription, Schema};
+use mongodb::bson::oid::ObjectId;
+use seevi_backend::data_source::mongo::MongoForTesting;
+use seevi_backend::graphql::mutation::Mutation;
+use seevi_backend::graphql::query::Query;
+use seevi_backend::object_id::ScalarObjectId;
 
 #[tokio::test]
 async fn register_and_login() {
@@ -140,7 +140,10 @@ async fn send_accept_decline_friends_request() {
 
     // id of user 1
     let user_id_str = user_rs.get("id").unwrap().as_str().unwrap().to_string();
-    let user_id = user_id_str.parse::<ObjectId>().map(Into::<ScalarObjectId>::into).unwrap();
+    let user_id = user_id_str
+        .parse::<ObjectId>()
+        .map(Into::<ScalarObjectId>::into)
+        .unwrap();
 
     make_register_request("ltp2", "ltp2", &routes).await;
     let login_result = make_login_request("ltp2", "ltp2", &routes).await;
@@ -163,7 +166,10 @@ async fn send_accept_decline_friends_request() {
 
     // id of user 2
     let friend_id_str = user_rs.get("id").unwrap().as_str().unwrap().to_string();
-    let friend_id = friend_id_str.parse::<ObjectId>().map(Into::<ScalarObjectId>::into).unwrap();
+    let friend_id = friend_id_str
+        .parse::<ObjectId>()
+        .map(Into::<ScalarObjectId>::into)
+        .unwrap();
 
     // send friend request
     let send_friend_request_result =
@@ -191,11 +197,14 @@ async fn send_accept_decline_friends_request() {
 
     // get friends list
     let friends_list_result = crate::common::friendslist(user_id, &routes).await;
+    print_json(&friends_list_result);
     let friends_list = friends_list_result
         .get("data")
         .expect("should have 'data' field")
         .get("friendslist")
         .expect("should have 'friendslist' field")
+        .get("edges")
+        .expect("should have 'edges' field")
         .as_array()
         .unwrap();
     assert_eq!(friends_list.len(), 1);
@@ -222,7 +231,10 @@ async fn send_accept_decline_friends_request() {
 
     // id of user 3
     let friend_id_str_2 = user_rs.get("id").unwrap().as_str().unwrap().to_string();
-    let friend_id_2 = friend_id_str_2.parse::<ObjectId>().map(Into::<ScalarObjectId>::into).unwrap();
+    let friend_id_2 = friend_id_str_2
+        .parse::<ObjectId>()
+        .map(Into::<ScalarObjectId>::into)
+        .unwrap();
 
     // send friend request
     let send_friend_request_result =
@@ -255,8 +267,9 @@ async fn send_accept_decline_friends_request() {
         .expect("should have 'data' field")
         .get("friendslist")
         .expect("should have 'friendslist' field")
+        .get("edges")
+        .expect("should have 'edges' field")
         .as_array()
         .unwrap();
     assert_eq!(friends_list.len(), 1);
-
 }
