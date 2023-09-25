@@ -211,6 +211,23 @@ impl UserDataSource for MongoDB {
     async fn get_user_by_email(&self, _email: &str) -> Result<users::User, UserDataSourceError> {
         unimplemented!()
     }
+
+    async fn get_users_by_ids(
+        &self,
+        _ids: BoxStream<'async_trait, bson::oid::ObjectId>,
+    ) -> BoxStream<Result<User, UserDataSourceError>> {
+        let collection: mongodb::Collection<users::User> = self.db.collection(USER_COLLECTION);
+        let list_ids = _ids.collect::<Vec<bson::oid::ObjectId>>().await;
+        let filter = bson::doc! {"_id": {"$in": list_ids}};
+        let cursor = collection.find(filter, None).await.unwrap();
+        let stream = cursor
+            .map(|result| match result {
+                Ok(doc) => Ok(doc),
+                Err(err) => Err(UserDataSourceError::DatabaseError),
+            })
+            .boxed();
+        stream
+    }
 }
 
 #[async_trait]

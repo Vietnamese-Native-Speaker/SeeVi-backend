@@ -52,6 +52,9 @@ pub enum UserDataSourceError {
 
     // Token is invalid
     InvalidToken,
+
+    // Database error
+    DatabaseError,
 }
 
 impl fmt::Display for UserDataSourceError {
@@ -144,6 +147,10 @@ impl fmt::Display for UserDataSourceError {
 
             UserDataSourceError::InvalidToken => {
                 write!(f, "Token is invalid")
+            }
+
+            UserDataSourceError::DatabaseError => {
+                write!(f, "Database error")
             }
         }
     }
