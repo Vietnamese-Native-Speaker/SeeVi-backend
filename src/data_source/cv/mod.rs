@@ -1,9 +1,10 @@
+mod error;
+
 use async_graphql::async_trait::async_trait;
 use mongodb::bson::{oid::ObjectId, Uuid};
-
 use crate::models::cv::{CreateCVInput, UpdateCVInput, CV};
 
-use super::cv_data_source_error::CVDataSourceError;
+pub use error::CVDataSourceError;
 
 /// Primary abstraction for CV Data Source. Ones should implement this trait for
 /// different type of database in order to provide that data source to services
