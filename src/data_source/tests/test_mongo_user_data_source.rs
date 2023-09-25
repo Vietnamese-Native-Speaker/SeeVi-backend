@@ -1,4 +1,4 @@
-use crate::data_source::friends_list_datasource::FriendsListDataSource;
+use crate::data_source::friends_list::FriendsListDataSource;
 use crate::data_source::mongo::MongoForTesting;
 use crate::data_source::user_data_source::UserDataSource;
 use crate::data_source::user_data_source_error::UserDataSourceError;

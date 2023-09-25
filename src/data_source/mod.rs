@@ -1,9 +1,10 @@
-pub mod cv_data_source;
-pub mod cv_data_source_error;
+mod error;
 pub mod mongo;
-pub mod user_data_source;
-pub mod user_data_source_error;
-pub mod friends_list_datasource;
-
 #[cfg(test)]
 mod tests;
+mod traits;
+
+pub use traits::cv::CVDataSource;
+pub use traits::friends_list::FriendsListDataSource;
+pub use traits::user::UserDataSource;
+pub use error::Error as DataSourceError;
