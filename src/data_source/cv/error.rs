@@ -1,5 +1,5 @@
 use async_graphql::ErrorExtensions;
-use mongodb::bson::{self, Uuid};
+use mongodb::bson;
 use std::fmt;
 
 #[non_exhaustive]
@@ -71,7 +71,7 @@ impl ErrorExtensions for CVDataSourceError {
 mod tests {
     use mongodb::bson::{self, oid::ObjectId};
 
-    use super::super::cv_data_source_error::CVDataSourceError;
+    use super::CVDataSourceError;
     #[test]
     fn test_cv_id_not_found() {
         let uuid = bson::oid::ObjectId::new();
