@@ -6,7 +6,7 @@ use mongodb::bson::oid::ObjectId;
 use crate::error::ServerError;
 use crate::object_id::ScalarObjectId;
 use crate::{
-    data_source::mongo::MongoDB,
+    data_source::mongo::{MongoDB, MongoForTesting},
     models::users::User,
     services::{auth_service::AuthService, user_service::UserService},
 };
@@ -28,7 +28,9 @@ struct LoginResult {
 #[Object]
 impl Query {
     async fn login(&self, ctx: &Context<'_>, login_info: LoginInfo) -> gql::Result<LoginResult> {
-        let db = ctx.data_unchecked::<MongoDB>();
+        let db = ctx
+            .data_opt::<MongoDB>()
+            .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
         let rs =
             AuthService::authenticate(db, Some(login_info.username), None, login_info.password)
                 .await;
@@ -42,7 +44,9 @@ impl Query {
     }
 
     async fn user_detail(&self, ctx: &Context<'_>) -> gql::Result<User> {
-        let db = ctx.data_unchecked::<MongoDB>();
+        let db = ctx
+            .data_opt::<MongoDB>()
+            .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
         let token = ctx.data_unchecked::<Option<String>>();
         let token = match token {
             Some(token) => token,
@@ -61,7 +65,9 @@ impl Query {
     }
 
     async fn refresh_token(&self, ctx: &Context<'_>, refresh_token: String) -> gql::Result<String> {
-        let db = ctx.data_unchecked::<MongoDB>();
+        let db = ctx
+            .data_opt::<MongoDB>()
+            .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
         let rs = AuthService::generate_new_access_token(db, refresh_token).await;
         match rs {
             Ok(token) => Ok(token),
@@ -72,7 +78,7 @@ impl Query {
     async fn friendslist(
         &self,
         ctx: &Context<'_>,
-        UserId: ObjectId,
+        user_id: ObjectId,
         after: Option<String>,
         before: Option<String>,
         first: Option<i32>,
@@ -85,8 +91,10 @@ impl Query {
             connection::EmptyFields,
         >,
     > {
-        let db = ctx.data_unchecked::<MongoDB>();
-        let friends_list = UserService::friend_lists(db, UserId)
+        let db = ctx
+            .data_opt::<MongoDB>()
+            .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
+        let friends_list = UserService::friend_lists(db, user_id)
             .await
             .collect::<Vec<_>>()
             .await;
