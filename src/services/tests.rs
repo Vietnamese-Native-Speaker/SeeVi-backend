@@ -1,6 +1,6 @@
-use crate::data_source::{FriendsListDataSource, FriendsListError};
 use crate::data_source::UserDataSource;
 use crate::data_source::UserDataSourceError;
+use crate::data_source::{FriendsListDataSource, FriendsListError};
 use crate::models::friend_request::{FriendRequest, FriendRequestStatus};
 use crate::models::users::{CreateUserInput, UpdateUserInput, User};
 use async_graphql::futures_util::stream::BoxStream;
@@ -205,9 +205,8 @@ impl UserDataSource for MockDatabase {
 
     async fn get_users_by_ids(
         &self,
-        ids: BoxStream<'async_trait, bson::oid::ObjectId>,
+        ids: Vec<bson::oid::ObjectId>,
     ) -> BoxStream<Result<User, UserDataSourceError>> {
-        let ids = ids.collect::<Vec<_>>().await;
         let users = self.users.lock().unwrap().clone();
         let stream = futures_util::stream::iter(users.into_iter());
         let stream = stream.filter(move |user| {
