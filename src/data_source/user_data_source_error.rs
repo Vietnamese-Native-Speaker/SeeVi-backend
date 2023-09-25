@@ -160,7 +160,7 @@ impl ErrorExtensions for UserDataSourceError {
 mod tests {
     use mongodb::bson::{self, Uuid};
 
-    use crate::data_source::mongo::MongoDB;
+    use crate::data_source::mongo::{MongoDB, MongoForTesting};
     use crate::models::users::CreateUserInput;
 
     use super::super::user_data_source::UserDataSource;
@@ -180,7 +180,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let db = MongoDB::init_test().await;
+        let db = MongoForTesting::init().await;
         db.create_user(new_user_input).await.unwrap();
         let user = db.get_user_by_username("username").await.unwrap();
         assert_eq!(user.username, "username");

@@ -10,9 +10,14 @@ pub enum FriendRequestStatus {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub struct FriendRequest {
+pub struct FriendRequestID {
     pub from: ObjectId,
     pub to: ObjectId,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct FriendRequest {
+    pub _id: FriendRequestID,
     pub message: Option<String>,
     pub status: FriendRequestStatus,
     pub created_at: bson::DateTime,
@@ -22,8 +27,7 @@ pub struct FriendRequest {
 impl FriendRequest {
     pub fn new(from: ObjectId, to: ObjectId, message: Option<impl Into<String>>) -> Self {
         Self {
-            from,
-            to,
+            _id: FriendRequestID { from, to },
             message: message.map(|m| m.into()),
             status: FriendRequestStatus::Pending,
             created_at: bson::DateTime::now(),

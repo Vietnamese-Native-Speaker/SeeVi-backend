@@ -10,6 +10,7 @@ use crate::data_source::friends_list_datasource::FriendsListError;
 use crate::data_source::user_data_source_error::UserDataSourceError;
 use crate::models::education::Education;
 use crate::models::friend_request::FriendRequest;
+use crate::mongo::mongo::bson::doc;
 
 use async_graphql::futures_util::stream::BoxStream;
 use async_graphql::futures_util::stream::StreamExt;
@@ -283,20 +284,23 @@ impl FriendsListDataSource for MongoDB {
         let collection: mongodb::Collection<FriendRequest> =
             self.db.collection(FRIEND_REQUEST_COLLECTION);
         let filter = bson::doc! {"$or" : [
-            {"from": _friend_request.from, "to": _friend_request.to},
-            {"from": _friend_request.to, "to": _friend_request.from}
+            {"_id.from": _friend_request._id.from, "_id.to": _friend_request._id.to},
+            {"_id.from": _friend_request._id.to, "_id.to": _friend_request._id.from}
         ]};
 
         let find = collection.find_one(filter, None).await;
         match find {
-            Ok(_) => Err(FriendsListError::FriendRequestAlreadyExist),
-            Err(_) => {
-                let result = collection.insert_one(&_friend_request, None).await;
-                match result {
-                    Ok(_) => Ok(()),
-                    Err(_) => Err(FriendsListError::AddFriendFailed),
+            Ok(_) => match find.unwrap() {
+                Some(_) => Err(FriendsListError::FriendRequestAlreadyExist),
+                None => {
+                    let result = collection.insert_one(&_friend_request, None).await;
+                    match result {
+                        Ok(_) => Ok(()),
+                        Err(_) => Err(FriendsListError::DatabaseError),
+                    }
                 }
-            }
+            },
+            Err(_) => Err(FriendsListError::DatabaseError),
         }
     }
 
@@ -309,30 +313,34 @@ impl FriendsListDataSource for MongoDB {
             .collection::<FriendRequest>(FRIEND_REQUEST_COLLECTION);
         let filter = bson::doc! {
             "$or": [
-                {"from": _friend_request.from, "to": _friend_request.to},
-                {"from": _friend_request.to, "to": _friend_request.from}
+                {"_id.from": _friend_request._id.from, "_id.to": _friend_request._id.to},
+                {"_id.from": _friend_request._id.to, "_id.to": _friend_request._id.from}
             ]
         };
 
-        let find = collection.find_one(filter, None).await;
+        let find = collection.find_one(filter.clone(), None).await;
         match find {
-            Ok(_) => {
-                let update = bson::doc! {"$set": {"status": _friend_request.status.to_string()}};
-                let result = collection
-                    .find_one_and_update(
-                        filter.clone(),
-                        update,
-                        FindOneAndUpdateOptions::builder()
-                            .return_document(ReturnDocument::After)
-                            .build(),
-                    )
-                    .await;
-                match result {
-                    Ok(_) => Ok(()),
-                    Err(_) => Err(FriendsListError::UpdateFriendRequestFailed),
+            Ok(_) => match find.unwrap() {
+                Some(_) => {
+                    let update =
+                        bson::doc! {"$set": {"status": _friend_request.status.to_string()}};
+                    let result = collection
+                        .find_one_and_update(
+                            filter,
+                            update,
+                            FindOneAndUpdateOptions::builder()
+                                .return_document(ReturnDocument::After)
+                                .build(),
+                        )
+                        .await;
+                    match result {
+                        Ok(_) => Ok(()),
+                        Err(_) => Err(FriendsListError::DatabaseError),
+                    }
                 }
-            }
-            Err(_) => Err(FriendsListError::FriendRequestNotFound),
+                None => Err(FriendsListError::FriendRequestNotFound),
+            },
+            Err(_) => Err(FriendsListError::DatabaseError),
         }
     }
 
@@ -345,8 +353,8 @@ impl FriendsListDataSource for MongoDB {
             .db
             .collection::<FriendRequest>(FRIEND_REQUEST_COLLECTION);
         let filter = bson::doc! {"$or": [
-            {"from": from, "to": to},
-            {"from": to, "to": from}
+            {"_id.from": from, "_id.to": to},
+            {"_id.from": to, "_id.to": from}
         ]};
         let result = collection.find_one(filter, None).await;
         match result {
@@ -365,7 +373,7 @@ impl FriendsListDataSource for MongoDB {
     ) -> BoxStream<Result<FriendRequest, FriendsListError>> {
         let collection: mongodb::Collection<FriendRequest> =
             self.db.collection(FRIEND_REQUEST_COLLECTION);
-        let filter = bson::doc! {"to" : _user_id};
+        let filter = bson::doc! {"_id.to" : _user_id};
 
         let cursor = collection.find(filter, None).await.unwrap();
         let stream = cursor
@@ -384,7 +392,7 @@ impl FriendsListDataSource for MongoDB {
     ) -> BoxStream<Result<FriendRequest, FriendsListError>> {
         let collection: mongodb::Collection<FriendRequest> =
             self.db.collection(FRIEND_REQUEST_COLLECTION);
-        let filter = bson::doc! {"from" : _user_id};
+        let filter = bson::doc! {"_id.from" : _user_id};
 
         let cursor = collection.find(filter, None).await.unwrap();
         let stream = cursor
@@ -403,8 +411,8 @@ impl FriendsListDataSource for MongoDB {
         let collection: mongodb::Collection<FriendRequest> =
             self.db.collection(FRIEND_REQUEST_COLLECTION);
         let filter = bson::doc! {"$or" : [
-            {"from": _friend_request_id, "status": "accepted"},
-            {"to": _friend_request_id, "status": "accepted"}
+            {"_id.from": _friend_request_id, "status": "Accepted"},
+            {"_id.to": _friend_request_id, "status": "Accepted"}
         ]};
 
         let cursor = collection.find(filter, None).await.unwrap();

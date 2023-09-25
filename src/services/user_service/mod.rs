@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod tests;
-use async_graphql::futures_util::stream::BoxStream;
+use std::pin::Pin;
+
+use async_graphql::futures_util::{stream::BoxStream, StreamExt};
 use mongodb::bson::oid::ObjectId;
 
 use crate::{
@@ -129,7 +131,19 @@ impl UserService {
     pub async fn friend_lists(
         database: &(impl UserDataSource + FriendsListDataSource + std::marker::Sync),
         user_id: ObjectId,
-    ) -> BoxStream<Result<User, FriendsListError>> {
-        unimplemented!();  
+    ) -> BoxStream<Result<User, UserDataSourceError>> {
+        let users = database
+            .accepted_friend_requests(user_id)
+            .await
+            .map(|f| {
+                let f = f.unwrap();
+                if f._id.from == user_id {
+                    f._id.to
+                } else {
+                    f._id.from
+                }
+            })
+            .boxed();
+        database.get_users_by_ids(users).await
     }
 }
