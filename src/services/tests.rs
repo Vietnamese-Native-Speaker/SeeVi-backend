@@ -1,6 +1,6 @@
-use crate::data_source::friends_list_datasource::{FriendsListDataSource, FriendsListError};
-use crate::data_source::user_data_source::UserDataSource;
-use crate::data_source::user_data_source_error::UserDataSourceError;
+use crate::data_source::{FriendsListDataSource, FriendsListError};
+use crate::data_source::UserDataSource;
+use crate::data_source::UserDataSourceError;
 use crate::models::friend_request::{FriendRequest, FriendRequestStatus};
 use crate::models::users::{CreateUserInput, UpdateUserInput, User};
 use async_graphql::futures_util::stream::BoxStream;
