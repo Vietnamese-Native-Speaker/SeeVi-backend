@@ -215,16 +215,17 @@ impl UserDataSource for MongoDB {
         &self,
         user_ids: Vec<bson::oid::ObjectId>,
     ) -> BoxStream<Result<User, UserDataSourceError>> {
-        let collection: mongodb::Collection<User> = self.db.collection(USER_COLLECTION);
-        let filter = bson::doc! {"_id": {"$in": user_ids}};
-
+        let collection: mongodb::Collection<users::User> = self.db.collection(USER_COLLECTION);
+        let list_ids = user_ids;
+        let filter = bson::doc! {"_id": {"$in": list_ids}};
         let cursor = collection.find(filter, None).await.unwrap();
-        cursor
+        let stream = cursor
             .map(|result| match result {
-                Ok(user) => Ok(user),
-                Err(_) => unimplemented!(),
+                Ok(doc) => Ok(doc),
+                Err(err) => Err(UserDataSourceError::DatabaseError),
             })
-            .boxed()
+            .boxed();
+        stream
     }
 }
 
