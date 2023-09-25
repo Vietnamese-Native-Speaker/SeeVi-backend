@@ -7,7 +7,7 @@ use async_graphql_warp::{GraphQLBadRequest, GraphQLResponse};
 use seevi_backend::{
     filters::with_auth_header,
     graphql::{mutation::Mutation, query::Query},
-    models::users::User,
+    models::users::User, object_id::ScalarObjectId,
 };
 use warp::{hyper::StatusCode, Filter, Rejection};
 
@@ -112,6 +112,74 @@ pub async fn user_detail(
         .method("POST")
         .path("/graphql")
         .header("Authorization", "Bearer ".to_string() + &token)
+        .body(query);
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply.to_owned()
+}
+
+pub async fn send_friend_request(
+    user_id: ScalarObjectId,
+    friend_id: ScalarObjectId,
+    message: Option<&str>,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static)
+) -> serde_json::Value {
+    let query = common::graphql::graphql_send_friend_request(user_id, friend_id, message);
+    print_json(&query);
+
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .body(query);
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply.to_owned()
+}
+
+pub async fn accept_friend_request(
+    user_id: ScalarObjectId,
+    friend_id: ScalarObjectId,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static)
+) -> serde_json::Value {
+    let query = common::graphql::graphql_accept_friend_request(user_id, friend_id);
+    print_json(&query);
+
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .body(query);
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply.to_owned()
+}
+
+pub async fn decline_friend_request(
+    user_id: ScalarObjectId,
+    friend_id: ScalarObjectId,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static)
+) -> serde_json::Value {
+    let query = common::graphql::graphql_decline_friend_request(user_id, friend_id);
+    print_json(&query);
+
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .body(query);
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply.to_owned()
+}
+
+pub async fn friendslist(
+    user_id: ScalarObjectId,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static)
+) -> serde_json::Value {
+    let query = common::graphql::graphql_friendslist(user_id);
+    print_json(&query);
+
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
         .body(query);
     let reply = request.reply(routes).await.body().clone();
     let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();

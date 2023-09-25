@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use seevi_backend::object_id::ScalarObjectId;
+
 use super::make_graphql;
 
 pub static USER_DETAIL: &str = r#"
@@ -29,6 +31,39 @@ mutation userRegister($user: CreateUserInput!) {
         id,
         username
     }
+}"#;
+
+pub static USER_FRIENDSLIST: &str = r#"
+query friendslist($id: ObjectId!) {
+    friendslist(userId: $id) {
+        edges {
+            node {
+                id,
+                username
+            }
+        }
+        pageInfo {
+            hasNextPage,
+            hasPreviousPage,
+            startCursor,
+            endCursor
+        }
+    }
+}"#;
+
+pub static SEND_FRIEND_REQUEST: &str = r#"
+mutation sendFriendRequest($user_id: ScalarObjectId!, $friend_id: ScalarObjectId!, $message: String) {
+    sendFriendRequest(userId: $user_id, friendId: $friend_id, message: $message)
+}"#;
+
+pub static ACCEPT_FRIEND_REQUEST: &str = r#"
+mutation acceptFriendRequest($user_id: ScalarObjectId!, $friend_id: ScalarObjectId!) {
+    acceptFriendRequest(userId: $user_id, friendId: $friend_id)
+}"#;
+
+pub static DECLINE_FRIEND_REQUEST: &str = r#"
+mutation declineFriendRequest($user_id: ScalarObjectId!, $friend_id: ScalarObjectId!) {
+    declineFriendRequest(userId: $user_id, friendId: $friend_id)
 }"#;
 
 pub fn graphql_refresh_token(refresh_token: &str) -> String {
@@ -73,4 +108,48 @@ pub fn graphql_user_login(username: &str, password: &str) -> String {
 
 pub fn graphql_user_detail() -> String {
     make_graphql(USER_DETAIL, "getUser", serde_json::json!({}))
+}
+
+pub fn graphql_friendslist(user_id: ScalarObjectId) -> String {
+    make_graphql(
+        USER_FRIENDSLIST, 
+        "friendslist",
+        serde_json::json!({
+            "id": user_id.to_string()
+        }),
+    )   
+}
+
+pub fn graphql_send_friend_request(user_id: ScalarObjectId, friend_id: ScalarObjectId, message: Option<&str>) -> String {
+    make_graphql(
+        SEND_FRIEND_REQUEST,
+        "sendFriendRequest",
+        serde_json::json!({
+            "user_id": user_id.to_string(),
+            "friend_id": friend_id.to_string(),
+            "message": message
+        }),
+    )
+}
+
+pub fn graphql_accept_friend_request(user_id: ScalarObjectId, friend_id: ScalarObjectId) -> String {
+    make_graphql(
+        ACCEPT_FRIEND_REQUEST,
+        "acceptFriendRequest",
+        serde_json::json!({
+            "user_id": user_id.to_string(),
+            "friend_id": friend_id.to_string()
+        }),
+    )
+}
+
+pub fn graphql_decline_friend_request(user_id: ScalarObjectId, friend_id: ScalarObjectId) -> String {
+    make_graphql(
+        DECLINE_FRIEND_REQUEST,
+        "declineFriendRequest",
+        serde_json::json!({
+            "user_id": user_id.to_string(),
+            "friend_id": friend_id.to_string()
+        }),
+    )
 }

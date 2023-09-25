@@ -135,10 +135,10 @@ impl UserService {
             .await
             .map(|f| {
                 let f = f.unwrap();
-                if f._id.from == user_id {
-                    f._id.to
+                if f.id.from == user_id {
+                    f.id.to
                 } else {
-                    f._id.from
+                    f.id.from
                 }
             })
             .boxed();
