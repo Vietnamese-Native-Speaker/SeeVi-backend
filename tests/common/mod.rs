@@ -7,7 +7,6 @@ use async_graphql_warp::{GraphQLBadRequest, GraphQLResponse};
 use seevi_backend::{
     filters::with_auth_header,
     graphql::{mutation::Mutation, query::Query},
-    models::users::User,
     object_id::ScalarObjectId,
 };
 use warp::{hyper::StatusCode, Filter, Rejection};
@@ -120,6 +119,7 @@ pub async fn user_detail(
 }
 
 pub async fn send_friend_request(
+    token: String,
     user_id: ScalarObjectId,
     friend_id: ScalarObjectId,
     message: Option<&str>,
@@ -131,6 +131,7 @@ pub async fn send_friend_request(
     let request = warp::test::request()
         .method("POST")
         .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + &token)
         .body(query);
     let reply = request.reply(routes).await.body().clone();
     let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
@@ -138,6 +139,7 @@ pub async fn send_friend_request(
 }
 
 pub async fn accept_friend_request(
+    token: String,
     user_id: ScalarObjectId,
     friend_id: ScalarObjectId,
     routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
@@ -148,6 +150,7 @@ pub async fn accept_friend_request(
     let request = warp::test::request()
         .method("POST")
         .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + &token)
         .body(query);
     let reply = request.reply(routes).await.body().clone();
     let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
@@ -155,6 +158,7 @@ pub async fn accept_friend_request(
 }
 
 pub async fn decline_friend_request(
+    token: String,
     user_id: ScalarObjectId,
     friend_id: ScalarObjectId,
     routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
@@ -165,6 +169,7 @@ pub async fn decline_friend_request(
     let request = warp::test::request()
         .method("POST")
         .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + &token)
         .body(query);
     let reply = request.reply(routes).await.body().clone();
     let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
@@ -172,6 +177,7 @@ pub async fn decline_friend_request(
 }
 
 pub async fn friendslist(
+    token: String,
     user_id: ScalarObjectId,
     routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
 ) -> serde_json::Value {
@@ -181,6 +187,7 @@ pub async fn friendslist(
     let request = warp::test::request()
         .method("POST")
         .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + &token)
         .body(query);
     let reply = request.reply(routes).await.body().clone();
     let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
