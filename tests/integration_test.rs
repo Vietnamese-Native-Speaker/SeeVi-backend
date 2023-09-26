@@ -174,6 +174,7 @@ async fn send_accept_decline_friends_request() {
     // send friend request
     let send_friend_request_result =
         crate::common::send_friend_request(user_id, friend_id, None, &routes).await;
+    print_json(&send_friend_request_result);
     let send_status = send_friend_request_result
         .get("data")
         .expect("should have 'data' field")
