@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::object_id::ScalarObjectId;
 
+use super::create_comment_input::CreateCommentInput;
+
 #[derive(Serialize, Deserialize, Clone, SimpleObject, Builder)]
 #[graphql(complex)]
 pub struct Comment {
@@ -42,5 +44,11 @@ impl Comment {
             shares: 0,
             replies: vec![],
         }
+    }
+}
+
+impl From<CreateCommentInput> for Comment {
+    fn from(input: CreateCommentInput) -> Self {
+        Self::new(input.content, input.author.into())
     }
 }
