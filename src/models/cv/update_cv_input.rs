@@ -1,17 +1,20 @@
 use async_graphql::InputObject;
-use mongodb::bson::Uuid;
 use serde::{Deserialize, Serialize};
+
+
+use crate::object_id::ScalarObjectId;
 
 #[derive(Serialize, Deserialize, Clone, InputObject, Builder, Default)]
 #[builder(
     pattern = "owned",
     setter(into, prefix = "with", strip_option),
 )]
+
 pub struct UpdateCVInput {
     #[builder(default)]
-    pub id: Uuid,
+    pub id: ScalarObjectId,
     #[builder(default)]
-    pub author_id: Uuid,
+    pub author_id: ScalarObjectId,
     #[builder(default)]
     pub title: Option<String>,
     #[builder(default)]
