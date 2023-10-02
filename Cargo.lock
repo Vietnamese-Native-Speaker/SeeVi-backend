@@ -2668,6 +2668,7 @@ dependencies = [
  "bcrypt",
  "derive_builder",
  "dotenv",
+ "futures-core",
  "google-cloud-auth",
  "google-cloud-default",
  "google-cloud-storage",
