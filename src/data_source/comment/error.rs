@@ -12,13 +12,17 @@ pub enum CommentDataSourceError {
     EmptyContent,
     // Error when the comment content is invalid
     InvalidContent(String),
-    // Error when create comment fails
+    /// Error when the number of likes is invalid
+    InvalidLikes,
+    /// Error when the number of bookmarks is invalid
+    InvalidBookmarks,
+    /// Error when create comment fails
     CreateCommentFailed,
-    // Error when update comment fails
+    /// Error when update comment fails
     UpdateCommentFailed,
-    // Error when delete comment fails
+    /// Error when delete comment fails
     DeleteCommentFailed,
-    // Database error
+    /// Database error
     DatabaseError,
 }
 
@@ -33,6 +37,12 @@ impl fmt::Display for CommentDataSourceError {
             }
             CommentDataSourceError::InvalidContent(content) => {
                 write!(f, "Comment content {} is invalid", content)
+            }
+            CommentDataSourceError::InvalidLikes => {
+                write!(f, "Comment likes is invalid")
+            }
+            CommentDataSourceError::InvalidBookmarks => {
+                write!(f, "Comment bookmarks is invalid")
             }
             CommentDataSourceError::CreateCommentFailed => {
                 write!(f, "Create comment failed")
