@@ -2,7 +2,7 @@ use async_graphql::{Enum, SimpleObject};
 use mongodb::bson::Uuid;
 use serde::{Deserialize, Serialize};
 
-use crate::models::{education::Education, ResourceIdentifier};
+use crate::models::{education::Education, sex::Sex ResourceIdentifier};
 
 use super::CreateUserInput;
 
@@ -23,6 +23,7 @@ pub struct User {
     pub first_name: String,
     pub last_name: String,
     pub country: Option<String>,
+    pub city: Option<String>,
     pub skills: Vec<String>,
     pub cv: Vec<Uuid>,
     pub primary_email: String,
@@ -37,6 +38,12 @@ pub struct User {
     pub shared_cvs: Vec<Uuid>,
     pub saved_cvs: Vec<Uuid>,
     pub liked_cvs: Vec<Uuid>,
+    pub city: Option<String>,
+    pub year_of_experience: Option<String>,
+    pub personalities: Vec<String>,
+    pub search_words: Vec<String>,
+    pub sex: Option<Sex>,
+    pub major: String,
 }
 
 impl From<CreateUserInput> for User {
