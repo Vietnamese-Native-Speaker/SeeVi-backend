@@ -5,7 +5,7 @@ use std::fmt;
 #[non_exhaustive]
 #[derive(Debug, PartialEq, Eq, Clone)]
 
-pub enum CommentDataSourceError {
+pub enum CommentServiceError {
     // Error when the comment id is not found
     IdNotFound(bson::oid::ObjectId),
     // Error when the comment content is empty
@@ -26,41 +26,41 @@ pub enum CommentDataSourceError {
     DatabaseError,
 }
 
-impl fmt::Display for CommentDataSourceError {
+impl fmt::Display for CommentServiceError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            CommentDataSourceError::IdNotFound(id) => {
+            CommentServiceError::IdNotFound(id) => {
                 write!(f, "Comment id {} not found", id)
             }
-            CommentDataSourceError::EmptyContent => {
+            CommentServiceError::EmptyContent => {
                 write!(f, "Comment content is empty")
             }
-            CommentDataSourceError::InvalidContent(content) => {
+            CommentServiceError::InvalidContent(content) => {
                 write!(f, "Comment content {} is invalid", content)
             }
-            CommentDataSourceError::InvalidLikes => {
+            CommentServiceError::InvalidLikes => {
                 write!(f, "Comment likes is invalid")
             }
-            CommentDataSourceError::InvalidBookmarks => {
+            CommentServiceError::InvalidBookmarks => {
                 write!(f, "Comment bookmarks is invalid")
             }
-            CommentDataSourceError::CreateCommentFailed => {
+            CommentServiceError::CreateCommentFailed => {
                 write!(f, "Create comment failed")
             }
-            CommentDataSourceError::UpdateCommentFailed => {
+            CommentServiceError::UpdateCommentFailed => {
                 write!(f, "Update comment failed")
             }
-            CommentDataSourceError::DeleteCommentFailed => {
+            CommentServiceError::DeleteCommentFailed => {
                 write!(f, "Delete comment failed")
             }
-            CommentDataSourceError::DatabaseError => {
+            CommentServiceError::DatabaseError => {
                 write!(f, "Database error")
             }
         }
     }
 }
 
-impl ErrorExtensions for CommentDataSourceError {
+impl ErrorExtensions for CommentServiceError {
     fn extend(&self) -> async_graphql::Error {
         async_graphql::Error::new(self.to_string())
             .extend_with(|_, e| e.set("code", "INVALID_COMMENT"))

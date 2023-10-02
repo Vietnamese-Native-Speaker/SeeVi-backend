@@ -1,17 +1,13 @@
-mod error;
-
 use async_graphql::futures_util::stream::BoxStream;
 use async_trait::async_trait;
 use google_cloud_storage::http::Error;
-use mongodb::bson::{self, Uuid};
+use mongodb::bson;
 
-pub use error::CommentDataSourceError;
-
-use crate::models::comment::{Comment, CreateCommentInput, UpdateCommentInput};
+use crate::{models::comment::{Comment, CreateCommentInput, UpdateCommentInput}, services::cv_service::comment_service::CommentServiceError};
 
 #[async_trait]
 pub trait CommentDataSource {
-    type Error;
+    type Error: std::error::Error + Send + Sync + Into<CommentServiceError>;
     async fn get_comment_by_id(&self, _id: bson::oid::ObjectId) -> Result<Comment, Error>;
 
     async fn get_comments_by_cv_id(
