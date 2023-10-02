@@ -1,8 +1,8 @@
 mod error;
 
+use crate::models::cv::{CreateCVInput, UpdateCVInput, CV};
 use async_graphql::async_trait::async_trait;
 use mongodb::bson::{oid::ObjectId, Uuid};
-use crate::models::cv::{CreateCVInput, UpdateCVInput, CV};
 
 pub use error::CVDataSourceError;
 
@@ -28,6 +28,24 @@ pub trait CVDataSource {
 
     /// Delete the CV with the provided id.
     async fn delete_cv(&self, _id: ObjectId) -> Result<(), CVDataSourceError> {
+        unimplemented!()
+    }
+
+    /// Add comment to the CV with the provided id.
+    async fn add_comment_to_cv(
+        &self,
+        _cv_id: ObjectId,
+        _comment_id: ObjectId,
+    ) -> Result<CV, CVDataSourceError> {
+        unimplemented!()
+    }
+
+    /// Remove comment from the CV with the provided id.
+    async fn remove_comment_from_cv(
+        &self,
+        _cv_id: ObjectId,
+        _comment_id: ObjectId,
+    ) -> Result<CV, CVDataSourceError> {
         unimplemented!()
     }
 }
