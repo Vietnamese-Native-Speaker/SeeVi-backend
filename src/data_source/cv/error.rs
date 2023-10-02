@@ -26,6 +26,12 @@ pub enum CVDataSourceError {
     // title is invalid
     InvalidTitle(String),
 
+    // add comment to cv failed
+    AddCommentFailed,
+
+    // remove comment from cv failed
+    RemoveCommentFailed,
+
     // id is invalid
     InvalidId(bson::oid::ObjectId),
 }
@@ -53,6 +59,12 @@ impl fmt::Display for CVDataSourceError {
             }
             CVDataSourceError::TooLongTitle => {
                 write!(f, "Title is too long")
+            }
+            CVDataSourceError::AddCommentFailed => {
+                write!(f, "Add comment failed")
+            }
+            CVDataSourceError::RemoveCommentFailed => {
+                write!(f, "Remove comment failed")
             }
             CVDataSourceError::AuthorIdNotFound(uuid) => {
                 write!(f, "Author id {:?} is not found", uuid)
