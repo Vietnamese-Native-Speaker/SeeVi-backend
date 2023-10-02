@@ -13,13 +13,15 @@ pub struct UpdateCommentInput {
     #[builder(default)]
     pub id: ScalarObjectId,
     #[builder(default)]
-    pub author_id: ScalarObjectId,
-    #[builder(default)]
     pub content: Option<String>,
     #[builder(default)]
     pub likes: Option<u32>,
     #[builder(default)]
     pub bookmarks: Option<u32>,
+    #[builder(default)]
+    pub shares: Option<u32>,
+    #[builder(default)]
+    pub replies: Option<Vec<ScalarObjectId>>,
 }
 
 impl UpdateCommentInput {
