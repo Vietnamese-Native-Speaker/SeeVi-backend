@@ -22,4 +22,16 @@ pub trait CommentDataSource {
     async fn update_comment(&self, _input: UpdateCommentInput) -> Result<Comment, Error>;
 
     async fn delete_comment(&self, _id: bson::oid::ObjectId) -> Result<Comment, Error>;
+
+    async fn add_reply_to_comment(
+        &self,
+        _comment_id: bson::oid::ObjectId,
+        _reply_id: bson::oid::ObjectId,
+    ) -> Result<Comment, Error>;
+
+    async fn remove_reply_from_comment(
+        &self,
+        _comment_id: bson::oid::ObjectId,
+        _reply_id: bson::oid::ObjectId,
+    ) -> Result<Comment, Error>;
 }
