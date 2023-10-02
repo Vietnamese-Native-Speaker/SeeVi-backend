@@ -1,6 +1,7 @@
 use mongodb::bson::oid::ObjectId;
 
-use crate::data_source::{CVDataSource, CVDataSourceError};
+use crate::data_source::{CVDataSource, CVDataSourceError, CommentDataSource};
+use crate::models::comment::CreateCommentInput;
 use crate::models::cv::{UpdateCVInput, CV};
 
 pub struct CVService {}
@@ -161,6 +162,76 @@ impl CVService {
                 };
                 let rs = database.update_cv_info(input).await;
                 return Ok(rs?);
+            }
+            Err(_) => {
+                return Err(CVDataSourceError::IdNotFound(cv_id));
+            }
+        }
+    }
+
+    pub async fn add_comment(
+        cv_database: &(impl CVDataSource + std::marker::Sync),
+        cmt_database: &(impl CommentDataSource + std::marker::Sync),
+        cv_id: ObjectId,
+        author_id: ObjectId,
+        content: String,
+    ) -> Result<CV, CVDataSourceError> {
+        let cv = cv_database.get_cv_by_id(cv_id).await;
+        match cv {
+            Ok(cv) => {
+                let input: CreateCommentInput = CreateCommentInput {
+                    author: author_id.into(),
+                    content
+                };
+                let rs = cmt_database.create_comment(input).await;
+                match rs {
+                    Ok(rs) => {
+                        let rs = cv_database.add_comment_to_cv(cv.id.into(), rs.id.into()).await;
+                        match rs {
+                            Ok(rs) => {
+                                return Ok(rs);
+                            }
+                            Err(_) => {
+                                return Err(CVDataSourceError::AddCommentFailed);
+                            }
+                        }
+                    }
+                    Err(_) => {
+                        return Err(CVDataSourceError::AddCommentFailed);
+                    }
+                }
+            }
+            Err(_) => {
+                return Err(CVDataSourceError::IdNotFound(cv_id));
+            }
+        }
+    }
+    pub async fn remove_comment(
+        cv_database: &(impl CVDataSource + std::marker::Sync),
+        cmt_database: &(impl CommentDataSource + std::marker::Sync),
+        cv_id: ObjectId,
+        comment_id: ObjectId,
+    ) -> Result<CV, CVDataSourceError> {
+        let cv = cv_database.get_cv_by_id(cv_id).await;
+        match cv {
+            Ok(cv) => {
+                let rs = cmt_database.delete_comment(comment_id).await;
+                match rs {
+                    Ok(_) => {
+                        let rs = cv_database.remove_comment_from_cv(cv.id.into(), comment_id).await;
+                        match rs {
+                            Ok(rs) => {
+                                return Ok(rs);
+                            }
+                            Err(_) => {
+                                return Err(CVDataSourceError::RemoveCommentFailed);
+                            }
+                        }
+                    }
+                    Err(_) => {
+                        return Err(CVDataSourceError::RemoveCommentFailed);
+                    }
+                }
             }
             Err(_) => {
                 return Err(CVDataSourceError::IdNotFound(cv_id));
