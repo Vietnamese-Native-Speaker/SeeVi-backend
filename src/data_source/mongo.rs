@@ -1,22 +1,27 @@
-use mongodb::bson::DateTime;
+use mongodb::bson::{DateTime, Uuid};
 use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Database};
-
+use std::pin::Pin;
 use crate::data_source::user_data_source::UserDataSource;
 
 use crate::data_source::user_data_source_error::UserDataSourceError;
+use crate::models::cv_details::cv_details::CVDetails;
 use crate::models::education::Education;
+use crate::models::sex::Sex;
 
 use async_trait::async_trait;
 
 use mongodb::bson;
 
-use crate::models::cv;
-use crate::models::users;
-
+use crate::models::cv::{self, CV};
+use crate::models::users::{self, User};
+use crate::models::cv_details;
+use crate::models::range_values::RangeValues;
 use super::cv_data_source::CVDataSource;
 use super::cv_data_source_error::CVDataSourceError;
-
+use super::cv_details_data_source::CVDetailsDataSource;
+use futures_core::stream::BoxStream;
+use tokio_stream::StreamExt;
 pub struct MongoDB {
     client: Client,
     pub db: Database,
@@ -215,5 +220,33 @@ impl CVDataSource for MongoDB {
             Ok(_) => Ok(()),
             Err(_) => Err(CVDataSourceError::UuidNotFound(id)),
         }
+    }
+}
+
+#[async_trait]
+impl CVDetailsDataSource for MongoDB{
+    async fn get_cvs_by_filter(&self, cv_details: CVDetails) -> BoxStream<Result<CV, CVDataSourceError>> {
+        let user_collection: mongodb::Collection<User> = self.db.collection("users");
+        let cv_collection: mongodb::Collection<CV> = self.db.collection("cvs");
+
+        let user_filter = bson::doc!{
+            "country": cv_details.country,
+            "city": cv_details.city,
+            "personalities" : { "$in" : cv_details.personalities},
+            "year_of_experience" : cv_details.year_of_experience,
+            "major" : cv_details.major,
+            "search_words" : { "$in" : cv_details.search_words},
+            "rating" : {"$gte" : cv_details.rating.clone().unwrap_or(RangeValues{upper:5.0,lower: 0.0}).lower,
+                        "$lte" : cv_details.rating.unwrap_or(RangeValues{upper:5.0,lower: 0.0}).upper},
+
+            "sex": bson::to_bson::<Sex>(&cv_details.sex.unwrap()).unwrap()
+        };
+        let user_cursor = user_collection.find(user_filter, None).await.expect("get_cvs_failed");
+        let list_author_id = user_cursor.map(|user|user.unwrap().user_id).collect::<Vec<_>>().await;
+        let cv_filter = bson::doc!{
+            "author_id": {"$in": list_author_id},
+        };
+        let cv_cursor = cv_collection.find(cv_filter, None).await.expect("get_cvs_failed");
+        Pin::from(Box::new(cv_cursor.map(|result| Ok(result.unwrap()))))
     }
 }

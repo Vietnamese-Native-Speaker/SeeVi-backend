@@ -3,6 +3,7 @@ pub mod cv_data_source_error;
 pub mod mongo;
 pub mod user_data_source;
 pub mod user_data_source_error;
+pub mod cv_details_data_source;
 
 #[cfg(test)]
 mod tests;
