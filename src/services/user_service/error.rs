@@ -2,6 +2,8 @@ use async_graphql::ErrorExtensions;
 use mongodb::bson;
 use std::fmt;
 
+use crate::models::users::User;
+
 #[non_exhaustive]
 #[derive(Debug, PartialEq, Eq, Clone)]
 
@@ -53,6 +55,9 @@ pub enum UserServiceError {
 
     // Token is invalid
     InvalidToken,
+
+    // Database error
+    DatabaseError,
 }
 
 impl fmt::Display for UserServiceError {
@@ -146,6 +151,9 @@ impl fmt::Display for UserServiceError {
             UserServiceError::InvalidToken => {
                 write!(f, "Token is invalid")
             }
+            UserServiceError::DatabaseError => {
+                write!(f, "Database error")
+            }
         }
     }
 }
@@ -169,6 +177,7 @@ impl ErrorExtensions for UserServiceError {
             UserServiceError::InvalidPassword => "INVALID_PASSWORD",
             UserServiceError::UpdateUserFailed => "UPDATE_USER_FAILED",
             UserServiceError::InvalidToken => "INVALID_TOKEN",
+            UserServiceError::DatabaseError => "DATABASE_ERROR",
         };
         async_graphql::Error::new(self.to_string()).extend_with(|_, e| e.set("code", code))
     }

@@ -1,6 +1,6 @@
+pub mod error;
 #[cfg(test)]
 mod tests;
-use std::pin::Pin;
 
 use async_graphql::futures_util::{stream::BoxStream, StreamExt};
 use mongodb::bson::oid::ObjectId;
@@ -141,7 +141,8 @@ impl UserService {
                     f.id.from
                 }
             })
-            .collect::<Vec<_>>().await;
+            .collect::<Vec<_>>()
+            .await;
         database.get_users_by_ids(users).await
     }
 }

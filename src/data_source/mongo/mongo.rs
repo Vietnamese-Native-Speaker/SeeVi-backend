@@ -119,6 +119,7 @@ impl From<UserDataSourceError> for UserServiceError {
             UserDataSourceError::EmptyUsername => UserServiceError::EmptyUsername,
             UserDataSourceError::EmptyEmail => UserServiceError::EmptyEmail,
             UserDataSourceError::EmptyName => UserServiceError::EmptyName,
+            UserDataSourceError::DatabaseError => UserServiceError::DatabaseError,
         }
     }
 }
@@ -237,7 +238,7 @@ impl UserDataSource for MongoDB {
     async fn get_users_by_ids(
         &self,
         user_ids: Vec<bson::oid::ObjectId>,
-    ) -> BoxStream<Result<User, UserDataSourceError>> {
+    ) -> BoxStream<Result<User, Self::Error>> {
         let collection: mongodb::Collection<users::User> = self.db.collection(USER_COLLECTION);
         let list_ids = user_ids;
         let filter = bson::doc! {"_id": {"$in": list_ids}};
