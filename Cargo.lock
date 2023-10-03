@@ -2682,6 +2682,7 @@ dependencies = [
  "serial_test",
  "struct_iterable",
  "tokio",
+ "tokio-stream",
  "warp",
 ]
 

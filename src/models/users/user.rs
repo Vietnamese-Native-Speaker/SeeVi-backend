@@ -24,7 +24,6 @@ pub struct User {
     pub first_name: String,
     pub last_name: String,
     pub country: Option<String>,
-    pub city: Option<String>,
     pub skills: Vec<String>,
     pub cv: Vec<Uuid>,
     pub primary_email: String,
@@ -70,6 +69,12 @@ impl From<CreateUserInput> for User {
             saved_cvs: Vec::default(),
             liked_cvs: Vec::default(),
             friends_list: Vec::default(),
+            city: None,
+            year_of_experience: None,
+            personalities: Vec::default(),
+            search_words: Vec::default(),
+            sex: None,
+            major: String::new(),
         }
     }
 }
