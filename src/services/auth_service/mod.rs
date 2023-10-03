@@ -1,12 +1,11 @@
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use google_cloud_auth::token_source::TokenSource;
 use jsonwebtoken::{Algorithm, DecodingKey, Validation};
 use mongodb::bson;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    data_source::{user_data_source::UserDataSource, user_data_source_error::UserDataSourceError},
+    data_source::{UserDataSource, UserDataSourceError},
     models::users::{CreateUserInput, UpdateUserInput, User},
 };
 

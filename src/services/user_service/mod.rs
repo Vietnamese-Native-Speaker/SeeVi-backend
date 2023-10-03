@@ -7,9 +7,7 @@ use mongodb::bson::oid::ObjectId;
 
 use crate::{
     data_source::{
-        friends_list_datasource::{FriendsListDataSource, FriendsListError},
-        user_data_source::UserDataSource,
-        user_data_source_error::UserDataSourceError,
+        UserDataSource, UserDataSourceError, {FriendsListDataSource, FriendsListError},
     },
     models::{
         friend_request::FriendRequest,
@@ -143,7 +141,7 @@ impl UserService {
                     f.id.from
                 }
             })
-            .boxed();
+            .collect::<Vec<_>>().await;
         database.get_users_by_ids(users).await
     }
 }

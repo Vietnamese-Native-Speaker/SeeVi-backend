@@ -2,11 +2,11 @@ use mongodb::bson::DateTime;
 use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Database};
 
-use crate::data_source::user_data_source::UserDataSource;
+use crate::data_source::UserDataSource;
 
-use crate::data_source::friends_list_datasource::FriendsListDataSource;
-use crate::data_source::friends_list_datasource::FriendsListError;
-use crate::data_source::user_data_source_error::UserDataSourceError;
+use crate::data_source::FriendsListDataSource;
+use crate::data_source::FriendsListError;
+use crate::data_source::UserDataSourceError;
 use crate::models::education::Education;
 use crate::models::friend_request::FriendRequest;
 use crate::mongo::mongo::bson::doc;
@@ -22,8 +22,8 @@ use mongodb::bson;
 use crate::models::cv;
 use crate::models::users::{self, User};
 
-use crate::data_source::cv_data_source::CVDataSource;
-use crate::data_source::cv_data_source_error::CVDataSourceError;
+use crate::data_source::CVDataSource;
+use crate::data_source::CVDataSourceError;
 
 const FRIEND_REQUEST_COLLECTION: &str = "friend_requests";
 const CV_COLLECTION: &str = "cvs";
@@ -232,6 +232,23 @@ impl UserDataSource for MongoDB {
 
     async fn get_user_by_email(&self, _email: &str) -> Result<users::User, Self::Error> {
         unimplemented!()
+    }
+
+    async fn get_users_by_ids(
+        &self,
+        user_ids: Vec<bson::oid::ObjectId>,
+    ) -> BoxStream<Result<User, UserDataSourceError>> {
+        let collection: mongodb::Collection<users::User> = self.db.collection(USER_COLLECTION);
+        let list_ids = user_ids;
+        let filter = bson::doc! {"_id": {"$in": list_ids}};
+        let cursor = collection.find(filter, None).await.unwrap();
+        let stream = cursor
+            .map(|result| match result {
+                Ok(doc) => Ok(doc),
+                Err(err) => Err(UserDataSourceError::DatabaseError),
+            })
+            .boxed();
+        stream
     }
 }
 

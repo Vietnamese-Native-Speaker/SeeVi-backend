@@ -2,6 +2,7 @@ use async_graphql as gql;
 use async_graphql::{futures_util::StreamExt, Context, InputObject, Object};
 use gql::{connection, ErrorExtensions};
 use mongodb::bson::oid::ObjectId;
+use mongodb::options::AuthMechanism;
 
 use crate::error::ServerError;
 use crate::object_id::ScalarObjectId;
@@ -10,6 +11,8 @@ use crate::{
     models::users::User,
     services::{auth_service::AuthService, user_service::UserService},
 };
+
+use super::authorization;
 
 pub struct Query;
 
@@ -47,16 +50,7 @@ impl Query {
         let db = ctx
             .data_opt::<MongoDB>()
             .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
-        let token = ctx.data_unchecked::<Option<String>>();
-        let token = match token {
-            Some(token) => token,
-            None => return Err(ServerError::Unauthorized.extend()),
-        };
-        let rs = AuthService::decode_token(token, true);
-        let claims = match rs {
-            Some(claims) => claims,
-            None => return Err(ServerError::InvalidToken.extend()),
-        };
+        let claims = authorization(ctx)?;
         let rs = UserService::get_user_by_username(db, claims.sub).await;
         match rs {
             Ok(user) => Ok(user),
@@ -94,6 +88,7 @@ impl Query {
         let db = ctx
             .data_opt::<MongoDB>()
             .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
+        authorization(ctx)?;
         let friends_list = UserService::friend_lists(db, user_id)
             .await
             .collect::<Vec<_>>()

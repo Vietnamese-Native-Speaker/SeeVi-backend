@@ -34,8 +34,8 @@ mutation userRegister($user: CreateUserInput!) {
 }"#;
 
 pub static USER_FRIENDSLIST: &str = r#"
-query friendslist($id: ObjectId!) {
-    friendslist(userId: $id) {
+query friendslist($id: ObjectId!, $after: String, $before: String, $first: Int, $last: Int) {
+    friendslist(userId: $id, after: $after, before: $before, first: $first, last: $last) {
         edges {
             node {
                 id,
@@ -110,17 +110,31 @@ pub fn graphql_user_detail() -> String {
     make_graphql(USER_DETAIL, "getUser", serde_json::json!({}))
 }
 
-pub fn graphql_friendslist(user_id: ScalarObjectId) -> String {
+pub fn graphql_friendslist(
+    user_id: ScalarObjectId,
+    after: Option<String>,
+    before: Option<String>,
+    first: Option<usize>,
+    last: Option<usize>,
+) -> String {
     make_graphql(
-        USER_FRIENDSLIST, 
+        USER_FRIENDSLIST,
         "friendslist",
         serde_json::json!({
-            "id": user_id.to_string()
+            "id": user_id.to_string(),
+            "after": after,
+            "before": before,
+            "first": first,
+            "last": last
         }),
-    )   
+    )
 }
 
-pub fn graphql_send_friend_request(user_id: ScalarObjectId, friend_id: ScalarObjectId, message: Option<&str>) -> String {
+pub fn graphql_send_friend_request(
+    user_id: ScalarObjectId,
+    friend_id: ScalarObjectId,
+    message: Option<&str>,
+) -> String {
     make_graphql(
         SEND_FRIEND_REQUEST,
         "sendFriendRequest",
@@ -143,7 +157,10 @@ pub fn graphql_accept_friend_request(user_id: ScalarObjectId, friend_id: ScalarO
     )
 }
 
-pub fn graphql_decline_friend_request(user_id: ScalarObjectId, friend_id: ScalarObjectId) -> String {
+pub fn graphql_decline_friend_request(
+    user_id: ScalarObjectId,
+    friend_id: ScalarObjectId,
+) -> String {
     make_graphql(
         DECLINE_FRIEND_REQUEST,
         "declineFriendRequest",

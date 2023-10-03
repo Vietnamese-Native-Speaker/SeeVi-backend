@@ -52,6 +52,9 @@ pub enum UserDataSourceError {
 
     // Token is invalid
     InvalidToken,
+
+    // Database error
+    DatabaseError,
 }
 
 impl fmt::Display for UserDataSourceError {
@@ -145,6 +148,10 @@ impl fmt::Display for UserDataSourceError {
             UserDataSourceError::InvalidToken => {
                 write!(f, "Token is invalid")
             }
+
+            UserDataSourceError::DatabaseError => {
+                write!(f, "Database error")
+            }
         }
     }
 }
@@ -163,8 +170,7 @@ mod tests {
     use crate::data_source::mongo::{MongoDB, MongoForTesting};
     use crate::models::users::CreateUserInput;
 
-    use super::super::user_data_source::UserDataSource;
-    use super::super::user_data_source_error::UserDataSourceError;
+    use super::super::{UserDataSource, UserDataSourceError};
 
     #[tokio::test]
     async fn basic_user_create_then_get() {
@@ -275,16 +281,12 @@ mod tests {
 
 #[test]
 fn test_user_create_fail() {
-    use super::user_data_source_error::UserDataSourceError;
-
     let err = UserDataSourceError::CreateUserFailed;
     assert_eq!(format!("{}", err), format!("Create user failed"));
 }
 
 #[test]
 fn test_wrong_email_username_or_password() {
-    use super::user_data_source_error::UserDataSourceError;
-
     let err = UserDataSourceError::WrongEmailUsernameOrPassword;
     assert_eq!(
         format!("{}", err),
