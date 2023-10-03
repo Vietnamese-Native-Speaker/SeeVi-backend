@@ -1,4 +1,5 @@
 use mongodb::bson::oid::ObjectId;
+use async_graphql::futures_util::{stream::BoxStream, StreamExt};
 
 mod error;
 
@@ -10,6 +11,48 @@ use crate::models::comment::{UpdateCommentInput, Comment, CreateCommentInput};
 pub struct CommentService {}
 
 impl CommentService {
+    pub async fn create_comment(
+        cmt_database: &(impl CommentDataSource + std::marker::Sync),
+        input: CreateCommentInput,
+    ) -> Result<Comment, CommentServiceError> {
+        let rs = cmt_database.create_comment(input).await;
+        match rs {
+            Ok(rs) => {
+                return Ok(rs);
+            }
+            Err(err) => {
+                let err: CommentServiceError = err.into();
+                return Err(err);
+            }
+        }
+    }
+
+    pub async fn get_comment_by_id(
+        cmt_database: &(impl CommentDataSource + std::marker::Sync),
+        comment_id: ObjectId,
+    ) -> Result<Comment, CommentServiceError> {
+        let rs = cmt_database.get_comment_by_id(comment_id).await;
+        match rs {
+            Ok(rs) => {
+                return Ok(rs);
+            }
+            Err(err) => {
+                let err: CommentServiceError = err.into();
+                return Err(err);
+            }
+        }
+    }
+
+    pub async fn get_comments_by_cv_id(
+        cmt_database: &(impl CommentDataSource + std::marker::Sync),
+        cv_id: ObjectId,
+    ) -> BoxStream<Result<Comment, CommentServiceError>> {
+        cmt_database.get_comments_by_cv_id(cv_id).await.map(|rs| rs.map_or_else(
+            |err| Err(err.into()),
+            |rs| Ok(rs),
+        )).boxed()    
+    }
+
     pub async fn update_content_comment(
         cmt_database: &(impl CommentDataSource + std::marker::Sync),
         comment_id: ObjectId,
@@ -31,13 +74,15 @@ impl CommentService {
                     Ok(rs) => {
                         return Ok(rs);
                     }
-                    Err(_) => {
-                        return Err(CommentServiceError::UpdateCommentFailed);
+                    Err(err) => {
+                        let err: CommentServiceError = err.into();
+                        return Err(err);
                     }
                 }
             }
-            Err(_) => {
-                return Err(CommentServiceError::IdNotFound(comment_id));
+            Err(err) => {
+                let err: CommentServiceError = err.into();
+                return Err(err);
             }
         }
     }
@@ -63,13 +108,15 @@ impl CommentService {
                     Ok(rs) => {
                         return Ok(rs);
                     }
-                    Err(_) => {
-                        return Err(CommentServiceError::UpdateCommentFailed);
+                    Err(err) => {
+                        let err: CommentServiceError = err.into();
+                        return Err(err);
                     }
                 }
             }
-            Err(_) => {
-                return Err(CommentServiceError::IdNotFound(comment_id));
+            Err(err) => {
+                let err: CommentServiceError = err.into();
+                return Err(err);
             }
         }
     }
@@ -98,13 +145,15 @@ impl CommentService {
                     Ok(rs) => {
                         return Ok(rs);
                     }
-                    Err(_) => {
-                        return Err(CommentServiceError::UpdateCommentFailed);
+                    Err(err) => {
+                        let err: CommentServiceError = err.into();
+                        return Err(err);
                     }
                 }
             }
-            Err(_) => {
-                return Err(CommentServiceError::IdNotFound(comment_id));
+            Err(err) => {
+                let err: CommentServiceError = err.into();
+                return Err(err);
             }
         }
     }
@@ -130,13 +179,15 @@ impl CommentService {
                     Ok(rs) => {
                         return Ok(rs);
                     }
-                    Err(_) => {
-                        return Err(CommentServiceError::UpdateCommentFailed);
+                    Err(err) => {
+                        let err: CommentServiceError = err.into();
+                        return Err(err);
                     }
                 }
             }
-            Err(_) => {
-                return Err(CommentServiceError::IdNotFound(comment_id));
+            Err(err) => {
+                let err: CommentServiceError = err.into();
+                return Err(err);
             }
         }
     }
@@ -165,13 +216,15 @@ impl CommentService {
                     Ok(rs) => {
                         return Ok(rs);
                     }
-                    Err(_) => {
-                        return Err(CommentServiceError::UpdateCommentFailed);
+                    Err(err) => {
+                        let err: CommentServiceError = err.into();
+                        return Err(err);
                     }
                 }
             }
-            Err(_) => {
-                return Err(CommentServiceError::IdNotFound(comment_id));
+            Err(err) => {
+                let err: CommentServiceError = err.into();
+                return Err(err);
             }
         }
     }
@@ -195,13 +248,15 @@ impl CommentService {
                     Ok(rs) => {
                         return Ok(rs);
                     }
-                    Err(_) => {
-                        return Err(CommentServiceError::UpdateCommentFailed);
+                    Err(err) => {
+                        let err: CommentServiceError = err.into();
+                        return Err(err);
                     }
                 }
             }
-            Err(_) => {
-                return Err(CommentServiceError::IdNotFound(comment_id));
+            Err(err) => {
+                let err: CommentServiceError = err.into();
+                return Err(err);
             }
         }
     }
@@ -226,18 +281,21 @@ impl CommentService {
                             Ok(rs) => {
                                 return Ok(rs);
                             }
-                            Err(_) => {
-                                return Err(CommentServiceError::CreateCommentFailed);
+                            Err(err) => {
+                                let err: CommentServiceError = err.into();
+                                return Err(err);
                             }
                         }
                     }
-                    Err(_) => {
-                        return Err(CommentServiceError::CreateCommentFailed);
+                    Err(err) => {
+                        let err: CommentServiceError = err.into();
+                        return Err(err);
                     }
                 }
             }
-            Err(_) => {
-                return Err(CommentServiceError::IdNotFound(comment_id));
+            Err(err) => {
+                let err: CommentServiceError = err.into();
+                return Err(err);
             }
         }
     }
@@ -254,13 +312,15 @@ impl CommentService {
                     Ok(rs) => {
                         return Ok(rs);
                     }
-                    Err(_) => {
-                        return Err(CommentServiceError::DeleteCommentFailed);
+                    Err(err) => {
+                        let err: CommentServiceError = err.into();
+                        return Err(err);
                     }
                 }
             }
-            Err(_) => {
-                return Err(CommentServiceError::IdNotFound(comment_id));
+            Err(err) => {
+                let err: CommentServiceError = err.into();
+                return Err(err);
             }
         }
     }
