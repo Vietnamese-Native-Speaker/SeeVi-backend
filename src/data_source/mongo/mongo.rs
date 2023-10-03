@@ -1,7 +1,6 @@
 use mongodb::bson::DateTime;
 use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Database};
-use std::pin::Pin;
 
 use crate::data_source::user_data_source::UserDataSource;
 
@@ -11,6 +10,7 @@ use crate::data_source::user_data_source_error::UserDataSourceError;
 use crate::models::education::Education;
 use crate::models::friend_request::FriendRequest;
 use crate::mongo::mongo::bson::doc;
+use crate::services::user_service::error::UserServiceError;
 
 use async_graphql::futures_util::stream::BoxStream;
 use async_graphql::futures_util::stream::StreamExt;
@@ -92,13 +92,44 @@ fn update_input_to_bson(input: users::UpdateUserInput) -> bson::Document {
     update
 }
 
+impl From<UserDataSourceError> for UserServiceError {
+    fn from(error: UserDataSourceError) -> Self {
+        match error {
+            UserDataSourceError::IdNotFound(id) => UserServiceError::IdNotFound(id),
+            UserDataSourceError::UsernameNotFound(username) => {
+                UserServiceError::UsernameNotFound(username)
+            }
+            UserDataSourceError::EmailNotFound(email) => UserServiceError::EmailNotFound(email),
+            UserDataSourceError::InvalidUsername(username) => {
+                UserServiceError::InvalidUsername(username)
+            }
+            UserDataSourceError::InvalidEmail(email) => UserServiceError::InvalidEmail(email),
+            UserDataSourceError::InvalidNameField(name) => UserServiceError::InvalidNameField(name),
+            UserDataSourceError::CreateUserFailed => UserServiceError::CreateUserFailed,
+            UserDataSourceError::WrongEmailUsernameOrPassword => {
+                UserServiceError::WrongEmailUsernameOrPassword
+            }
+            UserDataSourceError::InvalidPassword => UserServiceError::InvalidPassword,
+            UserDataSourceError::UpdateUserFailed => UserServiceError::UpdateUserFailed,
+            UserDataSourceError::InvalidToken => UserServiceError::InvalidToken,
+            UserDataSourceError::UsernameTaken(username) => {
+                UserServiceError::UsernameTaken(username)
+            }
+            UserDataSourceError::EmailTaken(email) => UserServiceError::EmailTaken(email),
+            UserDataSourceError::EmptyUsername => UserServiceError::EmptyUsername,
+            UserDataSourceError::EmptyEmail => UserServiceError::EmptyEmail,
+            UserDataSourceError::EmptyName => UserServiceError::EmptyName,
+        }
+    }
+}
+
+impl std::error::Error for UserDataSourceError {}
+
 // Implement datasource for MongoDB
 #[async_trait]
 impl UserDataSource for MongoDB {
-    async fn get_user_by_id(
-        &self,
-        id: bson::oid::ObjectId,
-    ) -> Result<users::User, UserDataSourceError> {
+    type Error = UserDataSourceError;
+    async fn get_user_by_id(&self, id: bson::oid::ObjectId) -> Result<users::User, Self::Error> {
         let collection: mongodb::Collection<users::User> = self.db.collection(USER_COLLECTION);
         let filter = bson::doc! {"_id": id};
         let result = collection.find_one(filter, None).await;
@@ -111,10 +142,7 @@ impl UserDataSource for MongoDB {
         }
     }
 
-    async fn get_user_by_username(
-        &self,
-        username: &str,
-    ) -> Result<users::User, UserDataSourceError> {
+    async fn get_user_by_username(&self, username: &str) -> Result<users::User, Self::Error> {
         let collection: mongodb::Collection<users::User> = self.db.collection(USER_COLLECTION);
         let filter = bson::doc! {"username": username.clone()};
         let result = collection.find_one(filter, None).await;
@@ -127,10 +155,7 @@ impl UserDataSource for MongoDB {
         }
     }
 
-    async fn create_user(
-        &self,
-        input: users::CreateUserInput,
-    ) -> Result<users::User, UserDataSourceError> {
+    async fn create_user(&self, input: users::CreateUserInput) -> Result<users::User, Self::Error> {
         let collection = self.db.collection::<User>(USER_COLLECTION);
         let username = input.username.clone();
         let user: users::User = users::User::from(input);
@@ -154,7 +179,7 @@ impl UserDataSource for MongoDB {
     async fn update_user_info(
         &self,
         input: users::UpdateUserInput,
-    ) -> Result<users::User, UserDataSourceError> {
+    ) -> Result<users::User, Self::Error> {
         let collection: mongodb::Collection<users::User> = self.db.collection(USER_COLLECTION);
         let filter = bson::doc! {"_id": input.user_id};
         let user_id = input.user_id.clone();
@@ -178,10 +203,7 @@ impl UserDataSource for MongoDB {
         }
     }
 
-    async fn delete_user(
-        &self,
-        id: bson::oid::ObjectId,
-    ) -> Result<users::User, UserDataSourceError> {
+    async fn delete_user(&self, id: bson::oid::ObjectId) -> Result<users::User, Self::Error> {
         let collection: mongodb::Collection<users::User> = self.db.collection(USER_COLLECTION);
         let filter = bson::doc! {"_id": id};
         let user = self.get_user_by_id(id).await;
@@ -192,23 +214,23 @@ impl UserDataSource for MongoDB {
         }
     }
 
-    async fn update_avatar(&self, _photo_id: bson::Uuid) -> Result<(), UserDataSourceError> {
+    async fn update_avatar(&self, _photo_id: bson::Uuid) -> Result<(), Self::Error> {
         unimplemented!()
     }
 
-    async fn update_cover_photo(&self, _photo_id: bson::Uuid) -> Result<(), UserDataSourceError> {
+    async fn update_cover_photo(&self, _photo_id: bson::Uuid) -> Result<(), Self::Error> {
         unimplemented!()
     }
 
-    async fn add_other_email(&self, _email: String) -> Result<(), UserDataSourceError> {
+    async fn add_other_email(&self, _email: String) -> Result<(), Self::Error> {
         unimplemented!()
     }
 
-    async fn delete_other_email(&self, _email: String) -> Result<(), UserDataSourceError> {
+    async fn delete_other_email(&self, _email: String) -> Result<(), Self::Error> {
         unimplemented!()
     }
 
-    async fn get_user_by_email(&self, _email: &str) -> Result<users::User, UserDataSourceError> {
+    async fn get_user_by_email(&self, _email: &str) -> Result<users::User, Self::Error> {
         unimplemented!()
     }
 }
