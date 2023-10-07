@@ -1,6 +1,6 @@
-use mongodb::bson::{Uuid, oid::ObjectId};
+use mongodb::bson::{self, oid::ObjectId};
 
-use super::{update_cv_input::UpdateCVInputBuilder};
+use super::update_cv_input::UpdateCVInputBuilder;
 use crate::models::cv::create_cv_input::CreateCVInputBuilder;
 
 #[test]
@@ -25,8 +25,8 @@ fn test_cv_from_input() {
 
 #[test]
 fn test_update_cv() {
-    let id = Uuid::new();
-    let author_id = Uuid::new();
+    let id =  bson::oid::ObjectId::new().into();
+    let author_id = bson::oid::ObjectId::new().into();
     let test_cv_update = UpdateCVInputBuilder::default()
         .with_id(id)
         .with_author_id(author_id)
