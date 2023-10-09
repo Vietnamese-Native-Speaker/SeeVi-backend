@@ -9,6 +9,8 @@ use crate::{
     models::users::{CreateUserInput, UpdateUserInput, User},
 };
 
+use super::user_service::error::UserServiceError;
+
 #[cfg(test)]
 mod tests;
 
@@ -99,7 +101,7 @@ impl AuthService {
     pub async fn register(
         database: &(impl UserDataSource + std::marker::Sync),
         user_input: CreateUserInput,
-    ) -> Result<User, UserDataSourceError> {
+    ) -> Result<User, UserServiceError> {
         /// Function will check whether the input string contains invalid characters
         // TODO: re-consider the invalid characters
         fn check_invalid_characters(s: &str) -> bool {
@@ -136,7 +138,7 @@ impl AuthService {
 
         let username = user_input.username.clone();
         if database.get_user_by_username(&username).await.is_ok() {
-            return Err(UserDataSourceError::UsernameTaken(username));
+            return Err(UserServiceError::UsernameTaken(username));
         }
         // let email = user_input.primary_email.clone();
         // if database.get_user_by_email(&email).await.is_ok() {
@@ -148,14 +150,7 @@ impl AuthService {
             ..user_input
         };
         let user = database.create_user(user_input).await;
-        match user {
-            Ok(_) => {
-                return user;
-            }
-            Err(_) => {
-                return Err(UserDataSourceError::CreateUserFailed);
-            }
-        }
+        user.map(|user| user).map_err(|err| err.into())
     }
 
     /// Authenticate a user
@@ -166,20 +161,20 @@ impl AuthService {
         username: Option<String>,
         email: Option<String>,
         password: String,
-    ) -> Result<(String, String), UserDataSourceError> {
+    ) -> Result<(String, String), UserServiceError> {
         if username.is_none() && email.is_none() {
-            return Err(UserDataSourceError::EmptyUsername);
+            return Err(UserServiceError::WrongEmailUsernameOrPassword);
         }
         if let Some(username) = username.clone() {
             let user = database.get_user_by_username(&username).await;
             if user.is_err() {
-                return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
+                return Err(UserServiceError::WrongEmailUsernameOrPassword);
             }
             let user = user.unwrap();
             let correct =
                 bcrypt::verify(password, &user.password).expect("Error verifying password");
             if !correct {
-                return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
+                return Err(UserServiceError::WrongEmailUsernameOrPassword);
             }
             let header = jsonwebtoken::Header::new(Algorithm::HS256);
             let time_now = SystemTime::now()
@@ -220,21 +215,21 @@ impl AuthService {
                         return Ok((access_token, refresh_token));
                     }
                     Err(_) => {
-                        return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
+                        return Err(UserServiceError::WrongEmailUsernameOrPassword);
                     }
                 },
                 Err(_) => {
-                    return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
+                    return Err(UserServiceError::WrongEmailUsernameOrPassword);
                 }
             }
         } else if let Some(email) = email.clone() {
             let user = database.get_user_by_email(&email).await;
             if user.is_err() {
-                return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
+                return Err(UserServiceError::WrongEmailUsernameOrPassword);
             }
             let user = user.unwrap();
             if let Err(_) = bcrypt::verify(password, user.password.as_str()) {
-                return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
+                return Err(UserServiceError::WrongEmailUsernameOrPassword);
             }
             let time_now = SystemTime::now()
                 .duration_since(UNIX_EPOCH)
@@ -275,15 +270,15 @@ impl AuthService {
                         return Ok((access_token, refresh_token));
                     }
                     Err(_) => {
-                        return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
+                        return Err(UserServiceError::WrongEmailUsernameOrPassword);
                     }
                 },
                 Err(_) => {
-                    return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
+                    return Err(UserServiceError::WrongEmailUsernameOrPassword);
                 }
             }
         }
-        return Err(UserDataSourceError::WrongEmailUsernameOrPassword);
+        return Err(UserServiceError::WrongEmailUsernameOrPassword);
     }
 
     /// Change the password of the user with the given id
@@ -292,10 +287,10 @@ impl AuthService {
         database: &(impl UserDataSource + std::marker::Sync),
         user_id: bson::oid::ObjectId,
         new_password: String,
-    ) -> Result<User, UserDataSourceError> {
+    ) -> Result<User, UserServiceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
-            return Err(UserDataSourceError::IdNotFound(user_id));
+            return Err(UserServiceError::IdNotFound(user_id));
         }
         let new_hashed_password = AuthService::hash_password(new_password);
         let new_user = UpdateUserInput::builder()
@@ -304,14 +299,7 @@ impl AuthService {
             .build()
             .unwrap();
         let user = database.update_user_info(new_user).await;
-        match user {
-            Ok(_) => {
-                return user;
-            }
-            Err(_) => {
-                return Err(UserDataSourceError::UpdateUserFailed);
-            }
-        }
+        user.map(|user| user).map_err(|err| err.into())
     }
 
     /// Function to generate a new access token from a refresh token

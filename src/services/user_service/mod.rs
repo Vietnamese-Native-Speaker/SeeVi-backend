@@ -1,7 +1,9 @@
+pub mod error;
 #[cfg(test)]
 mod tests;
-use std::pin::Pin;
 
+use crate::{models::users, services::user_service::error::UserServiceError};
+use async_graphql::futures_util::TryStreamExt;
 use async_graphql::futures_util::{stream::BoxStream, StreamExt};
 use mongodb::bson::oid::ObjectId;
 
@@ -21,61 +23,33 @@ impl UserService {
     pub async fn get_user_by_id(
         database: &(impl UserDataSource + std::marker::Sync),
         user_id: ObjectId,
-    ) -> Result<User, UserDataSourceError> {
+    ) -> Result<User, UserServiceError> {
         let user = database.get_user_by_id(user_id).await;
-        match user {
-            Ok(user) => {
-                return Ok(user);
-            }
-            Err(_) => {
-                return Err(UserDataSourceError::IdNotFound(user_id));
-            }
-        }
+        user.map(|user| user).map_err(|err| err.into())
     }
 
     pub async fn update_user(
         database: &(impl UserDataSource + std::marker::Sync),
         update_user_input: UpdateUserInput,
-    ) -> Result<User, UserDataSourceError> {
+    ) -> Result<User, UserServiceError> {
         let user = database.update_user_info(update_user_input).await;
-        match user {
-            Ok(user) => {
-                return Ok(user);
-            }
-            Err(_) => {
-                return Err(UserDataSourceError::UpdateUserFailed);
-            }
-        }
+        user.map(|user| user).map_err(|err| err.into())
     }
 
     pub async fn create_user(
         database: &(impl UserDataSource + std::marker::Sync),
         user: CreateUserInput,
-    ) -> Result<User, UserDataSourceError> {
+    ) -> Result<User, UserServiceError> {
         let user = database.create_user(user).await;
-        match user {
-            Ok(user) => {
-                return Ok(user);
-            }
-            Err(_) => {
-                return Err(UserDataSourceError::CreateUserFailed);
-            }
-        }
+        user.map(|user| user).map_err(|err| err.into())
     }
 
     pub async fn get_user_by_username(
         database: &(impl UserDataSource + std::marker::Sync),
         username: String,
-    ) -> Result<User, UserDataSourceError> {
+    ) -> Result<User, UserServiceError> {
         let user = database.get_user_by_username(&username).await;
-        match user {
-            Ok(user) => {
-                return Ok(user);
-            }
-            Err(_) => {
-                return Err(UserDataSourceError::UsernameNotFound(username));
-            }
-        }
+        user.map(|user| user).map_err(|err| err.into())
     }
 
     pub async fn send_friend_request(
@@ -129,7 +103,7 @@ impl UserService {
     pub async fn friend_lists(
         database: &(impl UserDataSource + FriendsListDataSource + std::marker::Sync),
         user_id: ObjectId,
-    ) -> BoxStream<Result<User, UserDataSourceError>> {
+    ) -> BoxStream<Result<User, UserServiceError>> {
         let users = database
             .accepted_friend_requests(user_id)
             .await
@@ -141,7 +115,9 @@ impl UserService {
                     f.id.from
                 }
             })
-            .collect::<Vec<_>>().await;
-        database.get_users_by_ids(users).await
+            .collect::<Vec<_>>()
+            .await;
+        let list_users = database.get_users_by_ids(users).await;
+        return list_users.map_err(|err| err.into()).boxed();
     }
 }

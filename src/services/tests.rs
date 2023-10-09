@@ -20,6 +20,7 @@ use mongodb::bson::oid::ObjectId;
 use std::sync::Mutex;
 
 use super::cv_service::comment_service::CommentServiceError;
+use super::user_service::error::UserServiceError;
 
 pub struct MockDatabase {
     users: Mutex<Vec<User>>,
@@ -128,39 +129,54 @@ impl FriendsListDataSource for MockDatabase {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct MockUserDataSourceError;
+
+impl std::fmt::Display for MockUserDataSourceError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Dummy Error")
+    }
+}
+
+impl From<MockUserDataSourceError> for UserServiceError {
+    fn from(_: MockUserDataSourceError) -> Self {
+        UserServiceError::CreateUserFailed
+    }
+}
+
+impl std::error::Error for MockUserDataSourceError {}
+
 #[async_trait]
 impl UserDataSource for MockDatabase {
-    async fn get_user_by_username(&self, username: &str) -> Result<User, UserDataSourceError> {
+    type Error = MockUserDataSourceError;
+    async fn get_user_by_username(&self, username: &str) -> Result<User, Self::Error> {
         let users = self.users.lock().unwrap();
         for user in users.iter() {
             if user.username == username {
                 return Ok(user.clone());
             }
         }
-        Err(UserDataSourceError::UsernameNotFound(username.to_string()))
+        Err(MockUserDataSourceError)
     }
-    async fn get_user_by_email(&self, email: &str) -> Result<User, UserDataSourceError> {
+    async fn get_user_by_email(&self, email: &str) -> Result<User, Self::Error> {
         let users = self.users.lock().unwrap();
         for user in users.iter() {
             if user.primary_email == email {
                 return Ok(user.clone());
             }
         }
-        Err(UserDataSourceError::EmailNotFound(email.to_string()))
+        Err(MockUserDataSourceError)
     }
-    async fn get_user_by_id(&self, id: bson::oid::ObjectId) -> Result<User, UserDataSourceError> {
+    async fn get_user_by_id(&self, id: bson::oid::ObjectId) -> Result<User, Self::Error> {
         let users = self.users.lock().unwrap();
         for user in users.iter() {
             if user.id == id.into() {
                 return Ok(user.clone());
             }
         }
-        Err(UserDataSourceError::IdNotFound(id.clone()))
+        Err(MockUserDataSourceError)
     }
-    async fn update_user_info(
-        &self,
-        updated_user: UpdateUserInput,
-    ) -> Result<User, UserDataSourceError> {
+    async fn update_user_info(&self, updated_user: UpdateUserInput) -> Result<User, Self::Error> {
         let mut users = self.users.lock().unwrap();
         for user in users.iter_mut() {
             if user.id == updated_user.user_id.into() {
@@ -207,12 +223,10 @@ impl UserDataSource for MockDatabase {
                 return Ok(user.clone());
             }
         }
-        return Err(UserDataSourceError::IdNotFound(
-            updated_user.user_id.clone(),
-        ));
+        return Err(MockUserDataSourceError);
     }
 
-    async fn create_user(&self, _input: CreateUserInput) -> Result<User, UserDataSourceError> {
+    async fn create_user(&self, _input: CreateUserInput) -> Result<User, Self::Error> {
         let mut users = self.users.lock().unwrap();
         let user = User::from(_input);
         users.push(user.clone());
@@ -222,7 +236,7 @@ impl UserDataSource for MockDatabase {
     async fn get_users_by_ids(
         &self,
         ids: Vec<bson::oid::ObjectId>,
-    ) -> BoxStream<Result<User, UserDataSourceError>> {
+    ) -> BoxStream<Result<User, Self::Error>> {
         let users = self.users.lock().unwrap().clone();
         let stream = futures_util::stream::iter(users.into_iter());
         let stream = stream.filter(move |user| {
