@@ -7,6 +7,7 @@ use crate::data_source::{FriendsListDataSource, FriendsListError};
 use crate::models::comment::Comment;
 use crate::models::comment::CreateCommentInput;
 use crate::models::comment::UpdateCommentInput;
+use crate::models::cv::CreateCVInput;
 use crate::models::cv::UpdateCVInput;
 use crate::models::cv::CV;
 use crate::models::friend_request::{FriendRequest, FriendRequestStatus};
@@ -235,6 +236,36 @@ impl UserDataSource for MockDatabase {
 
 #[async_trait]
 impl CVDataSource for MockDatabase {
+    async fn get_comments_by_cv_id(
+        &self,
+        _cv_id: ObjectId,
+    ) -> Result<Vec<ObjectId>, CVDataSourceError> {
+        let cvs = self.cvs.lock().unwrap();
+        for cv in cvs.iter() {
+            if cv.id == _cv_id.into() {
+                return Ok(cv.comments.clone());
+            }
+        }
+        Err(CVDataSourceError::IdNotFound(_cv_id.clone()))
+    }
+
+    async fn create_cv(&self, _input: CreateCVInput) -> Result<CV, CVDataSourceError> {
+        let mut cvs = self.cvs.lock().unwrap();
+        let cv = CV::from(_input);
+        cvs.push(cv.clone());
+        Ok(cv)
+    }
+
+    async fn get_cv_by_id(&self, _id: ObjectId) -> Result<CV, CVDataSourceError> {
+        let cvs = self.cvs.lock().unwrap();
+        for cv in cvs.iter() {
+            if cv.id == _id.into() {
+                return Ok(cv.clone());
+            }
+        }
+        Err(CVDataSourceError::IdNotFound(_id.clone()))
+    }
+
     async fn find_and_update_cv(
         &self,
         _cv_id: ObjectId,
@@ -277,6 +308,14 @@ impl CVDataSource for MockDatabase {
         _comment_id: ObjectId,
     ) -> Result<CV, CVDataSourceError> {
         let mut cvs = self.cvs.lock().unwrap();
+        // remove comment from the db
+        let mut comments = self.comments.lock().unwrap();
+        for (i, comment) in comments.iter().enumerate() {
+            if comment.id == _comment_id.into() {
+                comments.remove(i);
+                break;
+            }
+        }
         cvs.iter_mut()
             .find(|cv| cv.id == _cv_id.into())
             .map_or_else(
@@ -320,15 +359,16 @@ impl CommentDataSource for MockDatabase {
             )
     }
 
-    async fn get_comments_by_cv_id(
+    async fn get_comments_list(
         &self,
-        _cv_id: bson::oid::ObjectId,
+        _ids: Vec<ObjectId>
     ) -> BoxStream<Result<Comment, Self::Error>> {
         let comments = self.comments.lock().unwrap().clone();
         let stream = futures_util::stream::iter(comments.into_iter());
         let stream = stream.filter(move |comment| {
-            let comment_id = comment.id.clone();
-            async move { comment_id == _cv_id.into() }
+            let comment = comment.clone();
+            let ids = _ids.clone();
+            async move { ids.contains(&comment.id) }
         });
         stream.map(|comment| Ok(comment)).boxed()
     }
