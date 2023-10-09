@@ -54,4 +54,11 @@ pub trait CVDataSource {
         _cv_id: ObjectId,
         _input: UpdateCVInput,
     ) -> Result<CV, CVDataSourceError>;
+
+    async fn get_comments_by_cv_id(
+        &self,
+        _cv_id: ObjectId,
+    ) -> Result<Vec<ObjectId>, CVDataSourceError> {
+        unimplemented!()
+    }
 }

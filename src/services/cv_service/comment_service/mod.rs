@@ -5,7 +5,7 @@ mod error;
 
 pub use error::CommentServiceError;
 
-use crate::data_source::CommentDataSource;
+use crate::data_source::{CommentDataSource, CVDataSource, CVDataSourceError};
 use crate::models::comment::{Comment, CreateCommentInput, UpdateCommentInput};
 
 pub struct CommentService {}
@@ -35,15 +35,17 @@ impl CommentService {
         rs.map_or_else(|err| Err(err.into()), |rs| Ok(rs))
     }
 
-    pub async fn get_comments_by_cv_id(
-        cmt_database: &(impl CommentDataSource + std::marker::Sync),
+    pub async fn get_comments_list_by_cv_id(
+        database: &(impl CVDataSource + CommentDataSource + std::marker::Sync),
         cv_id: ObjectId,
     ) -> BoxStream<Result<Comment, CommentServiceError>> {
-        cmt_database
-            .get_comments_by_cv_id(cv_id)
-            .await
-            .map(|rs| rs.map_or_else(|err| Err(err.into()), |rs| Ok(rs)))
-            .boxed()
+        let ids: Result<Vec<ObjectId>, CVDataSourceError> = database.get_comments_by_cv_id(cv_id).await.map_err(|err| err.into());
+        let rs = database.get_comments_list(ids.unwrap()).await;
+        rs.map(|item| {
+            item.map_err(|err| {
+                err.into()
+            })
+        }).boxed()
     }
 
     pub async fn update_content_comment(
@@ -66,7 +68,6 @@ impl CommentService {
         comment_id: ObjectId,
     ) -> Result<Comment, CommentServiceError> {
         let cmt = cmt_database.get_comment_by_id(comment_id).await;
-        println!("{:?}", cmt);
         match cmt {
             Ok(cmt) => {
                 let input = UpdateCommentInput::builder()
@@ -74,7 +75,6 @@ impl CommentService {
                     .build()
                     .unwrap();
                 let rs = cmt_database.find_and_update_comment(cmt.id.into(), input).await;
-                println!("{:?}", rs);
                 match rs {
                     Ok(rs) => Ok(rs),
                     Err(err) => Err(err.into()),

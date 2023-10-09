@@ -4,6 +4,7 @@ use crate::data_source::{CVDataSource, CVDataSourceError, CommentDataSource};
 use crate::models::comment::CreateCommentInput;
 use crate::models::cv::{UpdateCVInput, CV, CreateCVInput};
 
+
 pub struct CVService {}
 
 impl CVService {
@@ -52,8 +53,8 @@ impl CVService {
                 }
                 let input: UpdateCVInput =
                     UpdateCVInput::builder().with_tags(tags).build().unwrap();
-                let rs = database.update_cv_info(input).await;
-                return Ok(rs?);
+                let rs = database.find_and_update_cv(cv_id.into(), input).await;
+                rs.map_err(|err| err.into())
             }
             Err(err) => {
                 return Err(err.into());
@@ -75,8 +76,8 @@ impl CVService {
                 }
                 let input: UpdateCVInput =
                     UpdateCVInput::builder().with_tags(tags).build().unwrap();
-                let rs = database.update_cv_info(input).await;
-                return Ok(rs?);
+                let rs = database.find_and_update_cv(cv_id.into(), input).await;
+                rs.map_err(|err| err.into())
             }
             Err(err) => {
                 return Err(err.into());
@@ -112,19 +113,13 @@ impl CVService {
             }
         }
     }
+
     pub async fn remove_comment(
         database: &(impl CVDataSource + CommentDataSource + std::marker::Sync),
         cv_id: ObjectId,
         comment_id: ObjectId,
     ) -> Result<CV, CVDataSourceError> {
         let rs = database.remove_comment_from_cv(cv_id, comment_id).await;
-        match rs {
-            Ok(cv) => {
-                Ok(cv)
-            }
-            Err(err) => {
-                Err(err.into())
-            }
-        }
+        rs.map_err(|err| err.into())
     }
 }

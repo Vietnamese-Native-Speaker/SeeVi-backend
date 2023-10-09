@@ -1,6 +1,6 @@
 use async_graphql::futures_util::stream::BoxStream;
 use async_trait::async_trait;
-use mongodb::bson;
+use mongodb::bson::{self, oid::ObjectId};
 
 use crate::{models::comment::{Comment, CreateCommentInput, UpdateCommentInput}, services::cv_service::comment_service::CommentServiceError};
 
@@ -9,9 +9,9 @@ pub trait CommentDataSource {
     type Error: std::error::Error + Send + Sync + Into<CommentServiceError>;
     async fn get_comment_by_id(&self, id: bson::oid::ObjectId) -> Result<Comment, Self::Error>;
 
-    async fn get_comments_by_cv_id(
+    async fn get_comments_list(
         &self,
-        cv_id: bson::oid::ObjectId,
+        ids: Vec<ObjectId>
     ) -> BoxStream<Result<Comment, Self::Error>>;
 
     async fn create_comment(&self, input: CreateCommentInput) -> Result<Comment, Self::Error>;
