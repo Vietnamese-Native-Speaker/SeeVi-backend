@@ -1,5 +1,3 @@
-use std::f32::consts::E;
-
 use async_graphql::futures_util::{stream::BoxStream, StreamExt};
 use mongodb::bson::oid::ObjectId;
 
@@ -9,7 +7,6 @@ pub use error::CommentServiceError;
 
 use crate::data_source::CommentDataSource;
 use crate::models::comment::{Comment, CreateCommentInput, UpdateCommentInput};
-use crate::object_id::ScalarObjectId;
 
 pub struct CommentService {}
 
@@ -69,13 +66,15 @@ impl CommentService {
         comment_id: ObjectId,
     ) -> Result<Comment, CommentServiceError> {
         let cmt = cmt_database.get_comment_by_id(comment_id).await;
+        println!("{:?}", cmt);
         match cmt {
             Ok(cmt) => {
                 let input = UpdateCommentInput::builder()
                     .with_likes(cmt.likes + 1)
                     .build()
                     .unwrap();
-                let rs = cmt_database.update_comment(input).await;
+                let rs = cmt_database.find_and_update_comment(cmt.id.into(), input).await;
+                println!("{:?}", rs);
                 match rs {
                     Ok(rs) => Ok(rs),
                     Err(err) => Err(err.into()),
@@ -99,7 +98,7 @@ impl CommentService {
                     .with_likes(comment.likes - 1)
                     .build()
                     .unwrap();
-                let rs = cmt_database.update_comment(input).await;
+                let rs = cmt_database.find_and_update_comment(comment_id, input).await;
                 match rs {
                     Ok(rs) => Ok(rs),
                     Err(err) => Err(err.into()),
@@ -120,7 +119,7 @@ impl CommentService {
                     .with_bookmarks(cv.bookmarks + 1)
                     .build()
                     .unwrap();
-                let rs = cmt_database.update_comment(input).await;
+                let rs = cmt_database.find_and_update_comment(comment_id, input).await;
                 match rs {
                     Ok(rs) => Ok(rs),
                     Err(err) => Err(err.into()),
@@ -145,7 +144,7 @@ impl CommentService {
                     .with_bookmarks(cmt.bookmarks - 1)
                     .build()
                     .unwrap();
-                let rs = cmt_database.update_comment(input).await;
+                let rs = cmt_database.find_and_update_comment(comment_id, input).await;
                 match rs {
                     Ok(rs) => {
                         return Ok(rs);
@@ -173,7 +172,7 @@ impl CommentService {
                     .with_shares(cmt.shares + 1)
                     .build()
                     .unwrap();
-                let rs = cmt_database.update_comment(input).await;
+                let rs = cmt_database.find_and_update_comment(comment_id, input).await;
                 match rs {
                     Ok(rs) => Ok(rs),
                     Err(err) => Err(err.into()),
