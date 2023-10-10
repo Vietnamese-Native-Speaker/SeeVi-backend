@@ -1,16 +1,19 @@
 use mongodb::bson::DateTime;
+use mongodb::bson::oid::ObjectId;
 use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Database};
 
-use crate::data_source::UserDataSource;
+use crate::data_source::{UserDataSource, CommentDataSource};
 
 use crate::data_source::FriendsListDataSource;
 use crate::data_source::FriendsListError;
 use crate::data_source::UserDataSourceError;
+use crate::models::comment::{Comment, CreateCommentInput, UpdateCommentInput};
 use crate::models::education::Education;
 use crate::models::friend_request::FriendRequest;
 use crate::mongo::mongo::bson::doc;
 use crate::services::user_service::error::UserServiceError;
+use crate::services::cv_service::comment_service::CommentServiceError;
 
 use async_graphql::futures_util::stream::BoxStream;
 use async_graphql::futures_util::stream::StreamExt;
@@ -471,5 +474,67 @@ impl FriendsListDataSource for MongoDB {
             })
             .boxed();
         stream
+    }
+}
+
+#[async_trait]
+impl CommentDataSource for MongoDB {
+    async fn get_comment_by_id(&self, id: bson::oid::ObjectId) -> Result<Comment, Self::Error> {
+        todo!()
+    }
+
+    async fn get_comments_list(
+        &self,
+        ids: Vec<ObjectId>
+    ) -> BoxStream<Result<Comment, Self::Error>> {
+        todo!()
+    }
+
+    async fn create_comment(&self, input: CreateCommentInput) -> Result<Comment, Self::Error> {
+        todo!()
+    }
+
+    async fn add_comment(&self, comment: Comment) -> Result<(), Self::Error> {
+        todo!()
+    }
+
+    async fn update_comment(&self, input: UpdateCommentInput) -> Result<Comment, Self::Error> {
+        todo!()
+    }
+
+    async fn remove_comment(&self, id: bson::oid::ObjectId) -> Result<Comment, Self::Error> {
+        todo!()
+    }
+
+    async fn find_and_update_comment(
+        &self,
+        id: bson::oid::ObjectId,
+        input: UpdateCommentInput,
+    ) -> Result<Comment, Self::Error> {
+        todo!()
+    }
+
+    async fn add_reply_to_comment(
+        &self,
+        comment_id: bson::oid::ObjectId,
+        reply_id: bson::oid::ObjectId,
+    ) -> Result<Comment, Self::Error> {
+        todo!()
+    }
+
+    async fn remove_reply_from_comment(
+        &self,
+        comment_id: bson::oid::ObjectId,
+        reply_id: bson::oid::ObjectId,
+    ) -> Result<Comment, Self::Error> {
+        todo!()
+    }
+
+    async fn find_and_remove_reply(
+        &self,
+        comment_id: bson::oid::ObjectId,
+        reply_id: bson::oid::ObjectId,
+    ) -> Result<Comment, Self::Error> {
+        todo!()
     }
 }

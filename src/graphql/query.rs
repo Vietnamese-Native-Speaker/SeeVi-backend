@@ -5,7 +5,9 @@ use mongodb::bson::oid::ObjectId;
 use mongodb::options::AuthMechanism;
 
 use crate::error::ServerError;
+use crate::models::comment::Comment;
 use crate::object_id::ScalarObjectId;
+use crate::services::cv_service::comment_service::CommentService;
 use crate::{
     data_source::mongo::{MongoDB, MongoForTesting},
     models::users::User,
@@ -134,6 +136,93 @@ impl Query {
                     .edges
                     .extend(friends_list.into_iter().map(|friend| {
                         connection::Edge::new(friend.as_ref().unwrap().id, friend.unwrap())
+                    }));
+                Ok::<_, async_graphql::Error>(connection)
+            },
+        )
+        .await
+    }
+
+    async fn get_comment_by_id(
+        &self,
+        ctx: &Context<'_>,
+        comment_id: ScalarObjectId,
+    ) -> gql::Result<User> {
+        let db = ctx
+            .data_opt::<MongoDB>()
+            .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
+        let rs = UserService::get_user_by_id(db, comment_id.into()).await;
+        match rs {
+            Ok(user) => Ok(user),
+            Err(e) => Err(e.extend()),
+        }
+    }
+
+    async fn get_comments_of_cv(
+        &self,
+        ctx: &Context<'_>,
+        cv_id: ScalarObjectId,
+        after: Option<String>,
+        before: Option<String>,
+        first: Option<i32>,
+        last: Option<i32>,
+    ) -> gql::Result<
+        connection::Connection<
+            ScalarObjectId,
+            Comment,
+            connection::EmptyFields,
+            connection::EmptyFields,
+        >,
+    > {
+        let db = ctx
+            .data_opt::<MongoDB>()
+            .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
+        authorization(ctx)?;
+        let comments_list = CommentService::get_comments_list_by_cv_id(db, cv_id.into())
+            .await
+            .collect::<Vec<_>>()
+            .await;
+        connection::query(
+            after,
+            before,
+            first,
+            last,
+            |after, before, first, last| async move {
+                let comments_list = if let Some(after) = after {
+                    comments_list
+                        .into_iter()
+                        .skip_while(|comment| comment.as_ref().unwrap().id != after)
+                        .skip(1)
+                        .map(|comment| comment)
+                        .collect::<Vec<_>>()
+                } else if let Some(before) = before {
+                    comments_list
+                        .into_iter()
+                        .take_while(|comment| comment.as_ref().unwrap().id != before)
+                        .map(|comment| comment)
+                        .collect::<Vec<_>>()
+                } else {
+                    comments_list.into_iter().collect::<Vec<_>>()
+                };
+                let comments_list = if let Some(first) = first {
+                    comments_list
+                        .into_iter()
+                        .take(first as usize)
+                        .collect::<Vec<_>>()
+                } else if let Some(last) = last {
+                    let size = comments_list.len() as usize;
+                    comments_list
+                        .into_iter()
+                        .skip(size - last as usize)
+                        .collect::<Vec<_>>()
+                } else {
+                    panic!("Must have either 'first' or 'last' argument")
+                };
+                let mut connection = connection::Connection::new(true, false);
+                connection
+                    .edges
+                    .extend(comments_list.into_iter().map(|comment| {
+                        connection::Edge::new(comment.as_ref().unwrap().id, comment.unwrap())
                     }));
                 Ok::<_, async_graphql::Error>(connection)
             },
