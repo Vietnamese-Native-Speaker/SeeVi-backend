@@ -6,7 +6,7 @@ use crate::object_id::ScalarObjectId;
 
 use super::create_comment_input::CreateCommentInput;
 
-#[derive(Serialize, Deserialize, Clone, SimpleObject, Builder)]
+#[derive(Debug, Serialize, Deserialize, Clone, SimpleObject, Builder)]
 #[graphql(complex)]
 pub struct Comment {
     #[serde(rename = "_id")]

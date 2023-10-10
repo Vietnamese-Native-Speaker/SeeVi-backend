@@ -1,7 +1,6 @@
 use async_graphql::InputObject;
 use serde::{Deserialize, Serialize};
 
-
 use crate::object_id::ScalarObjectId;
 
 #[derive(Serialize, Deserialize, Clone, InputObject, Builder, Default)]
@@ -10,21 +9,23 @@ use crate::object_id::ScalarObjectId;
     setter(into, prefix = "with", strip_option),
 )]
 
-pub struct UpdateCVInput {
+pub struct UpdateCommentInput {
     #[builder(default)]
     pub id: ScalarObjectId,
     #[builder(default)]
-    pub author_id: ScalarObjectId,
+    pub content: Option<String>,
     #[builder(default)]
-    pub title: Option<String>,
+    pub likes: Option<u32>,
     #[builder(default)]
-    pub description: Option<String>,
+    pub bookmarks: Option<u32>,
     #[builder(default)]
-    pub tags: Option<Vec<String>>,
+    pub shares: Option<u32>,
+    #[builder(default)]
+    pub replies: Option<Vec<ScalarObjectId>>,
 }
 
-impl UpdateCVInput {
-    pub fn builder() -> UpdateCVInputBuilder {
-        UpdateCVInputBuilder::default()
+impl UpdateCommentInput {
+    pub fn builder() -> UpdateCommentInputBuilder {
+        UpdateCommentInputBuilder::default()
     }
 }

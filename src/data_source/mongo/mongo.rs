@@ -313,6 +313,14 @@ impl CVDataSource for MongoDB {
             Err(_) => Err(CVDataSourceError::IdNotFound(id)),
         }
     }
+
+    async fn find_and_update_cv(
+        &self,
+        _cv_id: bson::oid::ObjectId,
+        _input: cv::UpdateCVInput,
+    ) -> Result<cv::CV, CVDataSourceError> {
+        todo!()
+    }
 }
 
 #[async_trait]
