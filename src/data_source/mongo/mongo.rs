@@ -1,9 +1,10 @@
-use mongodb::bson::DateTime;
 use mongodb::bson::oid::ObjectId;
+use mongodb::bson::DateTime;
 use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Database};
 
-use crate::data_source::{UserDataSource, CommentDataSource};
+use crate::data_source::{CommentDataSource, UserDataSource};
+use crate::mongo::comment_data_error::CommentDataSourceError;
 
 use crate::data_source::FriendsListDataSource;
 use crate::data_source::FriendsListError;
@@ -12,8 +13,8 @@ use crate::models::comment::{Comment, CreateCommentInput, UpdateCommentInput};
 use crate::models::education::Education;
 use crate::models::friend_request::FriendRequest;
 use crate::mongo::mongo::bson::doc;
-use crate::services::user_service::error::UserServiceError;
 use crate::services::cv_service::comment_service::CommentServiceError;
+use crate::services::user_service::error::UserServiceError;
 
 use async_graphql::futures_util::stream::BoxStream;
 use async_graphql::futures_util::stream::StreamExt;
@@ -32,6 +33,7 @@ const FRIEND_REQUEST_COLLECTION: &str = "friend_requests";
 const CV_COLLECTION: &str = "cvs";
 const USER_COLLECTION: &str = "users";
 const APP_NAME: &str = "SeeVi";
+const COMMENT_COLLECTION: &str = "comments";
 
 pub struct MongoDB {
     client: Client,
@@ -477,51 +479,86 @@ impl FriendsListDataSource for MongoDB {
     }
 }
 
-#[derive(Debug)]
-pub struct DummyCommentDataSourceError;
-
-impl std::fmt::Display for DummyCommentDataSourceError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "dummy error")
+impl From<CommentDataSourceError> for CommentServiceError {
+    fn from(error: CommentDataSourceError) -> Self {
+        match error {
+            CommentDataSourceError::IdNotFound(id) => CommentServiceError::IdNotFound(id),
+            CommentDataSourceError::EmptyContent => CommentServiceError::EmptyContent,
+            CommentDataSourceError::NoLikes => CommentServiceError::NoLikes,
+            CommentDataSourceError::NoBookmarks => CommentServiceError::NoBookmarks,
+            CommentDataSourceError::CreateCommentFailed => CommentServiceError::CreateCommentFailed,
+            CommentDataSourceError::UpdateCommentFailed => CommentServiceError::UpdateCommentFailed,
+            CommentDataSourceError::DeleteCommentFailed => CommentServiceError::DeleteCommentFailed,
+            CommentDataSourceError::DatabaseError => CommentServiceError::DatabaseError,
+        }
     }
 }
 
-impl From<DummyCommentDataSourceError> for CommentServiceError {
-    fn from(_: DummyCommentDataSourceError) -> Self {
-        CommentServiceError::EmptyContent
-    }
-}
-
-impl std::error::Error for DummyCommentDataSourceError {}
+impl std::error::Error for CommentDataSourceError {}
 
 #[async_trait]
 impl CommentDataSource for MongoDB {
-    type Error = DummyCommentDataSourceError;
+    type Error = CommentDataSourceError;
     async fn get_comment_by_id(&self, id: bson::oid::ObjectId) -> Result<Comment, Self::Error> {
-        todo!()
+        let collection = self.db.collection::<Comment>(COMMENT_COLLECTION);
+        let filter = bson::doc! {"_id": id};
+        let result = collection.find_one(filter, None).await;
+        match result {
+            Ok(comment) => match comment {
+                Some(comment) => Ok(comment),
+                None => Err(CommentDataSourceError::IdNotFound(id)),
+            },
+            Err(_) => Err(CommentDataSourceError::DatabaseError),
+        }
     }
 
     async fn get_comments_list(
         &self,
-        ids: Vec<ObjectId>
+        ids: Vec<ObjectId>,
     ) -> BoxStream<Result<Comment, Self::Error>> {
-        todo!()
+        let collection = self.db.collection::<Comment>(COMMENT_COLLECTION);
+        let list_ids = ids;
+        let filter = bson::doc! {"_id": {"$in": list_ids}};
+        let cursor = collection.find(filter, None).await.unwrap();
+        let stream = cursor
+            .map(|result| match result {
+                Ok(doc) => Ok(doc),
+                Err(_) => Err(CommentDataSourceError::DatabaseError),
+            })
+            .boxed();
+        stream
     }
 
     async fn create_comment(&self, input: CreateCommentInput) -> Result<Comment, Self::Error> {
-        todo!()
+        let collection = self.db.collection::<Comment>(COMMENT_COLLECTION);
+        let comment: Comment = Comment::from(input);
+        let result = self.add_comment(comment.clone()).await;
+        match result {
+            Ok(_) => Ok(comment),
+            Err(_) => Err(CommentDataSourceError::CreateCommentFailed),
+        }
     }
 
     async fn add_comment(&self, comment: Comment) -> Result<(), Self::Error> {
-        todo!()
-    }
-
-    async fn update_comment(&self, input: UpdateCommentInput) -> Result<Comment, Self::Error> {
-        todo!()
+        let collection = self.db.collection::<Comment>(COMMENT_COLLECTION);
+        let result = collection.insert_one(&comment, None).await;
+        match result {
+            Ok(_) => Ok(()),
+            Err(_) => Err(CommentDataSourceError::DatabaseError),
+        }
     }
 
     async fn remove_comment(&self, id: bson::oid::ObjectId) -> Result<Comment, Self::Error> {
-        todo!()
+        let collection = self.db.collection::<Comment>(COMMENT_COLLECTION);
+        let filter = bson::doc! {"_id": id};
+        let result = collection.find_one_and_delete(filter, None).await;
+        match result {
+            Ok(comment) => match comment {
+                Some(comment) => Ok(comment),
+                None => Err(CommentDataSourceError::DeleteCommentFailed),
+            },
+            Err(_) => Err(CommentDataSourceError::DatabaseError),
+        }
     }
 
     async fn find_and_update_comment(
@@ -529,7 +566,31 @@ impl CommentDataSource for MongoDB {
         id: bson::oid::ObjectId,
         input: UpdateCommentInput,
     ) -> Result<Comment, Self::Error> {
-        todo!()
+        let collection = self.db.collection::<Comment>(COMMENT_COLLECTION);
+        let filter = bson::doc! {"_id": id};
+        let find = collection.find_one(filter.clone(), None).await;
+        match find {
+            Ok(_) => match find.unwrap() {
+                Some(_) => {
+                    let update = bson::doc! {"$set": {"content": input.content}};
+                    let result = collection
+                        .find_one_and_update(
+                            filter,
+                            update,
+                            FindOneAndUpdateOptions::builder()
+                                .return_document(ReturnDocument::After)
+                                .build(),
+                        )
+                        .await;
+                    match result {
+                        Ok(comment) => Ok(comment.unwrap()),
+                        Err(_) => Err(CommentDataSourceError::IdNotFound(id)),
+                    }
+                }
+                None => Err(CommentDataSourceError::IdNotFound(id)),
+            },
+            Err(_) => Err(CommentDataSourceError::DatabaseError),
+        }
     }
 
     async fn add_reply_to_comment(
@@ -537,15 +598,31 @@ impl CommentDataSource for MongoDB {
         comment_id: bson::oid::ObjectId,
         reply_id: bson::oid::ObjectId,
     ) -> Result<Comment, Self::Error> {
-        todo!()
-    }
-
-    async fn remove_reply_from_comment(
-        &self,
-        comment_id: bson::oid::ObjectId,
-        reply_id: bson::oid::ObjectId,
-    ) -> Result<Comment, Self::Error> {
-        todo!()
+        let collection = self.db.collection::<Comment>(COMMENT_COLLECTION);
+        let filter = bson::doc! {"_id": comment_id};
+        let find = collection.find_one(filter.clone(), None).await;
+        match find {
+            Ok(_) => match find.unwrap() {
+                Some(_) => {
+                    let update = bson::doc! {"$push": {"replies": reply_id}};
+                    let result = collection
+                        .find_one_and_update(
+                            filter,
+                            update,
+                            FindOneAndUpdateOptions::builder()
+                                .return_document(ReturnDocument::After)
+                                .build(),
+                        )
+                        .await;
+                    match result {
+                        Ok(comment) => Ok(comment.unwrap()),
+                        Err(_) => Err(CommentDataSourceError::IdNotFound(comment_id)),
+                    }
+                }
+                None => Err(CommentDataSourceError::IdNotFound(comment_id)),
+            },
+            Err(_) => Err(CommentDataSourceError::DatabaseError),
+        }
     }
 
     async fn find_and_remove_reply(
@@ -553,6 +630,30 @@ impl CommentDataSource for MongoDB {
         comment_id: bson::oid::ObjectId,
         reply_id: bson::oid::ObjectId,
     ) -> Result<Comment, Self::Error> {
-        todo!()
+        let collection = self.db.collection::<Comment>(COMMENT_COLLECTION);
+        let filter = bson::doc! {"_id": comment_id};
+        let find = collection.find_one(filter.clone(), None).await;
+        match find {
+            Ok(_) => match find.unwrap() {
+                Some(_) => {
+                    let update = bson::doc! {"$pull": {"replies": reply_id}};
+                    let result = collection
+                        .find_one_and_update(
+                            filter,
+                            update,
+                            FindOneAndUpdateOptions::builder()
+                                .return_document(ReturnDocument::After)
+                                .build(),
+                        )
+                        .await;
+                    match result {
+                        Ok(comment) => Ok(comment.unwrap()),
+                        Err(_) => Err(CommentDataSourceError::IdNotFound(comment_id)),
+                    }
+                }
+                None => Err(CommentDataSourceError::IdNotFound(comment_id)),
+            },
+            Err(_) => Err(CommentDataSourceError::DatabaseError),
+        }
     }
 }
