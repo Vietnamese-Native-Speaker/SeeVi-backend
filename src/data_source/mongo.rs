@@ -20,8 +20,10 @@ use crate::models::range_values::RangeValues;
 use super::cv_data_source::CVDataSource;
 use super::cv_data_source_error::CVDataSourceError;
 use super::cv_details_data_source::CVDetailsDataSource;
+use super::cv_details_data_source_error::CVDetailsDataSourceError;
 use futures_core::stream::BoxStream;
-use tokio_stream::StreamExt;
+use tokio_stream::{StreamExt, Stream};
+
 pub struct MongoDB {
     client: Client,
     pub db: Database,
@@ -127,6 +129,7 @@ impl UserDataSource for MongoDB {
             // TODO: load the struct "education" into the document
             "education": bson::to_bson::<Vec<Education>>(&input.education.unwrap()).unwrap(),
         }};
+        
         println!("{}",update.get("$set").unwrap());
         let result = collection.find_one_and_update(filter.clone(), update, FindOneAndUpdateOptions::builder().return_document(ReturnDocument::After).build()).await.expect("update user failed");
         
@@ -225,28 +228,48 @@ impl CVDataSource for MongoDB {
 
 #[async_trait]
 impl CVDetailsDataSource for MongoDB{
-    async fn get_cvs_by_filter(&self, cv_details: CVDetails) -> BoxStream<Result<CV, CVDataSourceError>> {
+    async fn get_cvs_by_filter(&self, cv_details: CVDetails) -> Result<Pin<Box<dyn Stream<Item = CV>>>, CVDetailsDataSourceError> {
         let user_collection: mongodb::Collection<User> = self.db.collection("users");
         let cv_collection: mongodb::Collection<CV> = self.db.collection("cvs");
 
-        let user_filter = bson::doc!{
+        let mut user_filter = bson::doc!{
             "country": cv_details.country,
             "city": cv_details.city,
             "personalities" : { "$in" : cv_details.personalities},
             "year_of_experience" : cv_details.year_of_experience,
-            "major" : cv_details.major,
-            "search_words" : { "$in" : cv_details.search_words},
-            "rating" : {"$gte" : cv_details.rating.clone().unwrap_or(RangeValues{upper:5.0,lower: 0.0}).lower,
-                        "$lte" : cv_details.rating.unwrap_or(RangeValues{upper:5.0,lower: 0.0}).upper},
-
             "sex": bson::to_bson::<Sex>(&cv_details.sex.unwrap()).unwrap()
         };
-        let user_cursor = user_collection.find(user_filter, None).await.expect("get_cvs_failed");
-        let list_author_id = user_cursor.map(|user|user.unwrap().user_id).collect::<Vec<_>>().await;
-        let cv_filter = bson::doc!{
-            "author_id": {"$in": list_author_id},
-        };
-        let cv_cursor = cv_collection.find(cv_filter, None).await.expect("get_cvs_failed");
-        Pin::from(Box::new(cv_cursor.map(|result| Ok(result.unwrap()))))
+        if (cv_details.major != None){
+            user_filter.insert("education", bson::doc!{ "$elemMatch" : {"major" : cv_details.major.unwrap()}});
+        }
+        if (cv_details.rating != None){
+            let rating_query = bson::doc!{"$gte" : cv_details.rating.clone().unwrap().lower, "$lte" : cv_details.rating.unwrap().upper};
+            user_filter.insert("rating", rating_query);
+        }
+        let user_cursor_result = user_collection.find(user_filter, None).await;
+        match user_cursor_result {
+            Ok(cursor) =>{
+                let list_author_id = cursor.map(|user|user.unwrap().user_id).collect::<Vec<_>>().await;
+                if (list_author_id.is_empty()){
+                    return Err(CVDetailsDataSourceError::UserNotFound);
+                } 
+                let cv_filter = bson::doc!{
+                    "author_id": {"$in": list_author_id},
+                    "$or" :[
+                        {"tags": {"$in": cv_details.search_words.clone()}},
+                        {"title": {"$in": cv_details.search_words.clone()}},
+                        ],
+
+                };
+                let cv_cursor_result = cv_collection.find(cv_filter, None).await;
+                match cv_cursor_result {
+                    Ok(cursor) => Ok(Box::pin(cursor.map(|result| result.unwrap()))),
+                    Err(_) => Err(CVDetailsDataSourceError::CVNotFound),
+                }
+                
+            },
+            Err(_) => Err(CVDetailsDataSourceError::QueryError),
+        }
+        
     }
 }
