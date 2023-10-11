@@ -70,12 +70,12 @@ impl CreateUserInputBuilder {
         self.skills.push(skill.into());
         self
     }
-    pub fn with_personalities<T: Into<String>>(mut self, skill: T) -> Self {
-        self.personalities.push(skill.into());
+    pub fn with_personalities<T: Into<String>>(mut self, personality: T) -> Self {
+        self.personalities.push(personality.into());
         self
     }
-    pub fn with_search_words<T: Into<String>>(mut self, skill: T) -> Self {
-        self.search_words.push(skill.into());
+    pub fn with_search_words<T: Into<String>>(mut self, search_word: T) -> Self {
+        self.search_words.push(search_word.into());
         self
     }
 }

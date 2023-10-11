@@ -40,9 +40,7 @@ pub struct User {
     pub city: Option<String>,
     pub year_of_experience: Option<String>,
     pub personalities: Vec<String>,
-    pub search_words: Vec<String>,
     pub sex: Option<Sex>,
-    pub major: String,
 }
 
 impl From<CreateUserInput> for User {
@@ -68,12 +66,10 @@ impl From<CreateUserInput> for User {
             saved_cvs: Vec::default(),
             liked_cvs: Vec::default(),
             friends_list: Vec::default(),
-            city: None,
-            year_of_experience: None,
-            personalities: Vec::default(),
-            search_words: Vec::default(),
-            sex: None,
-            major: String::new(),
+            city: input.city,
+            year_of_experience: input.year_of_experience,
+            personalities: input.personalities,
+            sex: input.sex,
         }
     }
 }
