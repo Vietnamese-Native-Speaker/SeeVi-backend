@@ -26,24 +26,27 @@ fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
         .with_other_mail("other_mails")
         .with_other_mail("other_mails2")
         .with_education(Education {
-            institution: "University of Example 1".to_string(),
-            course: Some("Computer Science".to_string()),
-            degree: Some("Bachelor's Degree".to_string()),
+            school: "school 1".to_string(),
+            major: "major 1".to_string(),
+            minor: Some("minor 1".to_string()),
+            degree: "degree 1".to_string(),
+            start_date: None,
+            end_date: None
         })
         .with_education(Education {
-            institution: "University of Example 2".to_string(),
-            course: Some("Computer Science".to_string()),
-            degree: Some("Bachelor's Degree".to_string()),
+            school: "school 2".to_string(),
+            major: "major 2".to_string(),
+            minor: Some("minor 2".to_string()),
+            degree: "degree 2".to_string(),
+            start_date: None,
+            end_date: None
         })
         .with_about("about".to_string())
         .with_avatar(test_uuid)
         .with_cover_photo(test_uuid)
-        .with_country("country")
         .with_city("city")
-        .with_major("major")
         .with_personalities("personality")
         .with_rating(4.0)
-        .with_search_words("search_words")
         .with_sex(Sex::Male)
         .with_year_of_experience("year_of_experience")
         .build()
@@ -65,10 +68,11 @@ fn create_demo_cv_details() -> CVDetails{
     CVDetailsBuilder::default()
         .with_country("country")
         .with_city("city")
-        .with_major("major")
+        .with_major("major 1")
         .with_personalities("personality")
-        .with_rating(RangeValues{ upper: 5.0, lower: 0.0})
-        .with_search_words("search_words")
+        .with_rating(RangeValues{lower:0.0, upper: 5.0})
+        .with_search_words("title")
+        .with_search_words("tag3")
         .with_sex(Sex::Male)
         .with_year_of_experience("year_of_experience")
         .build()
@@ -131,8 +135,8 @@ async fn test_get_cvs_by_filter() {
     let input = create_demo_cv_input(input_user.user_id);
     let check_input = mongodb.create_cv(input).await.unwrap();
     let cv_filter = create_demo_cv_details();
-    let mut stream_cv = mongodb.get_cvs_by_filter(cv_filter).await;
-    while let Some(cv) = stream_cv.next().await {
-        assert_eq!(cv.unwrap().tags, vec!["tag".to_string(), "tag2".to_string()]);
-    }
+    let mut stream_cv = mongodb.get_cvs_by_filter(cv_filter).await.unwrap();
+    let vec_cv = stream_cv.collect::<Vec<_>>().await;
+    assert_eq!(vec_cv.len(), 1);
+    assert_eq!(vec_cv[0].tags, vec!["tag".to_string(), "tag2".to_string()]);
 }

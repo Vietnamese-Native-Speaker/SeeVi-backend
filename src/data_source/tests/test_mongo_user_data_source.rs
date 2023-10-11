@@ -23,14 +23,20 @@ fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
         .with_other_mail("other_mails")
         .with_other_mail("other_mails2")
         .with_education(Education {
-            institution: "University of Example 1".to_string(),
-            course: Some("Computer Science".to_string()),
-            degree: Some("Bachelor's Degree".to_string()),
+            school: "school 1".to_string(),
+            major: "major 1".to_string(),
+            minor: Some("minor 1".to_string()),
+            degree: "degree 1".to_string(),
+            start_date: None,
+            end_date: None
         })
         .with_education(Education {
-            institution: "University of Example 2".to_string(),
-            course: Some("Computer Science".to_string()),
-            degree: Some("Bachelor's Degree".to_string()),
+            school: "school 2".to_string(),
+            major: "major 2".to_string(),
+            minor: Some("minor 2".to_string()),
+            degree: "degree 2".to_string(),
+            start_date: None,
+            end_date: None
         })
         .with_about("about".to_string())
         .with_avatar(test_uuid)
@@ -63,31 +69,24 @@ async fn test_create_user_and_get_user_by_username() {
     assert_eq!(check_input.avatar, Some(uuid));
     assert_eq!(check_input.cover_photo, Some(uuid));
     assert_eq!(check_input.friends_list, vec![]);
-    assert_eq!(check_input.education.len(), 2);
-    assert_eq!(
-        check_input.education[0].institution,
-        "University of Example 1".to_string()
-    );
-    assert_eq!(
-        check_input.education[0].course,
-        Some("Computer Science".to_string())
-    );
-    assert_eq!(
-        check_input.education[0].degree,
-        Some("Bachelor's Degree".to_string())
-    );
-    assert_eq!(
-        check_input.education[1].institution,
-        "University of Example 2".to_string()
-    );
-    assert_eq!(
-        check_input.education[1].course,
-        Some("Computer Science".to_string())
-    );
-    assert_eq!(
-        check_input.education[1].degree,
-        Some("Bachelor's Degree".to_string())
-    );
+    assert_eq!(check_input.education, vec![
+        Education {
+            school: "school 1".to_string(),
+            major: "major 1".to_string(),
+            minor: Some("minor 1".to_string()),
+            degree: "degree 1".to_string(),
+            start_date: None,
+            end_date: None
+        },
+        Education {
+            school: "school 2".to_string(),
+            major: "major 2".to_string(),
+            minor: Some("minor 2".to_string()),
+            degree: "degree 2".to_string(),
+            start_date: None,
+            end_date: None
+        }
+    ]);
     assert_eq!(check_input.rating, None);
     assert_eq!(check_input.level, None);
     assert_eq!(check_input.shared_cvs, vec![]);
@@ -128,31 +127,24 @@ async fn test_get_user_by_id() {
     assert_eq!(check_input.avatar, Some(uuid));
     assert_eq!(check_input.cover_photo, Some(uuid));
     assert_eq!(check_input.friends_list, vec![]);
-    assert_eq!(check_input.education.len(), 2);
-    assert_eq!(
-        check_input.education[0].institution,
-        "University of Example 1".to_string()
-    );
-    assert_eq!(
-        check_input.education[0].course,
-        Some("Computer Science".to_string())
-    );
-    assert_eq!(
-        check_input.education[0].degree,
-        Some("Bachelor's Degree".to_string())
-    );
-    assert_eq!(
-        check_input.education[1].institution,
-        "University of Example 2".to_string()
-    );
-    assert_eq!(
-        check_input.education[1].course,
-        Some("Computer Science".to_string())
-    );
-    assert_eq!(
-        check_input.education[1].degree,
-        Some("Bachelor's Degree".to_string())
-    );
+    assert_eq!(check_input.education, vec![
+        Education {
+            school: "school 1".to_string(),
+            major: "major 1".to_string(),
+            minor: Some("minor 1".to_string()),
+            degree: "degree 1".to_string(),
+            start_date: None,
+            end_date: None
+        },
+        Education {
+            school: "school 2".to_string(),
+            major: "major 2".to_string(),
+            minor: Some("minor 2".to_string()),
+            degree: "degree 2".to_string(),
+            start_date: None,
+            end_date: None
+        }
+    ]);
     assert_eq!(check_input.rating, None);
     assert_eq!(check_input.level, None);
     assert_eq!(check_input.shared_cvs, vec![]);
@@ -197,9 +189,12 @@ async fn test_update_user_info() {
         .with_last_name("last_name2".to_string())
         .with_country("country2".to_string())
         .with_education(vec![Education {
-            institution: "University of Example 3".to_string(),
-            course: Some("Computer Science".to_string()),
-            degree: Some("Bachelor's Degree".to_string()),
+            school: "school 3".to_string(),
+            major: "major 3".to_string(),
+            minor: Some("minor 3".to_string()),
+            degree: "degree 3".to_string(),
+            start_date: None,
+            end_date: None
         }])
         .with_skills(vec!["skill".to_string(), "skill2".to_string()])
         .with_primary_email("primary_email2".to_string())
@@ -225,19 +220,14 @@ async fn test_update_user_info() {
     assert_eq!(check_input2.avatar, Some(uuid));
     assert_eq!(check_input2.cover_photo, Some(uuid));
     assert_eq!(check_input2.friends_list, vec![]);
-    assert_eq!(check_input2.education.len(), 1);
-    assert_eq!(
-        check_input2.education[0].institution,
-        "University of Example 3".to_string()
-    );
-    assert_eq!(
-        check_input2.education[0].course,
-        Some("Computer Science".to_string())
-    );
-    assert_eq!(
-        check_input2.education[0].degree,
-        Some("Bachelor's Degree".to_string())
-    );
+    assert_eq!(check_input2.education, vec![Education {
+        school: "school 3".to_string(),
+        major: "major 3".to_string(),
+        minor: Some("minor 3".to_string()),
+        degree: "degree 3".to_string(),
+        start_date: None,
+        end_date: None
+    }]);
     assert_eq!(check_input2.rating, None);
     assert_eq!(check_input2.level, None);
     assert_eq!(check_input2.shared_cvs, vec![]);
