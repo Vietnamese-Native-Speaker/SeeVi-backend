@@ -17,6 +17,7 @@ pub mod models;
 pub mod services;
 pub mod filters;
 pub mod error;
+pub mod mock_data_generation;
 
 #[derive(Clone)]
 pub struct State {
