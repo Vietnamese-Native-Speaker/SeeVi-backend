@@ -1,4 +1,6 @@
 pub mod graphql;
+pub mod value_getter;
+pub mod cv;
 
 use std::convert::Infallible;
 
@@ -12,6 +14,8 @@ use seevi_backend::{
 use warp::{hyper::StatusCode, Filter, Rejection};
 
 use crate::common;
+
+pub use value_getter::JsonValueGetter;
 
 pub fn print_json<T: serde::Serialize>(t: &T) {
     println!("{}", serde_json::to_string_pretty(t).unwrap());

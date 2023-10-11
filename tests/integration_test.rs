@@ -2,7 +2,7 @@ mod common;
 
 use crate::common::{
     default_route, make_login_request, make_refresh_token_request, make_register_request,
-    print_json, user_detail,
+    print_json, user_detail, JsonValueGetter,
 };
 use async_graphql::{EmptySubscription, Schema};
 use mongodb::bson::oid::ObjectId;
@@ -27,16 +27,10 @@ async fn register_and_login() {
     print_json(&rs);
     let login_result = make_login_request("ltp", "ltp", &routes).await;
     print_json(&login_result);
-    let access_token = login_result
-        .get("data")
-        .expect("should have 'data' field")
-        .get("login")
-        .expect("should have 'login' field")
-        .get("accessToken")
-        .expect("should have 'accessToken' field")
-        .as_str()
-        .unwrap()
-        .to_string();
+    let access_token = JsonValueGetter::new(login_result)
+        .field("data")
+        .field("login")
+        .string("accessToken");
 
     let user_rs = user_detail(access_token, &routes).await;
     print_json(&user_rs);
@@ -64,16 +58,10 @@ async fn register_login_refresh_access() {
     make_register_request("ltp", "ltp", &routes).await;
     let login_result = make_login_request("ltp", "ltp", &routes).await;
     print_json(&login_result);
-    let refresh_token = login_result
-        .get("data")
-        .expect("should have 'data' field")
-        .get("login")
-        .expect("should have 'login' field")
-        .get("refreshToken")
-        .expect("should have 'refreshToken' field")
-        .as_str()
-        .unwrap()
-        .to_string();
+    let refresh_token = JsonValueGetter::new(login_result)
+        .field("data")
+        .field("login")
+        .string("refreshToken");
     print_json(&refresh_token);
 
     // make a false refresh token request
@@ -85,14 +73,10 @@ async fn register_login_refresh_access() {
 
     let refresh_result = make_refresh_token_request(&refresh_token, &routes).await;
     print_json(&refresh_result);
-    let access_token = refresh_result
-        .get("data")
-        .expect("should have 'data' field")
-        .get("refreshToken")
-        .expect("should have 'refreshToken' field")
-        .as_str()
-        .unwrap()
-        .to_string();
+    let access_token = JsonValueGetter::new(refresh_result)
+        .field("data")
+        .field("refreshToken")
+        .string("refreshToken");
 
     let user_rs = user_detail(access_token, &routes).await;
     print_json(&user_rs);
@@ -230,7 +214,8 @@ async fn send_accept_decline_friends_request() {
         user_id3.clone(),
         None,
         &routes,
-    ).await;
+    )
+    .await;
     print_json(&send_friend_request_rs);
     let send_status = send_friend_request_rs
         .get("data")
@@ -247,7 +232,8 @@ async fn send_accept_decline_friends_request() {
         user_id2.clone(),
         user_id1.clone(),
         &routes,
-    ).await;
+    )
+    .await;
     print_json(&accept_friend_request_rs);
     let accept_status = accept_friend_request_rs
         .get("data")
@@ -264,23 +250,17 @@ async fn send_accept_decline_friends_request() {
         user_id3.clone(),
         user_id1.clone(),
         &routes,
-    ).await;
+    )
+    .await;
     print_json(&decline_friend_request_rs);
-    let decline_status = decline_friend_request_rs
-        .get("data")
-        .expect("should have 'data' field")
-        .get("declineFriendRequest")
-        .expect("should have 'declineFriendRequest' field")
-        .as_bool()
-        .unwrap();
+    let decline_status = JsonValueGetter::new(decline_friend_request_rs)
+        .field("data")
+        .bool("declineFriendRequest");
     assert_eq!(decline_status, true);
 
     // get friends list of user1
-    let friends_list_rs = common::friendslist(
-        access_token1.clone(),
-        user_id1.clone(),
-        &routes,
-    ).await;
+    let friends_list_rs =
+        common::friendslist(access_token1.clone(), user_id1.clone(), &routes).await;
     print_json(&friends_list_rs);
     let friends_list = friends_list_rs
         .get("data")
