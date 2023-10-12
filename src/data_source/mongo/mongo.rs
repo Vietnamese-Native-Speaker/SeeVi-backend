@@ -251,7 +251,7 @@ impl UserDataSource for MongoDB {
         let stream = cursor
             .map(|result| match result {
                 Ok(doc) => Ok(doc),
-                Err(err) => Err(UserDataSourceError::DatabaseError),
+                Err(_) => Err(UserDataSourceError::DatabaseError),
             })
             .boxed();
         stream
@@ -432,7 +432,7 @@ impl FriendsListDataSource for MongoDB {
         let stream = cursor
             .map(|result| match result {
                 Ok(doc) => Ok(doc),
-                Err(err) => Err(FriendsListError::DatabaseError),
+                Err(_) => Err(FriendsListError::DatabaseError),
             })
             .boxed();
         stream
@@ -451,7 +451,7 @@ impl FriendsListDataSource for MongoDB {
         let stream = cursor
             .map(|result| match result {
                 Ok(doc) => Ok(doc),
-                Err(err) => Err(FriendsListError::DatabaseError),
+                Err(_) => Err(FriendsListError::DatabaseError),
             })
             .boxed();
         stream
@@ -472,7 +472,7 @@ impl FriendsListDataSource for MongoDB {
         let stream = cursor
             .map(|result| match result {
                 Ok(doc) => Ok(doc),
-                Err(err) => Err(FriendsListError::DatabaseError),
+                Err(_) => Err(FriendsListError::DatabaseError),
             })
             .boxed();
         stream
@@ -530,7 +530,6 @@ impl CommentDataSource for MongoDB {
     }
 
     async fn create_comment(&self, input: CreateCommentInput) -> Result<Comment, Self::Error> {
-        let collection = self.db.collection::<Comment>(COMMENT_COLLECTION);
         let comment: Comment = Comment::from(input);
         let result = self.add_comment(comment.clone()).await;
         match result {
