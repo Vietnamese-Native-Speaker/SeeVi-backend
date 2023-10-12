@@ -477,8 +477,26 @@ impl FriendsListDataSource for MongoDB {
     }
 }
 
+#[derive(Debug)]
+pub struct DummyCommentDataSourceError;
+
+impl std::fmt::Display for DummyCommentDataSourceError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "dummy error")
+    }
+}
+
+impl From<DummyCommentDataSourceError> for CommentServiceError {
+    fn from(_: DummyCommentDataSourceError) -> Self {
+        CommentServiceError::EmptyContent
+    }
+}
+
+impl std::error::Error for DummyCommentDataSourceError {}
+
 #[async_trait]
 impl CommentDataSource for MongoDB {
+    type Error = DummyCommentDataSourceError;
     async fn get_comment_by_id(&self, id: bson::oid::ObjectId) -> Result<Comment, Self::Error> {
         todo!()
     }
