@@ -1,5 +1,5 @@
 use async_graphql::InputObject;
-use mongodb::bson::Uuid;
+use mongodb::bson::{Uuid, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 
 use crate::models::{education::Education, ResourceIdentifier};
@@ -11,7 +11,7 @@ use crate::models::{education::Education, ResourceIdentifier};
     setter(into, prefix = "with", strip_option),
 )]
 pub struct UpdateUserInput {
-    pub user_id: Uuid,
+    pub user_id: ObjectId,
     #[builder(default)]
     pub username: Option<String>,
     #[builder(default)]

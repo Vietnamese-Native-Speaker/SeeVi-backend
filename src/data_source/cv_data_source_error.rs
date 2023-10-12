@@ -1,14 +1,15 @@
-use mongodb::bson::Uuid;
+
+use mongodb::bson::oid::ObjectId;
 use std::fmt;
 
 #[non_exhaustive]
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum CVDataSourceError {
     // uuid cannot be found
-    UuidNotFound(Uuid),
+    ObjectIdNotFound(ObjectId),
 
     // author id cannot be found
-    AuthorIdNotFound(Uuid),
+    AuthorIdNotFound(ObjectId),
 
     // description is longer than limit
     TooLongDescription,
@@ -26,14 +27,18 @@ pub enum CVDataSourceError {
     InvalidTitle(String),
 
     // id is invalid
-    InvalidId(Uuid),
+    InvalidId(ObjectId),
+
+    // Cannot find CV
+    QueryFail,
 }
+
 
 impl fmt::Display for CVDataSourceError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            CVDataSourceError::UuidNotFound(uuid) => {
-                write!(f, "Uuid {:?} is not found", uuid)
+            CVDataSourceError::ObjectIdNotFound(uuid) => {
+                write!(f, "ObjectId {:?} is not found", uuid)
             }
             CVDataSourceError::TooLongDescription => {
                 write!(f, "Description is too long")
@@ -47,14 +52,17 @@ impl fmt::Display for CVDataSourceError {
             CVDataSourceError::InvalidTitle(s) => {
                 write!(f, "Title {:?} is invalid", s)
             }
-            CVDataSourceError::InvalidId(uuid) => {
-                write!(f, "Uuid {:?} is invalid", uuid)
+            CVDataSourceError::InvalidId(objectid) => {
+                write!(f, "ObjectId {:?} is invalid", objectid)
             }
             CVDataSourceError::TooLongTitle => {
                 write!(f, "Title is too long")
             }
-            CVDataSourceError::AuthorIdNotFound(uuid) => {
-                write!(f, "Author id {:?} is not found", uuid)
+            CVDataSourceError::AuthorIdNotFound(objectid) => {
+                write!(f, "Author id {:?} is not found", objectid)
+            }
+            CVDataSourceError::QueryFail => {
+                write!(f, "Fail to find CV")
             }
         }
     }

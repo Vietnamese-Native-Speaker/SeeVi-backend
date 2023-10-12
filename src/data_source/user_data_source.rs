@@ -1,6 +1,6 @@
 use super::user_data_source_error::UserDataSourceError;
 use async_trait::async_trait;
-use mongodb::bson::Uuid;
+use mongodb::bson::{Uuid, oid::ObjectId};
 
 use crate::models::users::{CreateUserInput, UpdateUserInput, User};
 
@@ -9,7 +9,7 @@ use crate::models::users::{CreateUserInput, UpdateUserInput, User};
 #[async_trait]
 pub trait UserDataSource {
     /// Return the user using the provided `id`
-    async fn get_user_by_id(&self, _id: Uuid) -> Result<User, UserDataSourceError> {
+    async fn get_user_by_id(&self, _id: ObjectId) -> Result<User, UserDataSourceError> {
         unimplemented!()
     }
 
@@ -44,7 +44,7 @@ pub trait UserDataSource {
     }
 
     /// Delete the user in the database with the provided id.
-    async fn delete_user(&self, _id: Uuid) -> Result<User, UserDataSourceError> {
+    async fn delete_user(&self, _id: ObjectId) -> Result<User, UserDataSourceError> {
         unimplemented!()
     }
 

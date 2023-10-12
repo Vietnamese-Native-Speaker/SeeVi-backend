@@ -1,4 +1,4 @@
-use mongodb::bson::Uuid;
+use mongodb::bson::{Uuid, oid::ObjectId};
 
 use crate::models::{
     education::Education,
@@ -55,13 +55,14 @@ fn test_create_user_input_to_user() {
 
 #[test]
 fn test_update_user() {
+    let objectid = ObjectId::new();
     let uuid = Uuid::new();
     let test_user_input = create_demo_user_input(uuid);
 
     let _user = create_demo_user(test_user_input);
 
     let update_user_input = UpdateUserInputBuilder::default()
-        .with_user_id(uuid)
+        .with_user_id(objectid)
         .with_about("Updated about")
         .build()
         .unwrap();

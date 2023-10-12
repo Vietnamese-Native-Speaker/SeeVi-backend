@@ -1,5 +1,5 @@
 use async_graphql::{Enum, SimpleObject};
-use mongodb::bson::Uuid;
+use mongodb::bson::{Uuid, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 
 use crate::models::{education::Education, sex::Sex, ResourceIdentifier};
@@ -16,7 +16,7 @@ pub enum Level {
 /// The User Model struct.
 #[derive(Debug, Serialize, Deserialize, Clone, SimpleObject, PartialEq)]
 pub struct User {
-    pub user_id: Uuid,
+    pub user_id:  ObjectId,
     pub username: String,
     #[graphql(skip)]
     pub password: String,
@@ -24,7 +24,7 @@ pub struct User {
     pub last_name: String,
     pub country: Option<String>,
     pub skills: Vec<String>,
-    pub cv: Vec<Uuid>,
+    pub cv: Vec<ObjectId>,
     pub primary_email: String,
     pub other_mails: Vec<String>,
     pub about: Option<String>,
@@ -34,9 +34,9 @@ pub struct User {
     pub education: Vec<Education>,
     pub rating: Option<f64>,
     pub level: Option<Level>,
-    pub shared_cvs: Vec<Uuid>,
-    pub saved_cvs: Vec<Uuid>,
-    pub liked_cvs: Vec<Uuid>,
+    pub shared_cvs: Vec<ObjectId>,
+    pub saved_cvs: Vec<ObjectId>,
+    pub liked_cvs: Vec<ObjectId>,
     pub city: Option<String>,
     pub year_of_experience: Option<String>,
     pub personalities: Vec<String>,
@@ -46,7 +46,7 @@ pub struct User {
 impl From<CreateUserInput> for User {
     fn from(input: CreateUserInput) -> Self {
         Self {
-            user_id: Uuid::new(),
+            user_id: ObjectId::new(),
             username: input.username,
             password: input.password,
             first_name: input.first_name.unwrap_or("None".to_string()),

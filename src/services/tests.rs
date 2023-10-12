@@ -3,6 +3,7 @@ use crate::data_source::user_data_source_error::UserDataSourceError;
 use crate::models::users::{CreateUserInput, UpdateUserInput, User};
 use async_trait::async_trait;
 use mongodb::bson::Uuid;
+use mongodb::bson::oid::ObjectId;
 use std::sync::Mutex;
 
 pub struct MockDatabase {
@@ -37,14 +38,14 @@ impl UserDataSource for MockDatabase {
         }
         Err(UserDataSourceError::EmailNotFound(email.to_string()))
     }
-    async fn get_user_by_id(&self, id: Uuid) -> Result<User, UserDataSourceError> {
+    async fn get_user_by_id(&self, id: ObjectId) -> Result<User, UserDataSourceError> {
         let users = self.users.lock().unwrap();
         for user in users.iter() {
             if user.user_id == id {
                 return Ok(user.clone());
             }
         }
-        Err(UserDataSourceError::UuidNotFound(id.clone()))
+        Err(UserDataSourceError::ObjectIdNotFound(id.clone()))
     }
     async fn update_user_info(
         &self,
@@ -96,7 +97,7 @@ impl UserDataSource for MockDatabase {
                 return Ok(user.clone());
             }
         }
-        return Err(UserDataSourceError::UuidNotFound(
+        return Err(UserDataSourceError::ObjectIdNotFound(
             updated_user.user_id.clone(),
         ));
     }

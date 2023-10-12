@@ -1,3 +1,5 @@
+use mongodb::bson::oid::ObjectId;
+
 use crate::{
     data_source::{user_data_source::UserDataSource, user_data_source_error::UserDataSourceError},
     models::{
@@ -13,7 +15,7 @@ pub struct UserService;
 impl UserService {
     pub async fn get_user_by_id(
         database: &(impl UserDataSource + std::marker::Sync),
-        user_id: ResourceIdentifier,
+        user_id: ObjectId,
     ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id).await;
         match user {
@@ -21,7 +23,7 @@ impl UserService {
                 return Ok(user);
             }
             Err(_) => {
-                return Err(UserDataSourceError::UuidNotFound(user_id));
+                return Err(UserDataSourceError::ObjectIdNotFound(user_id));
             }
         }
     }
@@ -46,12 +48,12 @@ impl UserService {
     /// and return the user with the new email
     pub async fn change_primary_email(
         database: &mut (impl UserDataSource + std::marker::Sync),
-        user_id: ResourceIdentifier,
+        user_id: ObjectId,
         new_email: String,
     ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
-            return Err(UserDataSourceError::UuidNotFound(user_id));
+            return Err(UserDataSourceError::ObjectIdNotFound(user_id));
         }
         let new_user = UpdateUserInput::builder()
             .with_user_id(user_id)
@@ -74,12 +76,12 @@ impl UserService {
     /// and return the user with the new other mails
     pub async fn change_other_mails(
         database: &mut (impl UserDataSource + std::marker::Sync),
-        user_id: ResourceIdentifier,
+        user_id: ObjectId,
         new_other_mails: Vec<String>,
     ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
-            return Err(UserDataSourceError::UuidNotFound(user_id));
+            return Err(UserDataSourceError::ObjectIdNotFound(user_id));
         }
         let new_user = UpdateUserInput::builder()
             .with_user_id(user_id)
@@ -102,12 +104,12 @@ impl UserService {
     /// and return the user with the new username
     pub async fn change_username(
         database: &mut (impl UserDataSource + std::marker::Sync),
-        user_id: ResourceIdentifier,
+        user_id: ObjectId,
         new_username: String,
     ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
-            return Err(UserDataSourceError::UuidNotFound(user_id));
+            return Err(UserDataSourceError::ObjectIdNotFound(user_id));
         }
         let new_user = UpdateUserInput::builder()
             .with_user_id(user_id)
@@ -130,13 +132,13 @@ impl UserService {
     /// and return the user with the new name
     pub async fn change_name(
         database: &mut (impl UserDataSource + std::marker::Sync),
-        user_id: ResourceIdentifier,
+        user_id: ObjectId,
         new_first_name: Option<String>,
         new_last_name: Option<String>,
     ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
-            return Err(UserDataSourceError::UuidNotFound(user_id));
+            return Err(UserDataSourceError::ObjectIdNotFound(user_id));
         }
         let new_user = UpdateUserInput::builder()
             .with_user_id(user_id)
@@ -160,12 +162,12 @@ impl UserService {
     /// and return the user with the new country
     pub async fn change_country(
         database: &mut (impl UserDataSource + std::marker::Sync),
-        user_id: ResourceIdentifier,
+        user_id: ObjectId,
         new_country: String,
     ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
-            return Err(UserDataSourceError::UuidNotFound(user_id));
+            return Err(UserDataSourceError::ObjectIdNotFound(user_id));
         }
         let new_user = UpdateUserInput::builder()
             .with_user_id(user_id)
@@ -185,12 +187,12 @@ impl UserService {
 
     pub async fn change_skills(
         database: &mut (impl UserDataSource + std::marker::Sync),
-        user_id: ResourceIdentifier,
+        user_id: ObjectId,
         new_skills: Vec<String>,
     ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
-            return Err(UserDataSourceError::UuidNotFound(user_id));
+            return Err(UserDataSourceError::ObjectIdNotFound(user_id));
         }
         let new_user = UpdateUserInput::builder()
             .with_user_id(user_id)
@@ -208,24 +210,24 @@ impl UserService {
         }
     }
 
-    /// Receive a user id and a new cv Uuid
+    /// Receive a user id and a new cv ObjectId
     /// and will add the cv to the user with the given id
     /// and return the user with the new cv
     pub async fn add_cv(
         database: &mut (impl UserDataSource + std::marker::Sync),
-        user_id: ResourceIdentifier,
-        new_cv: ResourceIdentifier,
+        user_id: ObjectId,
+        new_cv: ObjectId,
     ) -> Result<User, UserDataSourceError> {
         todo!()
     }
 
-    /// Receive a user id and a cv Uuid
+    /// Receive a user id and a cv ObjectId
     /// and will remove the cv from the user with the given id
     /// and return the user without the cv
     pub async fn remove_cv(
         database: &mut (impl UserDataSource + std::marker::Sync),
-        user_id: ResourceIdentifier,
-        to_remove_cv: ResourceIdentifier,
+        user_id: ObjectId,
+        to_remove_cv: ObjectId,
     ) -> Result<User, UserDataSourceError> {
         todo!()
     }
@@ -235,12 +237,12 @@ impl UserService {
     /// and return the user with the new about
     pub async fn change_about(
         database: &mut (impl UserDataSource + std::marker::Sync),
-        user_id: ResourceIdentifier,
+        user_id: ObjectId,
         new_about: String,
     ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
-            return Err(UserDataSourceError::UuidNotFound(user_id));
+            return Err(UserDataSourceError::ObjectIdNotFound(user_id));
         }
         let new_user = UpdateUserInput::builder()
             .with_user_id(user_id)
@@ -258,17 +260,17 @@ impl UserService {
         }
     }
 
-    /// Receive a user id and a new avatar Uuid
+    /// Receive a user id and a new avatar ObjectId
     /// and will change the avatar of the user with the given id
     /// and return the user with the new avatar
     pub async fn change_avatar(
         database: &mut (impl UserDataSource + std::marker::Sync),
-        user_id: ResourceIdentifier,
+        user_id: ObjectId,
         new_avatar: ResourceIdentifier,
     ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
-            return Err(UserDataSourceError::UuidNotFound(user_id));
+            return Err(UserDataSourceError::ObjectIdNotFound(user_id));
         }
         let new_user = UpdateUserInput::builder()
             .with_user_id(user_id)
@@ -286,17 +288,17 @@ impl UserService {
         }
     }
 
-    /// Receive a user id and a new cover photo Uuid
+    /// Receive a user id and a new cover photo ObjectId
     /// and will change the cover photo of the user with the given id
     /// and return the user with the new cover photo
     pub async fn change_cover_photo(
         database: &mut (impl UserDataSource + std::marker::Sync),
-        user_id: ResourceIdentifier,
+        user_id: ObjectId,
         new_cover_photo: ResourceIdentifier,
     ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
-            return Err(UserDataSourceError::UuidNotFound(user_id));
+            return Err(UserDataSourceError::ObjectIdNotFound(user_id));
         }
         let new_user = UpdateUserInput::builder()
             .with_user_id(user_id)
@@ -319,12 +321,12 @@ impl UserService {
     /// and return the user with the new friend list
     pub async fn update_friend_list(
         database: &mut (impl UserDataSource + std::marker::Sync),
-        user_id: ResourceIdentifier,
+        user_id: ObjectId,
         friend_list: Vec<ResourceIdentifier>,
     ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
-            return Err(UserDataSourceError::UuidNotFound(user_id));
+            return Err(UserDataSourceError::ObjectIdNotFound(user_id));
         }
         let new_user = UpdateUserInput::builder()
             .with_user_id(user_id)
@@ -347,12 +349,12 @@ impl UserService {
     /// and return the user with the new education list
     pub async fn update_education(
         database: &mut (impl UserDataSource + std::marker::Sync),
-        user_id: ResourceIdentifier,
+        user_id: ObjectId,
         new_education: Vec<Education>,
     ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
-            return Err(UserDataSourceError::UuidNotFound(user_id));
+            return Err(UserDataSourceError::ObjectIdNotFound(user_id));
         }
         let new_user = UpdateUserInput::builder()
             .with_user_id(user_id)

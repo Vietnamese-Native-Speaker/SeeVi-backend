@@ -1,11 +1,11 @@
-use mongodb::bson::Uuid;
+use mongodb::bson::{Uuid, oid::ObjectId};
 use std::fmt;
 
 #[non_exhaustive]
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum UserDataSourceError {
     /// Error when the uid is not found
-    UuidNotFound(Uuid),
+    ObjectIdNotFound(ObjectId),
 
     /// Error when the username is not found.
     UsernameNotFound(String),
@@ -54,8 +54,8 @@ impl fmt::Display for UserDataSourceError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             // Display message for Uuid not found
-            UserDataSourceError::UuidNotFound(uuid) => {
-                write!(f, "Uuid {:?} not found", uuid)
+            UserDataSourceError::ObjectIdNotFound(objectid) => {
+                write!(f, "ObjectId {:?} not found", objectid)
             }
 
             // Display message for username not found

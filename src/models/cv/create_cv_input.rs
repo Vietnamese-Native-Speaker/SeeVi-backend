@@ -1,12 +1,12 @@
 use async_graphql::InputObject;
-use mongodb::bson::Uuid;
+use mongodb::bson::{Uuid, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 
 /// CV InputObject for CV creation query in GraphQL.
 #[derive(Serialize, Deserialize, Clone, InputObject, Builder)]
 #[builder(pattern = "owned", setter(into, prefix = "with", strip_option))]
 pub struct CreateCVInput {
-    pub author_id: Uuid,
+    pub author_id: ObjectId,
     pub title: String,
     #[builder(default)]
     pub description: Option<String>,

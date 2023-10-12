@@ -9,6 +9,7 @@ use crate::{
     },
 };
 use mongodb::bson::Uuid;
+use mongodb::bson::oid::ObjectId;
 use serial_test::serial;
 
 fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
@@ -150,9 +151,9 @@ async fn test_get_user_by_id() {
     assert_eq!(check_input.shared_cvs, vec![]);
     assert_eq!(check_input.saved_cvs, vec![]);
     assert_eq!(check_input.liked_cvs, vec![]);
-    let uuid3 = Uuid::new();
-    let check_input2 = mongodb.get_user_by_id(uuid3).await;
-    assert_eq!(check_input2, Err(UserDataSourceError::UuidNotFound(uuid3)));
+    let id3 = ObjectId::new();
+    let check_input2 = mongodb.get_user_by_id(id3).await;
+    assert_eq!(check_input2, Err(UserDataSourceError::ObjectIdNotFound(id3)));
 }
 
 #[tokio::test]
@@ -162,17 +163,17 @@ async fn test_delete_user() {
     let uuid = Uuid::new();
     let input = create_demo_user_input(uuid);
     mongodb.create_user(input).await.unwrap();
-    let uuid2 = mongodb
+    let id2 = mongodb
         .get_user_by_username("username")
         .await
         .unwrap()
         .user_id;
-    let uuid3 = Uuid::new();
-    let error = mongodb.delete_user(uuid3).await;
-    assert_eq!(error, Err(UserDataSourceError::UuidNotFound(uuid3)));
-    mongodb.delete_user(uuid2).await.unwrap();
-    let error2 = mongodb.get_user_by_id(uuid2).await;
-    assert_eq!(error2, Err(UserDataSourceError::UuidNotFound(uuid2)))
+    let id3 = ObjectId::new();
+    let error = mongodb.delete_user(id3).await;
+    assert_eq!(error, Err(UserDataSourceError::ObjectIdNotFound(id3)));
+    mongodb.delete_user(id2).await.unwrap();
+    let error2 = mongodb.get_user_by_id(id2).await;
+    assert_eq!(error2, Err(UserDataSourceError::ObjectIdNotFound(id2)))
 }
 
 #[tokio::test]

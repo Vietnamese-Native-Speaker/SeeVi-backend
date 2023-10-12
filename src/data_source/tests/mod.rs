@@ -2,14 +2,15 @@ mod test_mongo_cv_data_source;
 mod test_mongo_user_data_source;
 
 mod cv_tests {
+    use mongodb::bson::oid::ObjectId;
+
     use super::super::cv_data_source_error::CVDataSourceError;
     #[test]
     fn test_cv_id_not_found() {
-        use mongodb::bson::Uuid;
 
-        let uuid = Uuid::new();
-        let err = CVDataSourceError::UuidNotFound(uuid);
-        assert_eq!(format!("{}", err), format!("Uuid {:?} is not found", uuid));
+        let objectid = ObjectId::new();
+        let err = CVDataSourceError::ObjectIdNotFound(objectid);
+        assert_eq!(format!("{}", err), format!("ObjectId {:?} is not found", objectid));
     }
 
     #[test]
@@ -42,10 +43,9 @@ mod cv_tests {
 
     #[test]
     fn test_invalid_id() {
-        use mongodb::bson::Uuid;
-        let uuid = Uuid::new();
-        let err = CVDataSourceError::InvalidId(uuid);
-        assert_eq!(format!("{}", err), format!("Uuid {:?} is invalid", uuid));
+        let objectid = ObjectId::new();
+        let err = CVDataSourceError::InvalidId(objectid);
+        assert_eq!(format!("{}", err), format!("ObjectId {:?} is invalid", objectid));
     }
 
     #[test]
@@ -53,10 +53,17 @@ mod cv_tests {
         let err = CVDataSourceError::TooLongTitle;
         assert_eq!(format!("{}", err), format!("Title is too long"));
     }
+
+    #[test]
+    fn test_query_fail() {
+        let err = CVDataSourceError::QueryFail;
+        assert_eq!(format!("{}", err), format!("Fail to find CV"))
+    }
 }
 
 mod user_tests {
     use mongodb::bson::Uuid;
+    use mongodb::bson::oid::ObjectId;
 
     use crate::data_source::mongo::MongoDB;
     use crate::models::users::CreateUserInput;
@@ -86,9 +93,9 @@ mod user_tests {
 
     #[test]
     fn test_user_id_not_found() {
-        let uuid = Uuid::new();
-        let err = UserDataSourceError::UuidNotFound(uuid);
-        assert_eq!(format!("{}", err), format!("Uuid {:?} not found", uuid));
+        let objectid = ObjectId::new();
+        let err = UserDataSourceError::ObjectIdNotFound(objectid);
+        assert_eq!(format!("{}", err), format!("ObjectId {:?} not found", objectid));
     }
 
     #[test]

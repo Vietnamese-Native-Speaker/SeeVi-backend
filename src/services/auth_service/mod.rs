@@ -1,4 +1,5 @@
 use jsonwebtoken::{Algorithm, DecodingKey, Validation};
+use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -229,12 +230,12 @@ impl AuthService {
     /// and return the user with the new password
     pub async fn change_password(
         database: &mut (impl UserDataSource + std::marker::Sync),
-        user_id: ResourceIdentifier,
+        user_id: ObjectId,
         new_password: String,
     ) -> Result<User, UserDataSourceError> {
         let user = database.get_user_by_id(user_id.clone()).await;
         if user.is_err() {
-            return Err(UserDataSourceError::UuidNotFound(user_id));
+            return Err(UserDataSourceError::ObjectIdNotFound(user_id));
         }
         let new_hashed_password = AuthService::hash_password(new_password);
         let new_user = UpdateUserInput::builder()

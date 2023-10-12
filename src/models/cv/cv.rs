@@ -1,5 +1,5 @@
 use async_graphql::{ComplexObject, SimpleObject};
-use mongodb::bson::{DateTime, Uuid};
+use mongodb::bson::{DateTime, Uuid, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 
 use crate::models::ResourceIdentifier;
@@ -12,12 +12,12 @@ use super::CreateCVInput;
 #[derive(Debug, Serialize, Deserialize, Clone, SimpleObject, PartialEq)]
 #[graphql(complex)]
 pub struct CV {
-    pub _id: Uuid,
-    pub author_id: Uuid,
+    pub _id: ObjectId,
+    pub author_id: ObjectId,
     pub title: String,
     pub description: Option<String>,
     pub tags: Vec<String>,
-    pub comments: Vec<Uuid>,
+    pub comments: Vec<ObjectId>,
     #[graphql(skip)]
     pub created: DateTime,
     pub cv: Option<ResourceIdentifier>,
@@ -33,7 +33,7 @@ impl CV {
 impl From<CreateCVInput> for CV {
     fn from(input: CreateCVInput) -> Self {
         Self {
-            _id: Uuid::new(),
+            _id: ObjectId::new(),
             author_id: input.author_id,
             title: input.title,
             description: input.description,

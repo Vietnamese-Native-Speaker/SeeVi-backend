@@ -9,12 +9,14 @@ use crate::models::cv_details::cv_details::CVDetailsBuilder;
 use crate::models::{education::Education, sex::Sex, range_values::RangeValues};
 use crate::models::users::create_user_input::CreateUserInputBuilder;
 use crate::models::users::CreateUserInput;
+use google_cloud_storage::http::objects::Object;
 use mongodb::bson::Uuid;
+use mongodb::bson::oid::ObjectId;
 use serial_test::serial;
 use futures_core::stream::BoxStream;
 use tokio_stream::StreamExt;
 
-fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
+fn create_demo_user_input(test_objectid: ObjectId, test_uuid: Uuid) -> CreateUserInput {
     CreateUserInputBuilder::default()
         .with_password("password")
         .with_username("username")
@@ -53,9 +55,9 @@ fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
         .unwrap()
 }
 
-fn create_demo_cv_input(test_uuid: Uuid) -> CreateCVInput {
+fn create_demo_cv_input(test_objectid: ObjectId) -> CreateCVInput {
     CreateCVInputBuilder::default()
-        .with_author_id(test_uuid)
+        .with_author_id(test_objectid)
         .with_title("title")
         .with_description("description")
         .with_tag("tag")
@@ -83,7 +85,8 @@ fn create_demo_cv_details() -> CVDetails{
 async fn test_create_cv() {
     let mongodb = MongoDB::init_test().await;
     let uuid = Uuid::new();
-    let user = create_demo_user_input(uuid);
+    let objectid = ObjectId::new();
+    let user = create_demo_user_input(objectid, uuid);
     let input_user = mongodb.create_user(user).await.unwrap();
     let input = create_demo_cv_input(input_user.user_id);
     let check_input = mongodb.create_cv(input).await.unwrap();
@@ -100,14 +103,15 @@ async fn test_create_cv() {
 
 #[tokio::test]
 #[serial]
-async fn get_cv_by_id() {
+async fn test_get_cv_by_id() {
     let mongodb = MongoDB::init_test().await;
     let uuid = Uuid::new();
-    let user = create_demo_user_input(uuid);
+    let objectid = ObjectId::new();
+    let user = create_demo_user_input(objectid, uuid);
     let input_user = mongodb.create_user(user).await.unwrap();
     let input = create_demo_cv_input(input_user.user_id);
-    let check_input = mongodb.get_cv_by_id(uuid).await;
-    assert_eq!(check_input, Err(CVDataSourceError::UuidNotFound(uuid)));
+    let check_input = mongodb.get_cv_by_id(objectid).await;
+    assert_eq!(check_input, Err(CVDataSourceError::ObjectIdNotFound(objectid)));
     let check_id = mongodb.create_cv(input).await.unwrap()._id;
     let check_input2 = mongodb.get_cv_by_id(check_id).await.unwrap();
     assert_eq!(check_input2.author_id, input_user.user_id);
@@ -130,7 +134,8 @@ async fn get_cv_by_id() {
 async fn test_get_cvs_by_filter() {
     let mongodb = MongoDB::init_test().await;
     let uuid = Uuid::new();
-    let user = create_demo_user_input(uuid);
+    let objectid = ObjectId::new();
+    let user = create_demo_user_input(objectid, uuid);
     let input_user = mongodb.create_user(user).await.unwrap();
     let input = create_demo_cv_input(input_user.user_id);
     let check_input = mongodb.create_cv(input).await.unwrap();
