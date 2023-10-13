@@ -44,8 +44,6 @@ pub struct CreateUserInput {
     pub year_of_experience: Option<String>,
     #[builder(setter(custom), field(type = "Vec<String>"))]
     pub personalities: Vec<String>,
-    #[builder(setter(custom), field(type = "Vec<String>"))]
-    pub search_words: Vec<String>,
 }
 
 impl CreateUserInput {
