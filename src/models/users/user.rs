@@ -42,7 +42,6 @@ pub struct User {
     pub year_of_experience: Option<String>,
     pub personalities: Vec<String>,
     pub sex: Option<Sex>,
-    pub major: String,
 }
 
 impl From<CreateUserInput> for User {
@@ -72,7 +71,6 @@ impl From<CreateUserInput> for User {
             year_of_experience: input.year_of_experience,
             personalities: input.personalities,
             sex: input.sex,
-            major: String::new(),
         }
     }
 }

@@ -39,8 +39,6 @@ pub struct CreateUserInput {
     #[builder(default)]
     pub city: Option<String>,
     #[builder(default)]
-    pub major: Option<String>,
-    #[builder(default)]
     pub sex: Option<Sex>,
     #[builder(default)]
     pub year_of_experience: Option<String>,
