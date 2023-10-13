@@ -1,3 +1,5 @@
+use std::process::id;
+
 use mongodb::bson::oid::ObjectId;
 use mongodb::bson::DateTime;
 use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
@@ -567,26 +569,20 @@ impl CommentDataSource for MongoDB {
     ) -> Result<Comment, Self::Error> {
         let collection = self.db.collection::<Comment>(COMMENT_COLLECTION);
         let filter = bson::doc! {"_id": id};
-        let find = collection.find_one(filter.clone(), None).await;
-        match find {
-            Ok(_) => match find.unwrap() {
-                Some(_) => {
-                    let update = bson::doc! {"$set": {"content": input.content}};
-                    let result = collection
-                        .find_one_and_update(
-                            filter,
-                            update,
-                            FindOneAndUpdateOptions::builder()
-                                .return_document(ReturnDocument::After)
-                                .build(),
-                        )
-                        .await;
-                    match result {
-                        Ok(comment) => Ok(comment.unwrap()),
-                        Err(_) => Err(CommentDataSourceError::IdNotFound(id)),
-                    }
-                }
-                None => Err(CommentDataSourceError::IdNotFound(id)),
+        let update = bson::doc! {"$set": {"content": input.content}};
+        let result = collection
+            .find_one_and_update(
+                filter,
+                update,
+                FindOneAndUpdateOptions::builder()
+                    .return_document(ReturnDocument::After)
+                    .build(),
+            )
+            .await;
+        match result {
+            Ok(comment) => match comment {
+                Some(comment) => Ok(comment),
+                None => Err(CommentDataSourceError::UpdateCommentFailed),
             },
             Err(_) => Err(CommentDataSourceError::DatabaseError),
         }
@@ -599,25 +595,19 @@ impl CommentDataSource for MongoDB {
     ) -> Result<Comment, Self::Error> {
         let collection = self.db.collection::<Comment>(COMMENT_COLLECTION);
         let filter = bson::doc! {"_id": comment_id};
-        let find = collection.find_one(filter.clone(), None).await;
-        match find {
-            Ok(_) => match find.unwrap() {
-                Some(_) => {
-                    let update = bson::doc! {"$push": {"replies": reply_id}};
-                    let result = collection
-                        .find_one_and_update(
-                            filter,
-                            update,
-                            FindOneAndUpdateOptions::builder()
-                                .return_document(ReturnDocument::After)
-                                .build(),
-                        )
-                        .await;
-                    match result {
-                        Ok(comment) => Ok(comment.unwrap()),
-                        Err(_) => Err(CommentDataSourceError::IdNotFound(comment_id)),
-                    }
-                }
+        let update = bson::doc! {"$push": {"replies": reply_id}};
+        let result = collection
+            .find_one_and_update(
+                filter,
+                update,
+                FindOneAndUpdateOptions::builder()
+                    .return_document(ReturnDocument::After)
+                    .build(),
+            )
+            .await;
+        match result {
+            Ok(comment) => match comment {
+                Some(comment) => Ok(comment),
                 None => Err(CommentDataSourceError::IdNotFound(comment_id)),
             },
             Err(_) => Err(CommentDataSourceError::DatabaseError),
@@ -631,26 +621,20 @@ impl CommentDataSource for MongoDB {
     ) -> Result<Comment, Self::Error> {
         let collection = self.db.collection::<Comment>(COMMENT_COLLECTION);
         let filter = bson::doc! {"_id": comment_id};
-        let find = collection.find_one(filter.clone(), None).await;
-        match find {
-            Ok(_) => match find.unwrap() {
-                Some(_) => {
-                    let update = bson::doc! {"$pull": {"replies": reply_id}};
-                    let result = collection
-                        .find_one_and_update(
-                            filter,
-                            update,
-                            FindOneAndUpdateOptions::builder()
-                                .return_document(ReturnDocument::After)
-                                .build(),
-                        )
-                        .await;
-                    match result {
-                        Ok(comment) => Ok(comment.unwrap()),
-                        Err(_) => Err(CommentDataSourceError::IdNotFound(comment_id)),
-                    }
-                }
-                None => Err(CommentDataSourceError::IdNotFound(comment_id)),
+        let update = bson::doc! {"$pull": {"replies": reply_id}};
+        let result = collection
+            .find_one_and_update(
+                filter,
+                update,
+                FindOneAndUpdateOptions::builder()
+                    .return_document(ReturnDocument::After)
+                    .build(),
+            )
+            .await;
+        match result {
+            Ok(comment) => match comment {
+                Some(comment) => Ok(comment),
+                None => Err(CommentDataSourceError::IdNotFound((comment_id))),
             },
             Err(_) => Err(CommentDataSourceError::DatabaseError),
         }
