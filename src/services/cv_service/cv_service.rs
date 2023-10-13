@@ -1,13 +1,12 @@
+use futures_core::stream::BoxStream;
 use mongodb::bson::oid::ObjectId;
 
-use crate::data_source::{CVDataSource, CVDataSourceError, CommentDataSource, CVDetailsDataSource};
+use crate::data_source::{CVDataSource, CVDataSourceError, CVDetailsDataSource, CommentDataSource};
 use crate::models::comment::CreateCommentInput;
-use crate::models::cv::{UpdateCVInput, CV, CreateCVInput};
+use crate::models::cv::{CreateCVInput, UpdateCVInput, CV};
 
 use crate::models::cv_details::CVDetails;
 use std::boxed::Box;
-use std::fmt::Debug;
-use futures_core::stream::BoxStream;
 use std::pin::Pin;
 use tokio_stream::Stream;
 
@@ -108,17 +107,11 @@ impl CVService {
             Ok(comment) => {
                 let rs = database.add_comment_to_cv(cv_id, comment).await;
                 match rs {
-                    Ok(cv) => {
-                        Ok(cv)
-                    }
-                    Err(err) => {
-                        Err(err.into())
-                    }
+                    Ok(cv) => Ok(cv),
+                    Err(err) => Err(err.into()),
                 }
             }
-            Err(_err) => {
-                Err(CVDataSourceError::AddCommentFailed)
-            }
+            Err(_err) => Err(CVDataSourceError::AddCommentFailed),
         }
     }
 
@@ -130,9 +123,12 @@ impl CVService {
         let rs = database.remove_comment_from_cv(cv_id, comment_id).await;
         rs.map_err(|err| err.into())
     }
-    // NOTE: The return type should `Stream<Item = CV>`
-    pub async fn find_suggested_cvs<'a>(&'a self, database: &'a(impl CVDetailsDataSource + std::marker::Sync), cv_details: CVDetails) -> Result<Pin<Box<dyn Stream<Item = CV>>>, CVServiceError> {
+
+    pub async fn find_suggested_cvs(
+        database: &(impl CVDetailsDataSource + std::marker::Sync),
+        cv_details: CVDetails,
+    ) -> Result<BoxStream<CV>, CVServiceError> {
         let stream = database.get_cvs_by_filter(cv_details).await;
-        stream.map_err(|err|err.into())
+        stream.map_err(|err| err.into())
     }
 }
