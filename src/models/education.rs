@@ -19,21 +19,27 @@ pub struct Education {
 
 #[ComplexObject]
 impl Education {
-    async fn start_date(&self) -> String {
+    async fn start_date(&self) -> Option<String> {
         if let Some(date) = self.start_date{
-            date.try_to_rfc3339_string().unwrap()
+            match date.try_to_rfc3339_string() {
+                Ok(string_date) => Some(string_date),
+                Err(err) => None
+            }
         }
         else {
-            String::new()
+            None
         }
     }
 
-    async fn end_date(&self) -> String {
+    async fn end_date(&self) -> Option<String> {
         if let Some(date) = self.end_date{
-            date.try_to_rfc3339_string().unwrap()
+            match date.try_to_rfc3339_string() {
+                Ok(string_date) => Some(string_date),
+                Err(err) => None
+            }
         }
         else {
-            String::new()
+            None
         }
     }
 }
