@@ -100,21 +100,26 @@ async fn test_find_and_update_comment() {
     mongodb.add_comment(comment).await.unwrap();
     let find_comment = mongodb.get_comment_by_id(comment_id.clone().into()).await;
     assert_eq!(find_comment.unwrap().id, comment_id);
-    let updated_comment = UpdateCommentInputBuilder::default()
+    let update_comment = UpdateCommentInputBuilder::default()
         .with_id(comment_id.clone())
         .with_content("updated content".to_string())
-        .with_likes(1 as u32)
-        .with_bookmarks(1 as u32)
-        .with_shares(1 as u32)
-        .with_replies(vec![comment_id.clone()])
+        .with_likes(3 as u32)
+        .with_bookmarks(4 as u32)
+        .with_shares(5 as u32)
         .build()
         .unwrap();
     mongodb
-        .find_and_update_comment(comment_id.clone().into(), updated_comment)
+        .find_and_update_comment(comment_id.clone().into(), update_comment)
         .await
         .unwrap();
     let find_updated_comment = mongodb.get_comment_by_id(comment_id.into()).await;
-    assert_eq!(find_updated_comment.unwrap().content, "updated content");
+    assert_eq!(
+        find_updated_comment.clone().unwrap().content,
+        "updated content"
+    );
+    assert_eq!(find_updated_comment.clone().unwrap().likes, 3);
+    assert_eq!(find_updated_comment.clone().unwrap().bookmarks, 4);
+    assert_eq!(find_updated_comment.clone().unwrap().shares, 5);
 }
 
 #[tokio::test]
