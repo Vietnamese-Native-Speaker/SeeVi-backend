@@ -1,17 +1,21 @@
+use std::pin::Pin;
+
 use mongodb::bson::DateTime;
 use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Database};
 
-use crate::data_source::UserDataSource;
+use crate::data_source::{UserDataSource, CVDetailsDataSource};
 
 use crate::data_source::FriendsListDataSource;
 use crate::data_source::FriendsListError;
 use crate::data_source::UserDataSourceError;
+use crate::models::cv_details::CVDetails;
 use crate::models::education::Education;
 use crate::models::friend_request::FriendRequest;
+use crate::models::sex::Sex;
 use crate::mongo::mongo::bson::doc;
 use crate::services::user_service::error::UserServiceError;
-
+use crate::services::cv_service::error::CVServiceError;
 use async_graphql::futures_util::stream::BoxStream;
 use async_graphql::futures_util::stream::StreamExt;
 
@@ -19,12 +23,13 @@ use async_trait::async_trait;
 
 use mongodb::bson;
 
-use crate::models::cv;
+use crate::models::cv::{self, CV};
 use crate::models::users::{self, User};
 
 use crate::data_source::CVDataSource;
 use crate::data_source::CVDataSourceError;
 
+use tokio_stream::Stream;
 const FRIEND_REQUEST_COLLECTION: &str = "friend_requests";
 const CV_COLLECTION: &str = "cvs";
 const USER_COLLECTION: &str = "users";
@@ -471,5 +476,96 @@ impl FriendsListDataSource for MongoDB {
             })
             .boxed();
         stream
+    }
+}
+
+impl From<CVDataSourceError> for CVServiceError{
+    fn from(error: CVDataSourceError) -> Self {
+        match error{
+            CVDataSourceError::IdNotFound(objectid) => {
+                CVServiceError::ObjectIdNotFound(objectid)
+            }
+            CVDataSourceError::TooLongDescription => {
+                CVServiceError::TooLongDescription
+            }
+            CVDataSourceError::EmptyTitle => {
+                CVServiceError::EmptyTitle
+            }
+            CVDataSourceError::EmptyId => {
+                CVServiceError::EmptyId
+            }
+            CVDataSourceError::InvalidTitle(s) => {
+                CVServiceError::InvalidTitle(s)
+            }
+            CVDataSourceError::InvalidId(objectid) => {
+                CVServiceError::InvalidId(objectid)
+            }
+            CVDataSourceError::TooLongTitle => {
+                CVServiceError::TooLongTitle
+            }
+            CVDataSourceError::AuthorIdNotFound(objectid) => {
+                CVServiceError::AuthorIdNotFound(objectid)
+            }
+            CVDataSourceError::QueryFail => {
+                CVServiceError::QueryFail
+            }
+            CVDataSourceError::AddCommentFailed => {
+                CVServiceError::AddCommentFailed
+            }
+            CVDataSourceError::RemoveCommentFailed => {
+                CVServiceError::RemoveCommentFailed
+            }
+        }
+    }
+}
+
+impl std::error::Error for CVDataSourceError{}
+
+#[async_trait]
+impl CVDetailsDataSource for MongoDB{
+    type Error = CVDataSourceError;
+    async fn get_cvs_by_filter(&self, cv_details: CVDetails) -> Result<Pin<Box<dyn Stream<Item = CV>>>, Self::Error> {
+        let user_collection: mongodb::Collection<User> = self.db.collection("users");
+        let cv_collection: mongodb::Collection<CV> = self.db.collection("cvs");
+
+        let mut user_filter = bson::doc!{
+            "country": cv_details.country,
+            "city": cv_details.city,
+            "personalities" : { "$in" : cv_details.personalities},
+            "year_of_experience" : cv_details.year_of_experience,
+            "sex": bson::to_bson::<Sex>(&cv_details.sex.unwrap()).unwrap()
+        };
+        if (cv_details.major != None){
+            user_filter.insert("education", bson::doc!{ "$elemMatch" : {"major" : cv_details.major.unwrap()}});
+        }
+        if (cv_details.rating != None){
+            let rating_query = bson::doc!{"$gte" : cv_details.rating.clone().unwrap().lower, "$lte" : cv_details.rating.unwrap().upper};
+            user_filter.insert("rating", rating_query);
+        }
+        let user_cursor_result = user_collection.find(user_filter, None).await;
+        match user_cursor_result {
+            Ok(cursor) =>{
+                let list_author_id = cursor.map(|user|bson::oid::ObjectId::from(user.unwrap().id)).collect::<Vec<_>>().await;
+                if (list_author_id.is_empty()){
+                    return Err(CVDataSourceError::QueryFail)
+                }
+                let cv_filter = bson::doc!{
+                    "author_id": {"$in": list_author_id},
+                    "$or" :[
+                        {"tags": {"$in": cv_details.search_words.clone()}},
+                        {"title": {"$in": cv_details.search_words.clone()}},
+                        ],
+
+                };
+                let cv_cursor_result = cv_collection.find(cv_filter, None).await;
+                match cv_cursor_result {
+                    Ok(cursor) => Ok(Box::pin(cursor.map(|result| result.unwrap()))),
+                    Err(_) => Err(CVDataSourceError::QueryFail),
+                }
+                
+            },
+            Err(_) => Err(CVDataSourceError::QueryFail),
+        }
+        
     }
 }

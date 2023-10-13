@@ -1,14 +1,9 @@
 use mongodb::bson::oid::ObjectId;
 
-use crate::data_source::{CVDataSource, CVDataSourceError, CommentDataSource};
+use crate::data_source::{CVDataSource, CVDataSourceError, CommentDataSource, CVDetailsDataSource};
 use crate::models::comment::CreateCommentInput;
 use crate::models::cv::{UpdateCVInput, CV, CreateCVInput};
 
-use crate::data_source::{
-    cv_data_source_error::CVDataSourceError, 
-    cv_data_source::CVDataSource,
-    cv_details_data_source::CVDetailsDataSource};
-use crate::models::cv::CV;
 use crate::models::cv_details::CVDetails;
 use std::boxed::Box;
 use std::fmt::Debug;

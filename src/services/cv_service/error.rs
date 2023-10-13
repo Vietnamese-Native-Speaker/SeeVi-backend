@@ -32,6 +32,12 @@ pub enum CVServiceError{
     // Cannot find CV
     QueryFail,
 
+    // add comment to cv failed
+    AddCommentFailed,
+
+    // remove comment from cv failed
+    RemoveCommentFailed,
+
 }
 
 impl fmt::Display for CVServiceError{
@@ -63,6 +69,12 @@ impl fmt::Display for CVServiceError{
             }
             CVServiceError::QueryFail => {
                 write!(f, "Fail to find CV")
+            }
+            CVServiceError::AddCommentFailed => {
+                write!(f, "Add comment failed")
+            }
+            CVServiceError::RemoveCommentFailed => {
+                write!(f, "Remove comment failed")
             }
         }
     }

@@ -21,9 +21,20 @@ pub fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
         .with_avatar(test_uuid)
         .with_cover_photo(test_uuid)
         .with_education(Education {
-            institution: "University of Example 1".to_string(),
-            course: Some("Computer Science".to_string()),
-            degree: Some("Bachelor's Degree".to_string()),
+            school: "school 1".to_string(),
+            major: "major 1".to_string(),
+            minor: Some("minor 1".to_string()),
+            degree: "degree 1".to_string(),
+            start_date: None,
+            end_date: None
+        })
+        .with_education(Education {
+            school: "school 2".to_string(),
+            major: "major 2".to_string(),
+            minor: Some("minor 2".to_string()),
+            degree: "degree 2".to_string(),
+            start_date: None,
+            end_date: None
         })
         .build()
         .unwrap();
@@ -73,9 +84,20 @@ async fn register_user_test() {
     assert_eq!(
         user2.education,
         vec![Education {
-            institution: "University of Example 1".to_string(),
-            course: Some("Computer Science".to_string()),
-            degree: Some("Bachelor's Degree".to_string()),
+            school: "school 1".to_string(),
+            major: "major 1".to_string(),
+            minor: Some("minor 1".to_string()),
+            degree: "degree 1".to_string(),
+            start_date: None,
+            end_date: None
+        },
+        Education {
+            school: "school 2".to_string(),
+            major: "major 2".to_string(),
+            minor: Some("minor 2".to_string()),
+            degree: "degree 2".to_string(),
+            start_date: None,
+            end_date: None
         }]
     );
 }
