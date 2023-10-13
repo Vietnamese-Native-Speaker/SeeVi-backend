@@ -1,9 +1,9 @@
-use async_graphql::{ComplexObject, SimpleObject};
+use async_graphql::{ComplexObject, SimpleObject, InputObject};
 use mongodb::bson::{self, DateTime, Uuid};
 use serde::{Deserialize, Serialize};
 use crate::models::{sex::Sex, range_values::RangeValues};
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Builder)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Builder, InputObject)]
 #[builder(pattern = "owned", setter(into, prefix = "with", strip_option))]
 pub struct CVDetails {
     pub country: Option<String>,
