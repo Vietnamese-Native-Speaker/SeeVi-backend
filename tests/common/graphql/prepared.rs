@@ -89,7 +89,6 @@ pub fn graphql_user_register(username: &str, password: &str) -> String {
                 "education": [],
                 "skills": [],
                 "personalities": [],
-                "searchWords": []
             }
         }),
     )
