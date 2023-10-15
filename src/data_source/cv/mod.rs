@@ -1,7 +1,10 @@
 mod error;
 
-use crate::models::{cv::{CreateCVInput, UpdateCVInput, CV}, comment::Comment};
-use async_graphql::async_trait::async_trait;
+use crate::models::{
+    comment::Comment,
+    cv::{CreateCVInput, UpdateCVInput, CV},
+};
+use async_graphql::{async_trait::async_trait, futures_util::stream::BoxStream};
 use mongodb::bson::oid::ObjectId;
 
 pub use error::CVDataSourceError;
@@ -61,4 +64,9 @@ pub trait CVDataSource {
     ) -> Result<Vec<ObjectId>, CVDataSourceError> {
         unimplemented!()
     }
+
+    async fn get_cvs_by_user_id(
+        &self,
+        _user_id: ObjectId,
+    ) -> Result<BoxStream<Result<CV, CVDataSourceError>>, CVDataSourceError>;
 }

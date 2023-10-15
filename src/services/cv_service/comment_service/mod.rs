@@ -1,11 +1,12 @@
 use async_graphql::futures_util::{stream::BoxStream, StreamExt};
+use async_graphql::futures_util::{FutureExt, TryStreamExt};
 use mongodb::bson::oid::ObjectId;
 
 mod error;
 
 pub use error::CommentServiceError;
 
-use crate::data_source::{CommentDataSource, CVDataSource, CVDataSourceError};
+use crate::data_source::{CVDataSource, CVDataSourceError, CommentDataSource};
 use crate::models::comment::{Comment, CreateCommentInput, UpdateCommentInput};
 
 pub struct CommentService {}
@@ -39,13 +40,33 @@ impl CommentService {
         database: &(impl CVDataSource + CommentDataSource + std::marker::Sync),
         cv_id: ObjectId,
     ) -> BoxStream<Result<Comment, CommentServiceError>> {
-        let ids: Result<Vec<ObjectId>, CVDataSourceError> = database.get_comments_by_cv_id(cv_id).await.map_err(|err| err.into());
+        let ids: Result<Vec<ObjectId>, CVDataSourceError> = database
+            .get_comments_by_cv_id(cv_id)
+            .await
+            .map_err(|err| err.into());
         let rs = database.get_comments_list(ids.unwrap()).await;
-        rs.map(|item| {
-            item.map_err(|err| {
-                err.into()
-            })
-        }).boxed()
+        rs.map(|item| item.map_err(|err| err.into())).boxed()
+    }
+
+    pub async fn get_replies_of_comment(
+        database: &(impl CommentDataSource + std::marker::Sync),
+        comment_id: ObjectId,
+    ) -> Result<BoxStream<Result<Comment, CommentServiceError>>, CommentServiceError> {
+        let comment = match database.get_comment_by_id(comment_id).await {
+            Ok(comment) => comment,
+            Err(err) => return Err(err.into()),
+        };
+        let rs = database
+            .get_comments_list(
+                comment
+                    .replies
+                    .into_iter()
+                    .map(|item| item.into())
+                    .collect::<Vec<_>>(),
+            )
+            .map(|item| item.map_err(|err| err.into()))
+            .await;
+        Ok(rs.boxed())
     }
 
     pub async fn update_content_comment(
@@ -74,7 +95,9 @@ impl CommentService {
                     .with_likes(cmt.likes + 1)
                     .build()
                     .unwrap();
-                let rs = cmt_database.find_and_update_comment(cmt.id.into(), input).await;
+                let rs = cmt_database
+                    .find_and_update_comment(cmt.id.into(), input)
+                    .await;
                 match rs {
                     Ok(rs) => Ok(rs),
                     Err(err) => Err(err.into()),
@@ -98,7 +121,9 @@ impl CommentService {
                     .with_likes(comment.likes - 1)
                     .build()
                     .unwrap();
-                let rs = cmt_database.find_and_update_comment(comment_id, input).await;
+                let rs = cmt_database
+                    .find_and_update_comment(comment_id, input)
+                    .await;
                 match rs {
                     Ok(rs) => Ok(rs),
                     Err(err) => Err(err.into()),
@@ -119,7 +144,9 @@ impl CommentService {
                     .with_bookmarks(cv.bookmarks + 1)
                     .build()
                     .unwrap();
-                let rs = cmt_database.find_and_update_comment(comment_id, input).await;
+                let rs = cmt_database
+                    .find_and_update_comment(comment_id, input)
+                    .await;
                 match rs {
                     Ok(rs) => Ok(rs),
                     Err(err) => Err(err.into()),
@@ -144,7 +171,9 @@ impl CommentService {
                     .with_bookmarks(cmt.bookmarks - 1)
                     .build()
                     .unwrap();
-                let rs = cmt_database.find_and_update_comment(comment_id, input).await;
+                let rs = cmt_database
+                    .find_and_update_comment(comment_id, input)
+                    .await;
                 match rs {
                     Ok(rs) => {
                         return Ok(rs);
@@ -172,7 +201,9 @@ impl CommentService {
                     .with_shares(cmt.shares + 1)
                     .build()
                     .unwrap();
-                let rs = cmt_database.find_and_update_comment(comment_id, input).await;
+                let rs = cmt_database
+                    .find_and_update_comment(comment_id, input)
+                    .await;
                 match rs {
                     Ok(rs) => Ok(rs),
                     Err(err) => Err(err.into()),

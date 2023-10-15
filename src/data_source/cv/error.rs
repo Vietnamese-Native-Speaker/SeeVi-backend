@@ -34,11 +34,16 @@ pub enum CVDataSourceError {
 
     // id is invalid
     InvalidId(bson::oid::ObjectId),
+
+    DatabaseError,
 }
 
 impl fmt::Display for CVDataSourceError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            CVDataSourceError::DatabaseError => {
+                write!(f, "Database error")
+            }
             CVDataSourceError::IdNotFound(uuid) => {
                 write!(f, "Id {:?} is not found", uuid)
             }
