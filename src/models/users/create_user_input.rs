@@ -23,7 +23,7 @@ pub struct CreateUserInput {
     pub skills: Vec<String>,
     pub primary_email: String,
     #[builder(setter(custom), field(type = "Vec<String>"))]
-    pub other_mails: Vec<String>,
+    pub other_emails: Vec<String>,
     #[builder(default)]
     pub about: Option<String>,
     #[builder(default)]
@@ -46,7 +46,7 @@ impl CreateUserInput {
 
 impl CreateUserInputBuilder {
     pub fn with_other_mail(mut self, other_mails: impl Into<String>) -> Self {
-        self.other_mails.push(other_mails.into());
+        self.other_emails.push(other_mails.into());
         self
     }
     pub fn with_education(mut self, education: Education) -> Self {

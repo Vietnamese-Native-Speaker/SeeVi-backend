@@ -1,7 +1,7 @@
 use super::super::tests::MockDatabase;
 use crate::models::education::Education;
 use crate::models::users::create_user_input::CreateUserInputBuilder;
-use crate::models::users::{CreateUserInput, UpdateUserInput, User};
+use crate::models::users::CreateUserInput;
 use crate::services::auth_service::{AuthService, Claims};
 use mongodb::bson::Uuid;
 
@@ -64,7 +64,7 @@ async fn register_user_test() {
     );
     assert_eq!(user2.primary_email, "test_primary_email");
     assert_eq!(
-        user2.other_mails,
+        user2.other_emails,
         vec!["test_mail1".to_string(), "test_mail2".to_string()]
     );
     assert_eq!(user2.about, Some("test_about".to_string()));

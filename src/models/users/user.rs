@@ -1,11 +1,10 @@
-use async_graphql as gql;
-use async_graphql::{
-    connection::{self, CursorType},
-    Context, Enum, SimpleObject,
-};
-use gql::futures_util::StreamExt;
-use mongodb::bson::{self, Uuid};
+use async_graphql::{Enum, SimpleObject};
+use mongodb::bson::Uuid;
 use serde::{Deserialize, Serialize};
+
+use async_graphql as gql;
+use async_graphql::{connection, Context};
+use gql::futures_util::StreamExt;
 
 use crate::models::cv::CV;
 use crate::{
@@ -40,7 +39,7 @@ pub struct User {
     #[graphql(skip)]
     pub cv: Vec<Uuid>,
     pub primary_email: String,
-    pub other_mails: Vec<String>,
+    pub other_emails: Vec<String>,
     pub about: Option<String>,
     pub avatar: Option<ResourceIdentifier>,
     pub cover_photo: Option<ResourceIdentifier>,
@@ -108,11 +107,9 @@ impl User {
                     panic!("Must have either 'first' or 'last' argument")
                 };
                 let mut connection = connection::Connection::new(true, false);
-                connection
-                    .edges
-                    .extend(cvs.into_iter().map(|friend| {
-                        connection::Edge::new(friend.as_ref().unwrap().id, friend.unwrap())
-                    }));
+                connection.edges.extend(cvs.into_iter().map(|friend| {
+                    connection::Edge::new(friend.as_ref().unwrap().id, friend.unwrap())
+                }));
                 Ok::<_, async_graphql::Error>(connection)
             },
         )
@@ -131,7 +128,7 @@ impl From<CreateUserInput> for User {
             country: input.country,
             skills: input.skills,
             primary_email: input.primary_email,
-            other_mails: input.other_mails,
+            other_emails: input.other_emails,
             about: input.about,
             avatar: input.avatar,
             cover_photo: input.cover_photo,
