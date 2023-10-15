@@ -2,7 +2,6 @@ use crate::data_source::CVDataSource;
 use crate::data_source::CVDataSourceError;
 use crate::data_source::CommentDataSource;
 use crate::data_source::UserDataSource;
-use crate::data_source::UserDataSourceError;
 use crate::data_source::{FriendsListDataSource, FriendsListError};
 use crate::models::comment::Comment;
 use crate::models::comment::CreateCommentInput;
@@ -202,10 +201,10 @@ impl UserDataSource for MockDatabase {
                     .primary_email
                     .clone()
                     .unwrap_or(user.primary_email.clone());
-                user.other_mails = updated_user
+                user.other_emails = updated_user
                     .other_mails
                     .clone()
-                    .unwrap_or(user.other_mails.clone());
+                    .unwrap_or(user.other_emails.clone());
                 user.about = updated_user.about.clone().or(user.about.clone());
                 user.avatar = updated_user.avatar.clone().or(user.avatar.clone());
                 user.cover_photo = updated_user

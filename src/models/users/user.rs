@@ -1,8 +1,11 @@
-use async_graphql::{Enum, SimpleObject, connection::CursorType};
-use mongodb::bson::{Uuid, self};
+use async_graphql::{Enum, SimpleObject};
+use mongodb::bson::Uuid;
 use serde::{Deserialize, Serialize};
 
-use crate::{models::{education::Education, ResourceIdentifier}, object_id::ScalarObjectId};
+use crate::{
+    models::{education::Education, ResourceIdentifier},
+    object_id::ScalarObjectId,
+};
 
 use super::CreateUserInput;
 
@@ -51,7 +54,7 @@ impl From<CreateUserInput> for User {
             country: input.country,
             skills: input.skills,
             primary_email: input.primary_email,
-            other_mails: input.other_mails,
+            other_emails: input.other_emails,
             about: input.about,
             avatar: input.avatar,
             cover_photo: input.cover_photo,

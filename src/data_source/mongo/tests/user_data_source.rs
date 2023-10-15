@@ -56,7 +56,7 @@ async fn test_create_user_and_get_user_by_username() {
     assert_eq!(check_input.cv, vec![]);
     assert_eq!(check_input.primary_email, "primary_email".to_string());
     assert_eq!(
-        check_input.other_mails,
+        check_input.other_emails,
         vec!["other_mails".to_string(), "other_mails2".to_string()]
     );
     assert_eq!(check_input.about, Some("about".to_string()));
@@ -116,7 +116,7 @@ async fn test_get_user_by_id() {
     assert_eq!(check_input.cv, vec![]);
     assert_eq!(check_input.primary_email, "primary_email".to_string());
     assert_eq!(
-        check_input.other_mails,
+        check_input.other_emails,
         vec!["other_mails".to_string(), "other_mails2".to_string()]
     );
     assert_eq!(check_input.about, Some("about".to_string()));
@@ -207,7 +207,7 @@ async fn test_update_user_info() {
     assert_eq!(check_input2.cv, vec![]);
     assert_eq!(check_input2.primary_email, "primary_email2".to_string());
     assert_eq!(
-        check_input2.other_mails,
+        check_input2.other_emails,
         vec!["other_mails".to_string(), "other_mails2".to_string()]
     );
     assert_eq!(check_input2.about, Some("about2".to_string()));
