@@ -1,5 +1,3 @@
-use std::process::id;
-
 use mongodb::bson::oid::ObjectId;
 use mongodb::bson::DateTime;
 use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
@@ -262,6 +260,26 @@ impl UserDataSource for MongoDB {
 
 #[async_trait]
 impl CVDataSource for MongoDB {
+    async fn get_cvs_by_user_id(
+        &self,
+        user_id: ObjectId,
+    ) -> Result<BoxStream<Result<cv::CV, CVDataSourceError>>, CVDataSourceError> {
+        let collection: mongodb::Collection<cv::CV> = self.db.collection(CV_COLLECTION);
+        let filter = bson::doc! {"author_id": user_id};
+        let result = collection.find(filter, None).await;
+        let cursor = match result {
+            Ok(cursor) => cursor,
+            Err(_) => return Err(CVDataSourceError::DatabaseError),
+        };
+        let stream = cursor
+            .map(|result| match result {
+                Ok(doc) => Ok(doc),
+                Err(_) => Err(CVDataSourceError::DatabaseError),
+            })
+            .boxed();
+        Ok(stream)
+    }
+
     async fn get_cv_by_id(&self, id: bson::oid::ObjectId) -> Result<cv::CV, CVDataSourceError> {
         let collection: mongodb::Collection<cv::CV> = self.db.collection(CV_COLLECTION);
         let filter = bson::doc! {"_id": id};

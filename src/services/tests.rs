@@ -249,6 +249,20 @@ impl UserDataSource for MockDatabase {
 
 #[async_trait]
 impl CVDataSource for MockDatabase {
+    async fn get_cvs_by_user_id(
+        &self,
+        user_id: ObjectId,
+    ) -> Result<BoxStream<Result<CV, CVDataSourceError>>, CVDataSourceError> {
+        let cvs = self.cvs.lock().unwrap();
+        let stream = futures_util::stream::iter(cvs.clone().into_iter());
+        let stream = stream.filter(move |cv| {
+            let cv = cv.clone();
+            let user_id = user_id.clone();
+            async move { user_id == cv.author_id.into() }
+        });
+        Ok(stream.map(|user| Ok(user)).boxed())
+    }
+
     async fn get_comments_by_cv_id(
         &self,
         _cv_id: ObjectId,
