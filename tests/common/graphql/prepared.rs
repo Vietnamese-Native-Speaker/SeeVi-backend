@@ -89,7 +89,7 @@ pub fn graphql_user_register(username: &str, password: &str) -> String {
                 "lastName": "lastname",
                 "primaryEmail": "someone@gmail.com",
                 "otherEmails": [],
-                "education": [],
+                "educations": [],
                 "skills": [],
                 "personalities": [],
             }
