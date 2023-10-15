@@ -2,7 +2,6 @@ use crate::data_source::CVDataSource;
 use crate::data_source::CVDataSourceError;
 use crate::data_source::CommentDataSource;
 use crate::data_source::UserDataSource;
-use crate::data_source::UserDataSourceError;
 use crate::data_source::{FriendsListDataSource, FriendsListError};
 use crate::models::comment::Comment;
 use crate::models::comment::CreateCommentInput;
@@ -250,6 +249,20 @@ impl UserDataSource for MockDatabase {
 
 #[async_trait]
 impl CVDataSource for MockDatabase {
+    async fn get_cvs_by_user_id(
+        &self,
+        user_id: ObjectId,
+    ) -> Result<BoxStream<Result<CV, CVDataSourceError>>, CVDataSourceError> {
+        let cvs = self.cvs.lock().unwrap();
+        let stream = futures_util::stream::iter(cvs.clone().into_iter());
+        let stream = stream.filter(move |cv| {
+            let cv = cv.clone();
+            let user_id = user_id.clone();
+            async move { user_id == cv.author_id.into() }
+        });
+        Ok(stream.map(|user| Ok(user)).boxed())
+    }
+
     async fn get_comments_by_cv_id(
         &self,
         _cv_id: ObjectId,
@@ -375,7 +388,7 @@ impl CommentDataSource for MockDatabase {
 
     async fn get_comments_list(
         &self,
-        _ids: Vec<ObjectId>
+        _ids: Vec<ObjectId>,
     ) -> BoxStream<Result<Comment, Self::Error>> {
         let comments = self.comments.lock().unwrap().clone();
         let stream = futures_util::stream::iter(comments.into_iter());
@@ -400,21 +413,6 @@ impl CommentDataSource for MockDatabase {
         Ok(())
     }
 
-    async fn update_comment(&self, _input: UpdateCommentInput) -> Result<Comment, Self::Error> {
-        let mut comments = self.comments.lock().unwrap();
-        for comment in comments.iter_mut() {
-            if comment.id == _input.id.into() {
-                comment.content = _input.content.clone().unwrap_or(comment.content.clone());
-                comment.likes = _input.likes.clone().unwrap_or(comment.likes);
-                comment.bookmarks = _input.bookmarks.clone().unwrap_or(comment.bookmarks);
-                comment.shares = _input.shares.clone().unwrap_or(comment.shares);
-                comment.replies = _input.replies.clone().unwrap_or(comment.replies.clone());
-                return Ok(comment.clone());
-            }
-        }
-        Err(DummyCommentDataSourceError)
-    }
-
     async fn remove_comment(&self, _id: bson::oid::ObjectId) -> Result<Comment, Self::Error> {
         let mut comments = self.comments.lock().unwrap();
         for (i, comment) in comments.iter().enumerate() {
@@ -434,21 +432,6 @@ impl CommentDataSource for MockDatabase {
         for comment in comments.iter_mut() {
             if comment.id == _comment_id.into() {
                 comment.replies.push(_reply_id.clone().into());
-                return Ok(comment.clone());
-            }
-        }
-        Err(DummyCommentDataSourceError)
-    }
-
-    async fn remove_reply_from_comment(
-        &self,
-        _comment_id: bson::oid::ObjectId,
-        _reply_id: bson::oid::ObjectId,
-    ) -> Result<Comment, Self::Error> {
-        let mut comments = self.comments.lock().unwrap();
-        for comment in comments.iter_mut() {
-            if comment.id == _comment_id.into() {
-                comment.replies.retain(|reply| reply != &_reply_id.into());
                 return Ok(comment.clone());
             }
         }

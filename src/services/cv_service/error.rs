@@ -38,11 +38,17 @@ pub enum CVServiceError{
     // remove comment from cv failed
     RemoveCommentFailed,
 
+    /// Database Error
+    DatabaseError,
+
 }
 
 impl fmt::Display for CVServiceError{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            CVServiceError::DatabaseError => {
+                write!(f, "Database error")
+            }
             CVServiceError::ObjectIdNotFound(uuid) => {
                 write!(f, "Uuid {:?} is not found", uuid)
             }

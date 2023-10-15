@@ -1,4 +1,4 @@
-use futures_core::stream::BoxStream;
+use async_graphql::futures_util::stream::BoxStream;
 use mongodb::bson::oid::ObjectId;
 
 use crate::data_source::{CVDataSource, CVDataSourceError, CVDetailsDataSource, CommentDataSource};
@@ -6,9 +6,6 @@ use crate::models::comment::CreateCommentInput;
 use crate::models::cv::{CreateCVInput, UpdateCVInput, CV};
 
 use crate::models::cv_details::CVDetails;
-use std::boxed::Box;
-use std::pin::Pin;
-use tokio_stream::Stream;
 
 use super::error::CVServiceError;
 
@@ -130,5 +127,13 @@ impl CVService {
     ) -> Result<BoxStream<CV>, CVServiceError> {
         let stream = database.get_cvs_by_filter(cv_details).await;
         stream.map_err(|err| err.into())
+    }
+
+    pub async fn get_cvs_by_user_id(
+        database: &(impl CVDataSource + std::marker::Sync),
+        user_id: ObjectId,
+    ) -> Result<BoxStream<Result<CV, CVDataSourceError>>, CVDataSourceError> {
+        let rs = database.get_cvs_by_user_id(user_id).await;
+        rs
     }
 }
