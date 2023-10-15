@@ -90,7 +90,7 @@ fn update_input_to_bson(input: users::UpdateUserInput) -> bson::Document {
         .primary_email
         .map(|primary_email| update.insert("primary_email", primary_email));
     input.about.map(|about| update.insert("about", about));
-    input.education.map(|education| {
+    input.educations.map(|education| {
         update.insert(
             "education",
             bson::to_bson::<Vec<Education>>(&education).unwrap(),

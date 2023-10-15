@@ -123,7 +123,7 @@ fn test_user_from_input() {
     assert_eq!(user.about, Some("about".to_string()));
     assert_eq!(user.avatar, Some(uuid));
     assert_eq!(user.cover_photo, Some(uuid));
-    assert_eq!(user.education.len(), 2);
+    assert_eq!(user.educations.len(), 2);
     assert_eq!(user.rating, None);
     assert_eq!(user.level, None);
     assert_eq!(user.shared_cvs, Vec::default());

@@ -34,7 +34,9 @@ pub struct UpdateUserInput {
     #[builder(default)]
     pub friends_list: Option<Vec<ResourceIdentifier>>,
     #[builder(default)]
-    pub education: Option<Vec<Education>>,
+    pub educations: Option<Vec<Education>>,
+    #[builder(default)]
+    pub experiences: Option<Vec<Education>>,
 }
 
 impl UpdateUserInput {

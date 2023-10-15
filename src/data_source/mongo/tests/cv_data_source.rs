@@ -48,7 +48,7 @@ fn create_demo_user_input() -> CreateUserInput {
         .with_personalities("personality")
         .with_rating(4.0)
         .with_sex(Sex::Male)
-        .with_year_of_experience("year_of_experience")
+        .with_experiences("year_of_experience")
         .build()
         .unwrap()
 }
@@ -214,4 +214,3 @@ async fn test_get_cvs_by_filter() {
     assert_eq!(vec_cv.len(), 1);
     assert_eq!(vec_cv[0].tags, vec!["tag".to_string(), "tag2".to_string()]);
 }
-

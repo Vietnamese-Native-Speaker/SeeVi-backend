@@ -82,7 +82,7 @@ async fn register_user_test() {
     assert_eq!(user2.avatar, Some(uuid.clone()));
     assert_eq!(user2.cover_photo, Some(uuid.clone()));
     assert_eq!(
-        user2.education,
+        user2.educations,
         vec![Education {
             school: "school 1".to_string(),
             major: "major 1".to_string(),
