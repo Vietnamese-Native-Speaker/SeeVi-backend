@@ -27,7 +27,7 @@ pub struct User {
     pub skills: Vec<String>,
     pub cv: Vec<Uuid>,
     pub primary_email: String,
-    pub other_mails: Vec<String>,
+    pub other_emails: Vec<String>,
     pub about: Option<String>,
     pub avatar: Option<ResourceIdentifier>,
     pub cover_photo: Option<ResourceIdentifier>,
