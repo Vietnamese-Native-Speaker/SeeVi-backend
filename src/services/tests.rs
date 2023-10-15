@@ -201,10 +201,10 @@ impl UserDataSource for MockDatabase {
                     .primary_email
                     .clone()
                     .unwrap_or(user.primary_email.clone());
-                user.other_mails = updated_user
+                user.other_emails = updated_user
                     .other_mails
                     .clone()
-                    .unwrap_or(user.other_mails.clone());
+                    .unwrap_or(user.other_emails.clone());
                 user.about = updated_user.about.clone().or(user.about.clone());
                 user.avatar = updated_user.avatar.clone().or(user.avatar.clone());
                 user.cover_photo = updated_user

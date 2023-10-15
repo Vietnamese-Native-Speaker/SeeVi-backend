@@ -117,7 +117,7 @@ fn test_user_from_input() {
     assert_eq!(user.skills, vec!["skill".to_string()]);
     assert_eq!(user.primary_email, "primary_email".to_string());
     assert_eq!(
-        user.other_mails,
+        user.other_emails,
         vec!["other_mails".to_string(), "other_mails2".to_string()]
     );
     assert_eq!(user.about, Some("about".to_string()));

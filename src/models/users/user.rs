@@ -39,7 +39,7 @@ pub struct User {
     #[graphql(skip)]
     pub cv: Vec<Uuid>,
     pub primary_email: String,
-    pub other_mails: Vec<String>,
+    pub other_emails: Vec<String>,
     pub about: Option<String>,
     pub avatar: Option<ResourceIdentifier>,
     pub cover_photo: Option<ResourceIdentifier>,
@@ -132,7 +132,7 @@ impl From<CreateUserInput> for User {
             country: input.country,
             skills: input.skills,
             primary_email: input.primary_email,
-            other_mails: input.other_mails,
+            other_emails: input.other_emails,
             about: input.about,
             avatar: input.avatar,
             cover_photo: input.cover_photo,
