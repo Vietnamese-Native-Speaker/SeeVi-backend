@@ -1,6 +1,6 @@
-mod create_comment_input;
 mod comment;
-mod update_comment_input;
+mod create_comment_input;
+pub mod update_comment_input;
 
 pub use comment::Comment;
 pub use create_comment_input::CreateCommentInput;

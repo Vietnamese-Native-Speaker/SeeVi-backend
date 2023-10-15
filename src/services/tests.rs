@@ -413,21 +413,6 @@ impl CommentDataSource for MockDatabase {
         Ok(())
     }
 
-    async fn update_comment(&self, _input: UpdateCommentInput) -> Result<Comment, Self::Error> {
-        let mut comments = self.comments.lock().unwrap();
-        for comment in comments.iter_mut() {
-            if comment.id == _input.id.into() {
-                comment.content = _input.content.clone().unwrap_or(comment.content.clone());
-                comment.likes = _input.likes.clone().unwrap_or(comment.likes);
-                comment.bookmarks = _input.bookmarks.clone().unwrap_or(comment.bookmarks);
-                comment.shares = _input.shares.clone().unwrap_or(comment.shares);
-                comment.replies = _input.replies.clone().unwrap_or(comment.replies.clone());
-                return Ok(comment.clone());
-            }
-        }
-        Err(DummyCommentDataSourceError)
-    }
-
     async fn remove_comment(&self, _id: bson::oid::ObjectId) -> Result<Comment, Self::Error> {
         let mut comments = self.comments.lock().unwrap();
         for (i, comment) in comments.iter().enumerate() {
@@ -447,21 +432,6 @@ impl CommentDataSource for MockDatabase {
         for comment in comments.iter_mut() {
             if comment.id == _comment_id.into() {
                 comment.replies.push(_reply_id.clone().into());
-                return Ok(comment.clone());
-            }
-        }
-        Err(DummyCommentDataSourceError)
-    }
-
-    async fn remove_reply_from_comment(
-        &self,
-        _comment_id: bson::oid::ObjectId,
-        _reply_id: bson::oid::ObjectId,
-    ) -> Result<Comment, Self::Error> {
-        let mut comments = self.comments.lock().unwrap();
-        for comment in comments.iter_mut() {
-            if comment.id == _comment_id.into() {
-                comment.replies.retain(|reply| reply != &_reply_id.into());
                 return Ok(comment.clone());
             }
         }

@@ -1,16 +1,13 @@
-use async_graphql as gql;
-use async_graphql::{futures_util::StreamExt, Context, InputObject, Object};
-use gql::{connection, ErrorExtensions};
-use mongodb::bson::oid::ObjectId;
-use mongodb::options::AuthMechanism;
-
-use crate::error::ServerError;
 use crate::object_id::ScalarObjectId;
 use crate::{
     data_source::mongo::{MongoDB, MongoForTesting},
     models::users::User,
     services::{auth_service::AuthService, user_service::UserService},
 };
+use async_graphql as gql;
+use async_graphql::{futures_util::StreamExt, Context, InputObject, Object};
+use gql::{connection, ErrorExtensions};
+use mongodb::bson::oid::ObjectId;
 
 use super::authorization;
 
@@ -139,5 +136,20 @@ impl Query {
             },
         )
         .await
+    }
+
+    async fn get_comment_by_id(
+        &self,
+        ctx: &Context<'_>,
+        comment_id: ScalarObjectId,
+    ) -> gql::Result<User> {
+        let db = ctx
+            .data_opt::<MongoDB>()
+            .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
+        let rs = UserService::get_user_by_id(db, comment_id.into()).await;
+        match rs {
+            Ok(user) => Ok(user),
+            Err(e) => Err(e.extend()),
+        }
     }
 }
