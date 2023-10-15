@@ -57,7 +57,6 @@ impl User {
     async fn friends(
         &self,
         ctx: &Context<'_>,
-        user_id: ObjectId,
         after: Option<String>,
         before: Option<String>,
         first: Option<i32>,
@@ -73,7 +72,7 @@ impl User {
         let db = ctx
             .data_opt::<MongoDB>()
             .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
-        let friends_list = UserService::friend_lists(db, user_id)
+        let friends_list = UserService::friend_lists(db, self.id.into())
             .await
             .collect::<Vec<_>>()
             .await;
