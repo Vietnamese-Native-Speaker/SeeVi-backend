@@ -1,5 +1,5 @@
+use async_graphql::futures_util::stream::BoxStream;
 use async_trait::async_trait;
-use futures_core::stream::BoxStream;
 use mongodb::bson::oid::ObjectId;
 
 use crate::{models::comment::Like, services::cv_service::comment_service::CommentServiceError};
