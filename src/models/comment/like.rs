@@ -1,19 +1,20 @@
 use async_graphql::{ComplexObject, SimpleObject};
-use mongodb::bson::{oid::ObjectId, DateTime};
+use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::object_id::ScalarObjectId;
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub struct LikeID {
-    pub from: ObjectId,
-    pub to: ObjectId,
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, SimpleObject)]
+pub struct Key {
+    pub user_id: ScalarObjectId,
+    pub comment_id: ScalarObjectId,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, SimpleObject)]
 #[graphql(complex)]
 pub struct Like {
     #[serde(rename = "_id")]
-    like_id: LikeID,
+    key: Key,
     #[graphql(skip)]
     pub created: DateTime,
 }
