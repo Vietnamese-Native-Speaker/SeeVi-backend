@@ -36,7 +36,7 @@ pub struct UpdateUserInput {
     #[builder(default)]
     pub educations: Option<Vec<Education>>,
     #[builder(default)]
-    pub experiences: Option<Vec<Education>>,
+    pub experiences: Option<String>,
 }
 
 impl UpdateUserInput {

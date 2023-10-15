@@ -65,7 +65,7 @@ fn create_demo_cv_details() -> CVDetails {
         .with_search_words("title")
         .with_search_words("tag3")
         .with_sex(Sex::Male)
-        .with_year_of_experience("year_of_experience")
+        .with_experiences("year_of_experience")
         .build()
         .unwrap()
 }

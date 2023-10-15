@@ -9,7 +9,7 @@ pub struct CVDetails {
     pub city: Option<String>,
     #[builder(setter(custom), field(type = "Vec<String>"))]
     pub personalities: Vec<String>,
-    pub year_of_experience: Option<String>,
+    pub experiences: Option<String>,
     pub major: Option<String>,
     #[builder(setter(custom), field(type = "Vec<String>"))]
     pub search_words: Vec<String>,
