@@ -20,14 +20,20 @@ fn create_demo_user_input(test_id: ObjectId) -> CreateUserInput {
         .with_other_mail("other_mails")
         .with_other_mail("other_mails2")
         .with_education(Education {
-            institution: "University of Example 1".to_string(),
-            course: Some("Computer Science".to_string()),
-            degree: Some("Bachelor's Degree".to_string()),
+            school: "school 1".to_string(),
+            major: "major 1".to_string(),
+            minor: Some("minor 1".to_string()),
+            degree: "degree 1".to_string(),
+            start_date: None,
+            end_date: None
         })
         .with_education(Education {
-            institution: "University of Example 2".to_string(),
-            course: Some("Computer Science".to_string()),
-            degree: Some("Bachelor's Degree".to_string()),
+            school: "school 2".to_string(),
+            major: "major 2".to_string(),
+            minor: Some("minor 2".to_string()),
+            degree: "degree 2".to_string(),
+            start_date: None,
+            end_date: None
         })
         .with_about("about".to_string())
         .with_avatar(dummy_uuid)
@@ -82,14 +88,20 @@ fn test_user_from_input() {
         .with_other_mail("other_mails")
         .with_other_mail("other_mails2")
         .with_education(Education {
-            institution: "University of Example 1".to_string(),
-            course: Some("Computer Science".to_string()),
-            degree: Some("Bachelor's Degree".to_string()),
+            school: "school 1".to_string(),
+            major: "major 1".to_string(),
+            minor: Some("minor 1".to_string()),
+            degree: "degree 1".to_string(),
+            start_date: None,
+            end_date: None
         })
         .with_education(Education {
-            institution: "University of Example 2".to_string(),
-            course: Some("Computer Science".to_string()),
-            degree: Some("Bachelor's Degree".to_string()),
+            school: "school 2".to_string(),
+            major: "major 2".to_string(),
+            minor: Some("minor 2".to_string()),
+            degree: "degree 2".to_string(),
+            start_date: None,
+            end_date: None
         })
         .with_about("about".to_string())
         .with_avatar(uuid)

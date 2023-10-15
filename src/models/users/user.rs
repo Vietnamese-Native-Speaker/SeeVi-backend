@@ -1,17 +1,17 @@
-use async_graphql::{Enum, SimpleObject};
+use async_graphql as gql;
+use async_graphql::{connection, Context, Enum, SimpleObject};
+use gql::futures_util::StreamExt;
 use mongodb::bson::Uuid;
 use serde::{Deserialize, Serialize};
-
-use async_graphql as gql;
-use async_graphql::{connection, Context};
-use gql::futures_util::StreamExt;
 
 use crate::models::cv::CV;
 use crate::{
     data_source::mongo::{MongoDB, MongoForTesting},
-    models::{education::Education, ResourceIdentifier},
-    object_id::ScalarObjectId,
     services::cv_service::cv_service::CVService,
+};
+use crate::{
+    models::{education::Education, sex::Sex, ResourceIdentifier},
+    object_id::ScalarObjectId,
 };
 
 use super::CreateUserInput;
@@ -50,6 +50,10 @@ pub struct User {
     pub shared_cvs: Vec<Uuid>,
     pub saved_cvs: Vec<Uuid>,
     pub liked_cvs: Vec<Uuid>,
+    pub city: Option<String>,
+    pub year_of_experience: Option<String>,
+    pub personalities: Vec<String>,
+    pub sex: Option<Sex>,
 }
 
 #[async_graphql::ComplexObject]
@@ -140,6 +144,10 @@ impl From<CreateUserInput> for User {
             saved_cvs: Vec::default(),
             liked_cvs: Vec::default(),
             friends_list: Vec::default(),
+            city: input.city,
+            year_of_experience: input.year_of_experience,
+            personalities: input.personalities,
+            sex: input.sex,
         }
     }
 }
