@@ -13,7 +13,7 @@ pub struct LikeID {
 #[graphql(complex)]
 pub struct Like {
     #[serde(rename = "_id")]
-    like_id: ScalarObjectId,
+    like_id: LikeID,
     #[graphql(skip)]
     pub created: DateTime,
 }
