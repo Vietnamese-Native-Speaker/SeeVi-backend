@@ -31,7 +31,7 @@ pub struct CreateUserInput {
     #[builder(default)]
     pub cover_photo: Option<Uuid>,
     #[builder(setter(custom), field(type = "Vec<Education>"))]
-    pub education: Vec<Education>,
+    pub educations: Vec<Education>,
     #[builder(default)]
     pub rating: Option<f64>,
     #[builder(default)]
@@ -41,7 +41,7 @@ pub struct CreateUserInput {
     #[builder(default)]
     pub sex: Option<Sex>,
     #[builder(default)]
-    pub year_of_experience: Option<String>,
+    pub experiences: Option<String>,
     #[builder(setter(custom), field(type = "Vec<String>"))]
     pub personalities: Vec<String>,
 }
@@ -58,7 +58,7 @@ impl CreateUserInputBuilder {
         self
     }
     pub fn with_education(mut self, education: Education) -> Self {
-        self.education.push(education);
+        self.educations.push(education);
         self
     }
 

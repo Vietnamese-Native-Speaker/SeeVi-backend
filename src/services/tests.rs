@@ -215,10 +215,10 @@ impl UserDataSource for MockDatabase {
                     .friends_list
                     .clone()
                     .unwrap_or(user.friends_list.clone());
-                user.education = updated_user
-                    .education
+                user.educations = updated_user
+                    .educations
                     .clone()
-                    .unwrap_or(user.education.clone());
+                    .unwrap_or(user.educations.clone());
                 return Ok(user.clone());
             }
         }

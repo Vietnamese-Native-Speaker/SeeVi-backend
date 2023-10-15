@@ -90,12 +90,15 @@ fn update_input_to_bson(input: users::UpdateUserInput) -> bson::Document {
         .primary_email
         .map(|primary_email| update.insert("primary_email", primary_email));
     input.about.map(|about| update.insert("about", about));
-    input.education.map(|education| {
+    input.educations.map(|education| {
         update.insert(
-            "education",
+            "educations",
             bson::to_bson::<Vec<Education>>(&education).unwrap(),
         )
     });
+    input
+        .experiences
+        .map(|exp| update.insert("experiences", exp));
     let update = bson::doc! {"$set": update};
     update
 }
@@ -550,12 +553,12 @@ impl CVDetailsDataSource for MongoDB {
             "country": cv_details.country,
             "city": cv_details.city,
             "personalities" : { "$in" : cv_details.personalities},
-            "year_of_experience" : cv_details.year_of_experience,
+            "experiences" : cv_details.experiences,
             "sex": bson::to_bson::<Sex>(&cv_details.sex.unwrap()).unwrap()
         };
         if cv_details.major != None {
             user_filter.insert(
-                "education",
+                "educations",
                 bson::doc! { "$elemMatch" : {"major" : cv_details.major.unwrap()}},
             );
         }

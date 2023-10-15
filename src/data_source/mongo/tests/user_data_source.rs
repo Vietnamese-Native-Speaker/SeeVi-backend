@@ -69,7 +69,7 @@ async fn test_create_user_and_get_user_by_username() {
     assert_eq!(check_input.avatar, Some(uuid));
     assert_eq!(check_input.cover_photo, Some(uuid));
     assert_eq!(check_input.friends_list, vec![]);
-    assert_eq!(check_input.education, vec![
+    assert_eq!(check_input.educations, vec![
         Education {
             school: "school 1".to_string(),
             major: "major 1".to_string(),
@@ -123,7 +123,7 @@ async fn test_get_user_by_id() {
     assert_eq!(check_input.avatar, Some(uuid));
     assert_eq!(check_input.cover_photo, Some(uuid));
     assert_eq!(check_input.friends_list, vec![]);
-    assert_eq!(check_input.education, vec![
+    assert_eq!(check_input.educations, vec![
         Education {
             school: "school 1".to_string(),
             major: "major 1".to_string(),
@@ -178,7 +178,7 @@ async fn test_update_user_info() {
         .with_first_name("first_name2".to_string())
         .with_last_name("last_name2".to_string())
         .with_country("country2".to_string())
-        .with_education(vec![Education {
+        .with_educations(vec![Education {
             school: "school 3".to_string(),
             major: "major 3".to_string(),
             minor: Some("minor 3".to_string()),
@@ -210,7 +210,7 @@ async fn test_update_user_info() {
     assert_eq!(check_input2.avatar, Some(uuid));
     assert_eq!(check_input2.cover_photo, Some(uuid));
     assert_eq!(check_input2.friends_list, vec![]);
-    assert_eq!(check_input2.education, vec![Education {
+    assert_eq!(check_input2.educations, vec![Education {
         school: "school 3".to_string(),
         major: "major 3".to_string(),
         minor: Some("minor 3".to_string()),
