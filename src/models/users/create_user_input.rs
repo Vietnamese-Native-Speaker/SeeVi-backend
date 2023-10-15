@@ -2,7 +2,7 @@ use async_graphql::InputObject;
 use mongodb::bson::Uuid;
 use serde::{Deserialize, Serialize};
 
-use crate::models::education::Education;
+use crate::models::{education::Education, sex::Sex};
 use derive_builder::Builder;
 
 use super::user::Level;
@@ -23,7 +23,7 @@ pub struct CreateUserInput {
     pub skills: Vec<String>,
     pub primary_email: String,
     #[builder(setter(custom), field(type = "Vec<String>"))]
-    pub other_mails: Vec<String>,
+    pub other_emails: Vec<String>,
     #[builder(default)]
     pub about: Option<String>,
     #[builder(default)]
@@ -36,6 +36,14 @@ pub struct CreateUserInput {
     pub rating: Option<f64>,
     #[builder(default)]
     pub level: Option<Level>,
+    #[builder(default)]
+    pub city: Option<String>,
+    #[builder(default)]
+    pub sex: Option<Sex>,
+    #[builder(default)]
+    pub year_of_experience: Option<String>,
+    #[builder(setter(custom), field(type = "Vec<String>"))]
+    pub personalities: Vec<String>,
 }
 
 impl CreateUserInput {
@@ -46,7 +54,7 @@ impl CreateUserInput {
 
 impl CreateUserInputBuilder {
     pub fn with_other_mail(mut self, other_mails: impl Into<String>) -> Self {
-        self.other_mails.push(other_mails.into());
+        self.other_emails.push(other_mails.into());
         self
     }
     pub fn with_education(mut self, education: Education) -> Self {
@@ -56,6 +64,10 @@ impl CreateUserInputBuilder {
 
     pub fn with_skill<T: Into<String>>(mut self, skill: T) -> Self {
         self.skills.push(skill.into());
+        self
+    }
+    pub fn with_personalities<T: Into<String>>(mut self, personality: T) -> Self {
+        self.personalities.push(personality.into());
         self
     }
 }

@@ -7,10 +7,12 @@ use serde::{Deserialize, Serialize};
 use crate::models::cv::CV;
 use crate::{
     data_source::mongo::{MongoDB, MongoForTesting},
-    models::{education::Education, ResourceIdentifier},
-    object_id::ScalarObjectId,
     services::cv_service::cv_service::CVService,
     services::user_service::UserService,
+};
+use crate::{
+    models::{education::Education, sex::Sex, ResourceIdentifier},
+    object_id::ScalarObjectId,
 };
 
 use super::CreateUserInput;
@@ -38,7 +40,7 @@ pub struct User {
     #[graphql(skip)]
     pub cv: Vec<Uuid>,
     pub primary_email: String,
-    pub other_mails: Vec<String>,
+    pub other_emails: Vec<String>,
     pub about: Option<String>,
     pub avatar: Option<ResourceIdentifier>,
     pub cover_photo: Option<ResourceIdentifier>,
@@ -50,6 +52,10 @@ pub struct User {
     pub shared_cvs: Vec<Uuid>,
     pub saved_cvs: Vec<Uuid>,
     pub liked_cvs: Vec<Uuid>,
+    pub city: Option<String>,
+    pub year_of_experience: Option<String>,
+    pub personalities: Vec<String>,
+    pub sex: Option<Sex>,
 }
 
 #[async_graphql::ComplexObject]
@@ -198,7 +204,7 @@ impl From<CreateUserInput> for User {
             country: input.country,
             skills: input.skills,
             primary_email: input.primary_email,
-            other_mails: input.other_mails,
+            other_emails: input.other_emails,
             about: input.about,
             avatar: input.avatar,
             cover_photo: input.cover_photo,
@@ -210,6 +216,10 @@ impl From<CreateUserInput> for User {
             saved_cvs: Vec::default(),
             liked_cvs: Vec::default(),
             friends_list: Vec::default(),
+            city: input.city,
+            year_of_experience: input.year_of_experience,
+            personalities: input.personalities,
+            sex: input.sex,
         }
     }
 }
