@@ -34,19 +34,22 @@ mutation userRegister($user: CreateUserInput!) {
 }"#;
 
 pub static USER_FRIENDSLIST: &str = r#"
-query friendslist($id: ObjectId!, $after: String, $before: String, $first: Int, $last: Int) {
-    friendslist(userId: $id, after: $after, before: $before, first: $first, last: $last) {
-        edges {
-            node {
-                id,
-                username
+query friendslist($after: String, $before: String, $first: Int, $last: Int) {
+    userDetail {
+        friends(first: $first, last: $last, after: $after, before: $before) {
+            edges {
+                node {
+                    id,
+                    username
+                }
+                cursor
             }
-        }
-        pageInfo {
-            hasNextPage,
-            hasPreviousPage,
-            startCursor,
-            endCursor
+            pageInfo {
+                hasNextPage,
+                hasPreviousPage,
+                startCursor,
+                endCursor
+            }
         }
     }
 }"#;
@@ -85,9 +88,10 @@ pub fn graphql_user_register(username: &str, password: &str) -> String {
                 "firstName": "firstname",
                 "lastName": "lastname",
                 "primaryEmail": "someone@gmail.com",
-                "otherMails": [],
-                "education": [],
-                "skills": []
+                "otherEmails": [],
+                "educations": [],
+                "skills": [],
+                "personalities": [],
             }
         }),
     )
