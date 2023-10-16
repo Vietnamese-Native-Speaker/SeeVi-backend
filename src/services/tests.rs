@@ -1,10 +1,12 @@
 use crate::data_source::CVDataSource;
 use crate::data_source::CVDataSourceError;
 use crate::data_source::CommentDataSource;
+use crate::data_source::LikeDataSource;
 use crate::data_source::UserDataSource;
 use crate::data_source::{FriendsListDataSource, FriendsListError};
 use crate::models::comment::Comment;
 use crate::models::comment::CreateCommentInput;
+use crate::models::comment::Like;
 use crate::models::comment::UpdateCommentInput;
 use crate::models::cv::CreateCVInput;
 use crate::models::cv::UpdateCVInput;
@@ -26,6 +28,7 @@ pub struct MockDatabase {
     friend_requests: Mutex<Vec<FriendRequest>>,
     cvs: Mutex<Vec<CV>>,
     comments: Mutex<Vec<Comment>>,
+    likes: Mutex<Vec<Like>>,
 }
 
 impl MockDatabase {
@@ -35,6 +38,7 @@ impl MockDatabase {
             friend_requests: Mutex::new(Vec::new()),
             cvs: Mutex::new(Vec::new()),
             comments: Mutex::new(Vec::new()),
+            likes: Mutex::new(Vec::new()),
         }
     }
 }
@@ -462,7 +466,6 @@ impl CommentDataSource for MockDatabase {
         for comment in comments.iter_mut() {
             if comment.id == _id.into() {
                 comment.content = _input.content.clone().unwrap_or(comment.content.clone());
-                comment.likes = _input.likes.clone().unwrap_or(comment.likes);
                 comment.bookmarks = _input.bookmarks.clone().unwrap_or(comment.bookmarks);
                 comment.shares = _input.shares.clone().unwrap_or(comment.shares);
                 comment.replies = _input.replies.clone().unwrap_or(comment.replies.clone());
@@ -470,5 +473,87 @@ impl CommentDataSource for MockDatabase {
             }
         }
         Err(DummyCommentDataSourceError)
+    }
+}
+
+#[derive(Debug)]
+pub struct DummyLikeDataSource(String);
+
+impl std::fmt::Display for DummyLikeDataSource {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl From<DummyLikeDataSource> for CommentServiceError {
+    fn from(_: DummyLikeDataSource) -> Self {
+        CommentServiceError::EmptyContent
+    }
+}
+
+impl std::error::Error for DummyLikeDataSource {}
+
+#[async_trait]
+impl LikeDataSource for MockDatabase {
+    type Error = DummyLikeDataSource;
+    async fn add_like(
+        &self,
+        _user_id: bson::oid::ObjectId,
+        _comment_id: bson::oid::ObjectId,
+    ) -> Result<(), Self::Error> {
+        let mut likes = self.likes.lock().unwrap();
+        for like in likes.iter_mut() {
+            if like.key.user_id == _user_id.clone().into()
+                && like.key.comment_id == _comment_id.clone().into()
+            {
+                return Err(DummyLikeDataSource("like already exists".to_string()));
+            }
+        }
+        likes.push(Like::new(_user_id.into(), _comment_id.into()));
+        Ok(())
+    }
+
+    async fn delete_like(
+        &self,
+        _user_id: bson::oid::ObjectId,
+        _comment_id: bson::oid::ObjectId,
+    ) -> Result<(), Self::Error> {
+        let mut likes = self.likes.lock().unwrap();
+        for like in likes.iter_mut() {
+            if like.key.user_id == _user_id.clone().into()
+                && like.key.comment_id == _comment_id.clone().into()
+            {
+                likes.retain(|like| {
+                    like.key.user_id != _user_id.clone().into()
+                        && like.key.comment_id != _comment_id.into()
+                });
+                return Ok(());
+            }
+        }
+        Err(DummyLikeDataSource("like not found".to_string()))
+    }
+
+    async fn get_likes_count(&self, _comment_id: bson::oid::ObjectId) -> Result<i32, Self::Error> {
+        let likes = self.likes.lock().unwrap();
+        let mut count = 0;
+        for like in likes.iter() {
+            if like.key.comment_id == _comment_id.clone().into() {
+                count += 1;
+            }
+        }
+        Ok(count)
+    }
+
+    async fn get_likes(
+        &self,
+        _comment_id: bson::oid::ObjectId,
+    ) -> Result<BoxStream<Like>, Self::Error> {
+        let likes = self.likes.lock().unwrap().clone();
+        let stream = futures_util::stream::iter(likes.into_iter());
+        let stream = stream.filter(move |like| {
+            let like = like.clone();
+            async move { like.key.comment_id == _comment_id.clone().into() }
+        });
+        Ok(stream.map(|like| like).boxed())
     }
 }

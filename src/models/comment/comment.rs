@@ -12,6 +12,7 @@ use crate::{
 };
 
 use super::create_comment_input::CreateCommentInput;
+use super::Like;
 
 #[derive(Debug, Serialize, Deserialize, Clone, SimpleObject, Builder)]
 #[graphql(complex)]
@@ -132,7 +133,7 @@ impl Comment {
     ) -> gql::Result<
         connection::Connection<
             ScalarObjectId,
-            Comment,
+            Like,
             connection::EmptyFields,
             connection::EmptyFields,
         >,
@@ -141,7 +142,7 @@ impl Comment {
             .data_opt::<MongoDB>()
             .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
         let likes_list = CommentService::get_likes(db, self.id.into())
-            .await
+            .await?
             .collect::<Vec<_>>()
             .await;
         connection::query(
@@ -153,14 +154,14 @@ impl Comment {
                 let likes_list = if let Some(after) = after {
                     likes_list
                         .into_iter()
-                        .skip_while(|like| like.as_ref().unwrap().id != after)
+                        .skip_while(|like| like.as_ref().unwrap().key.user_id != after)
                         .skip(1)
                         .map(|like| like)
                         .collect::<Vec<_>>()
                 } else if let Some(before) = before {
                     likes_list
                         .into_iter()
-                        .take_while(|like| like.as_ref().unwrap().id != before)
+                        .take_while(|like| like.as_ref().unwrap().key.user_id != before)
                         .map(|like| like)
                         .collect::<Vec<_>>()
                 } else {
@@ -184,7 +185,7 @@ impl Comment {
                 connection
                     .edges
                     .extend(friends_list.into_iter().map(|like| {
-                        connection::Edge::new(like.as_ref().unwrap().id, like.unwrap())
+                        connection::Edge::new(like.as_ref().unwrap().key.user_id, like.unwrap())
                     }));
                 Ok::<_, async_graphql::Error>(connection)
             },
@@ -192,11 +193,7 @@ impl Comment {
         .await
     }
 
-    async fn likes_count(
-        &self,
-        ctx: &Context<'_>,
-        comment_id: ScalarObjectId,
-    ) -> gql::Result<i32> {
+    async fn likes_count(&self, ctx: &Context<'_>, comment_id: ScalarObjectId) -> gql::Result<i32> {
         let db = ctx
             .data_opt::<MongoDB>()
             .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
@@ -205,7 +202,7 @@ impl Comment {
             Ok(count) => Ok(count),
             Err(e) => Err(e.extend()),
         }
-    }   
+    }
 }
 
 impl From<CreateCommentInput> for Comment {

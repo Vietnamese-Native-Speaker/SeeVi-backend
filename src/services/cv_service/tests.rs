@@ -28,7 +28,6 @@ async fn test_get_comment_by_id() {
         .await
         .unwrap();
     assert_eq!("test", comment.content);
-    assert_eq!(0, comment.likes);
 }
 
 #[tokio::test]
@@ -44,6 +43,8 @@ async fn test_comment_services() {
     let test_cv = CVService::create_cv(&db, cv_input).await.unwrap();
     assert_eq!("some_title", test_cv.title);
 
+    let user_id = bson::oid::ObjectId::new();
+
     // test add comment to cv
     let cv = CVService::add_comment(
         &db,
@@ -56,16 +57,22 @@ async fn test_comment_services() {
     assert_eq!(1, cv.comments.len());
 
     // test add like to comment
-    let comment = CommentService::add_like_comment(&db, cv.comments[0])
+    let comment = CommentService::add_like_comment(&db, user_id, cv.comments[0])
         .await
         .unwrap();
-    assert_eq!(1, comment.likes);
+    let total_like = CommentService::get_likes_count(&db, comment.id.into())
+        .await
+        .unwrap();
+    assert_eq!(1, total_like);
 
     // test remove like from comment
-    let comment = CommentService::remove_like_comment(&db, cv.comments[0])
+    let comment = CommentService::remove_like_comment(&db, user_id, cv.comments[0])
         .await
         .unwrap();
-    assert_eq!(0, comment.likes);
+    let total_like = CommentService::get_likes_count(&db, comment.id.into())
+        .await
+        .unwrap();
+    assert_eq!(0, total_like);
 
     // test add bookmark to comment
     let comment = CommentService::add_bookmark(&db, cv.comments[0])
