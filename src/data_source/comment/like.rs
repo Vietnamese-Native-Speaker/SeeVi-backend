@@ -10,8 +10,7 @@ pub trait LikeDataSource {
 
     async fn add_like(&self, user_id: ObjectId, comment_id: ObjectId) -> Result<(), Self::Error>;
 
-    async fn delete_like(&self, user_id: ObjectId, comment_id: ObjectId)
-        -> Result<(), Self::Error>;
+    async fn delete_like(&self, user_id: ObjectId, comment_id: ObjectId) -> Result<(), Self::Error>;
 
     async fn get_likes_count(&self, comment_id: ObjectId) -> Result<i32, Self::Error>;
 
