@@ -19,6 +19,18 @@ pub struct Like {
     pub created: DateTime,
 }
 
+impl Like {
+    pub fn new(user_id: ScalarObjectId, comment_id: ScalarObjectId) -> Self {
+        Self {
+            key: Key {
+                user_id,
+                comment_id,
+            },
+            created: DateTime::now(),
+        }
+    }
+}
+
 #[ComplexObject]
 impl Like {
     pub async fn created(&self) -> String {
