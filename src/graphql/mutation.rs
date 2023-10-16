@@ -230,42 +230,6 @@ impl Mutation {
         }
     }
 
-    async fn like_comment(
-        &self,
-        ctx: &Context<'_>,
-        comment_id: ScalarObjectId,
-    ) -> GqlResult<bool> {
-        let rs = CommentService::add_like_comment(
-            ctx.data_opt::<MongoDB>()
-                .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
-            comment_id.into(),
-        )
-        .await;
-        authorization(ctx)?;
-        match rs {
-            Ok(_) => Ok(true),
-            Err(e) => Err(e.into()),
-        }
-    }
-
-    async fn remove_like_comment(
-        &self,
-        ctx: &Context<'_>,
-        comment_id: ScalarObjectId,
-    ) -> GqlResult<bool> {
-        let rs = CommentService::remove_like_comment(
-            ctx.data_opt::<MongoDB>()
-                .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
-            comment_id.into(),
-        )
-        .await;
-        authorization(ctx)?;
-        match rs {
-            Ok(_) => Ok(true),
-            Err(e) => Err(e.into()),
-        }
-    }
-
     async fn add_bookmark_comment(
         &self,
         ctx: &Context<'_>,
@@ -353,6 +317,46 @@ impl Mutation {
                 .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
             comment_id.into(),
             reply_id.into(),
+        )
+        .await;
+        authorization(ctx)?;
+        match rs {
+            Ok(_) => Ok(true),
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    async fn like_comment(
+        &self,
+        ctx: &Context<'_>,
+        comment_id: ScalarObjectId,
+        user_id: ScalarObjectId,
+    ) -> GqlResult<bool> {
+        let rs = CommentService::add_like(
+            ctx.data_opt::<MongoDB>()
+                .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
+            user_id.into(),
+            comment_id.into(),
+        )
+        .await;
+        authorization(ctx)?;
+        match rs {
+            Ok(_) => Ok(true),
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    async fn unlike_comment(
+        &self,
+        ctx: &Context<'_>,
+        comment_id: ScalarObjectId,
+        user_id: ScalarObjectId,
+    ) -> GqlResult<bool> {
+        let rs = CommentService::delete_like(
+            ctx.data_opt::<MongoDB>()
+                .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
+            user_id.into(),
+            comment_id.into(),
         )
         .await;
         authorization(ctx)?;
