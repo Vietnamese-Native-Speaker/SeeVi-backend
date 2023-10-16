@@ -14,9 +14,8 @@ fn create_test_comment(
     Comment {
         id: comment_id,
         author: author_id,
-        content: content,
+        content,
         created: mongodb::bson::DateTime::now(),
-        bookmarks: 0,
         replies: vec![],
     }
 }
@@ -101,9 +100,6 @@ async fn test_find_and_update_comment() {
     let update_comment = UpdateCommentInputBuilder::default()
         .with_id(comment_id.clone())
         .with_content("updated content".to_string())
-        .with_likes(3 as u32)
-        .with_bookmarks(4 as u32)
-        .with_shares(5 as u32)
         .build()
         .unwrap();
     mongodb
@@ -115,7 +111,6 @@ async fn test_find_and_update_comment() {
         find_updated_comment.clone().unwrap().content,
         "updated content"
     );
-    assert_eq!(find_updated_comment.clone().unwrap().bookmarks, 4);
 }
 
 #[tokio::test]

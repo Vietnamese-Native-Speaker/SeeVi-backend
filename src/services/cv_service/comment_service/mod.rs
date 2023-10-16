@@ -124,64 +124,6 @@ impl CommentService {
         }
     }
 
-    pub async fn add_bookmark(
-        cmt_database: &(impl CommentDataSource + std::marker::Sync),
-        comment_id: ObjectId,
-    ) -> Result<Comment, CommentServiceError> {
-        let cv = cmt_database.get_comment_by_id(comment_id).await;
-        match cv {
-            Ok(cv) => {
-                let input = UpdateCommentInput::builder()
-                    .with_bookmarks(cv.bookmarks + 1)
-                    .build()
-                    .unwrap();
-                let rs = cmt_database
-                    .find_and_update_comment(comment_id, input)
-                    .await;
-                match rs {
-                    Ok(rs) => Ok(rs),
-                    Err(err) => Err(err.into()),
-                }
-            }
-            Err(err) => Err(err.into()),
-        }
-    }
-
-    pub async fn remove_bookmark(
-        cmt_database: &(impl CommentDataSource + std::marker::Sync),
-        comment_id: ObjectId,
-    ) -> Result<Comment, CommentServiceError> {
-        let cmt = cmt_database.get_comment_by_id(comment_id).await;
-        match cmt {
-            Ok(cmt) => {
-                let tmp = cmt.bookmarks;
-                if tmp == 0 {
-                    return Err(CommentServiceError::NoBookmarks);
-                }
-                let input = UpdateCommentInput::builder()
-                    .with_bookmarks(cmt.bookmarks - 1)
-                    .build()
-                    .unwrap();
-                let rs = cmt_database
-                    .find_and_update_comment(comment_id, input)
-                    .await;
-                match rs {
-                    Ok(rs) => {
-                        return Ok(rs);
-                    }
-                    Err(err) => {
-                        let err: CommentServiceError = err.into();
-                        return Err(err);
-                    }
-                }
-            }
-            Err(err) => {
-                let err: CommentServiceError = err.into();
-                return Err(err);
-            }
-        }
-    }
-
     pub async fn add_reply_comment(
         cmt_database: &(impl CommentDataSource + std::marker::Sync),
         comment_id: ObjectId,

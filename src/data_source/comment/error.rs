@@ -1,5 +1,4 @@
-use async_graphql::ErrorExtensions;
-use mongodb::bson::{self, oid::ObjectId};
+use mongodb::bson::oid::ObjectId;
 use std::fmt;
 
 #[non_exhaustive]

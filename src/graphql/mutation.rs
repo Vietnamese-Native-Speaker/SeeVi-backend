@@ -234,42 +234,6 @@ impl Mutation {
         }
     }
 
-    async fn add_bookmark_comment(
-        &self,
-        ctx: &Context<'_>,
-        comment_id: ScalarObjectId,
-    ) -> GqlResult<bool> {
-        let rs = CommentService::add_bookmark(
-            ctx.data_opt::<MongoDB>()
-                .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
-            comment_id.into(),
-        )
-        .await;
-        authorization(ctx)?;
-        match rs {
-            Ok(_) => Ok(true),
-            Err(e) => Err(e.into()),
-        }
-    }
-
-    async fn remove_bookmark_comment(
-        &self,
-        ctx: &Context<'_>,
-        comment_id: ScalarObjectId,
-    ) -> GqlResult<bool> {
-        let rs = CommentService::remove_bookmark(
-            ctx.data_opt::<MongoDB>()
-                .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
-            comment_id.into(),
-        )
-        .await;
-        authorization(ctx)?;
-        match rs {
-            Ok(_) => Ok(true),
-            Err(e) => Err(e.into()),
-        }
-    }
-
     async fn add_reply_to_comment(
         &self,
         ctx: &Context<'_>,

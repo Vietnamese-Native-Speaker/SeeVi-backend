@@ -7,7 +7,7 @@ use crate::models::{
 
 use super::{CreateUserInput, User};
 
-fn create_demo_user_input(test_id: ObjectId) -> CreateUserInput {
+fn create_demo_user_input(_test_id: ObjectId) -> CreateUserInput {
     let dummy_uuid = Uuid::new();
     CreateUserInputBuilder::default()
         .with_username("username")

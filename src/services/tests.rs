@@ -466,7 +466,6 @@ impl CommentDataSource for MockDatabase {
         for comment in comments.iter_mut() {
             if comment.id == _id.into() {
                 comment.content = _input.content.clone().unwrap_or(comment.content.clone());
-                comment.bookmarks = _input.bookmarks.clone().unwrap_or(comment.bookmarks);
                 comment.replies = _input.replies.clone().unwrap_or(comment.replies.clone());
                 return Ok(comment.clone());
             }

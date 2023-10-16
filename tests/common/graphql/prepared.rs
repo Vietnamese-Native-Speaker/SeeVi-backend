@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use seevi_backend::object_id::ScalarObjectId;
 
 use super::make_graphql;

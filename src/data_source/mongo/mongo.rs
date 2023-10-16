@@ -671,7 +671,7 @@ impl CommentDataSource for MongoDB {
     ) -> Result<Comment, Self::Error> {
         let collection = self.db.collection::<Comment>(COMMENT_COLLECTION);
         let filter = bson::doc! {"_id": id};
-        let update = bson::doc! {"$set": {"content": input.content, "likes": input.likes, "bookmarks": input.bookmarks, "shares": input.shares}};
+        let update = bson::doc! {"$set": {"content": input.content, }};
         let result = collection
             .find_one_and_update(
                 filter,
