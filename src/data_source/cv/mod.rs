@@ -1,4 +1,7 @@
 mod error;
+pub mod like;
+pub mod bookmark;
+pub mod share;
 
 use crate::models::{
     comment::Comment,
