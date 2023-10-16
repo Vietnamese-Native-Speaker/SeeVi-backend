@@ -1,4 +1,5 @@
 mod comment;
+mod bookmark;
 mod create_comment_input;
 pub mod update_comment_input;
 
