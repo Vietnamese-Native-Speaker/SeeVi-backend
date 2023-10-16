@@ -1,6 +1,7 @@
-mod comment;
-mod create_comment_input;
+pub mod comment;
 pub mod update_comment_input;
+pub mod like;
+pub mod create_comment_input;
 
 pub use like::Like;
 pub use comment::Comment;
