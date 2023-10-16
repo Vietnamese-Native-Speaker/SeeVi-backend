@@ -1,8 +1,11 @@
-use crate::object_id::ScalarObjectId;
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+use async_graphql::{ComplexObject, SimpleObject};
+use mongodb::bson::{oid::ObjectId, DateTime};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, SimpleObject)]
 pub struct Key {
-    pub from: ObjectId,
-    pub to: ObjectId,
+    pub user_id: ObjectId,
+    pub cv_id: ObjectId,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, SimpleObject)]
@@ -12,6 +15,15 @@ pub struct Like {
     key: Key,
     #[graphql(skip)]
     pub created: DateTime,
+}
+
+impl Like {
+    pub fn new(user_id: ObjectId, cv_id: ObjectId) -> Self {
+        Self {
+            key: Key { user_id, cv_id },
+            created: DateTime::now(),
+        }
+    }
 }
 
 #[ComplexObject]
@@ -30,8 +42,42 @@ pub struct Bookmark {
     pub created: DateTime,
 }
 
+impl Bookmark {
+    pub fn new(user_id: ObjectId, cv_id: ObjectId) -> Self {
+        Self {
+            key: Key { user_id, cv_id },
+            created: DateTime::now(),
+        }
+    }
+}
+
 #[ComplexObject]
-impl Like {
+impl Bookmark {
+    pub async fn created(&self) -> String {
+        self.created.try_to_rfc3339_string().unwrap()
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, SimpleObject)]
+#[graphql(complex)]
+pub struct Share {
+    #[serde(rename = "_id")]
+    key: Key,
+    #[graphql(skip)]
+    pub created: DateTime,
+}
+
+impl Share {
+    pub fn new(user_id: ObjectId, cv_id: ObjectId) -> Self {
+        Self {
+            key: Key { user_id, cv_id },
+            created: DateTime::now(),
+        }
+    }
+}
+
+#[ComplexObject]
+impl Share {
     pub async fn created(&self) -> String {
         self.created.try_to_rfc3339_string().unwrap()
     }
