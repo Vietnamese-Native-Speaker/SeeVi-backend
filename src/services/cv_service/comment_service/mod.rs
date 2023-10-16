@@ -1,13 +1,14 @@
-use async_graphql::futures_util::{stream::BoxStream, StreamExt};
-use async_graphql::futures_util::{FutureExt, TryStreamExt};
+use async_graphql::futures_util::FutureExt;
+use async_graphql::futures_util::{stream::BoxStream, StreamExt, TryStreamExt};
 use mongodb::bson::oid::ObjectId;
 
 mod error;
 
 pub use error::CommentServiceError;
 
+use crate::data_source::LikeDataSource;
 use crate::data_source::{CVDataSource, CVDataSourceError, CommentDataSource};
-use crate::models::comment::{Comment, CreateCommentInput, UpdateCommentInput};
+use crate::models::comment::{Comment, CreateCommentInput, Like, UpdateCommentInput};
 
 pub struct CommentService {}
 
@@ -85,21 +86,18 @@ impl CommentService {
     }
 
     pub async fn add_like_comment(
-        cmt_database: &(impl CommentDataSource + std::marker::Sync),
+        cmt_database: &(impl CommentDataSource + LikeDataSource + std::marker::Sync),
+        user_id: ObjectId,
         comment_id: ObjectId,
     ) -> Result<Comment, CommentServiceError> {
-        let cmt = cmt_database.get_comment_by_id(comment_id).await;
-        match cmt {
-            Ok(cmt) => {
-                let input = UpdateCommentInput::builder()
-                    .with_likes(cmt.likes + 1)
-                    .build()
-                    .unwrap();
-                let rs = cmt_database
-                    .find_and_update_comment(cmt.id.into(), input)
-                    .await;
+        let comment = cmt_database.get_comment_by_id(comment_id).await;
+        match comment {
+            Ok(_) => {
+                let rs = cmt_database.add_like(user_id, comment_id).await;
                 match rs {
-                    Ok(rs) => Ok(rs),
+                    Ok(_) => {
+                        return Ok(comment.unwrap());
+                    }
                     Err(err) => Err(err.into()),
                 }
             }
@@ -107,25 +105,18 @@ impl CommentService {
         }
     }
     pub async fn remove_like_comment(
-        cmt_database: &(impl CommentDataSource + std::marker::Sync),
+        cmt_database: &(impl CommentDataSource + LikeDataSource + std::marker::Sync),
+        user_id: ObjectId,
         comment_id: ObjectId,
     ) -> Result<Comment, CommentServiceError> {
         let comment = cmt_database.get_comment_by_id(comment_id).await;
         match comment {
-            Ok(comment) => {
-                let tmp = comment.likes;
-                if tmp < 1 {
-                    return Err(CommentServiceError::NoLikes);
-                }
-                let input = UpdateCommentInput::builder()
-                    .with_likes(comment.likes - 1)
-                    .build()
-                    .unwrap();
-                let rs = cmt_database
-                    .find_and_update_comment(comment_id, input)
-                    .await;
+            Ok(_) => {
+                let rs = cmt_database.delete_like(user_id, comment_id).await;
                 match rs {
-                    Ok(rs) => Ok(rs),
+                    Ok(_) => {
+                        return Ok(comment.unwrap());
+                    }
                     Err(err) => Err(err.into()),
                 }
             }
@@ -251,5 +242,25 @@ impl CommentService {
             .find_and_remove_reply(comment_id, reply_id)
             .await;
         rs.map(|rs| rs).map_err(|err| err.into())
+    }
+
+    pub async fn get_likes_count(
+        cmt_database: &(impl CommentDataSource + LikeDataSource + std::marker::Sync),
+        comment_id: ObjectId,
+    ) -> Result<i32, CommentServiceError> {
+        let rs = cmt_database.get_likes_count(comment_id).await;
+        rs.map(|rs| rs).map_err(|err| err.into())
+    }
+
+    pub async fn get_likes(
+        cmt_database: &(impl CommentDataSource + LikeDataSource + std::marker::Sync),
+        comment_id: ObjectId,
+    ) -> Result<BoxStream<Result<Like, CommentServiceError>>, CommentServiceError> {
+        let likes = match cmt_database.get_likes(comment_id).await {
+            Ok(likes) => likes,
+            Err(err) => return Err(err.into()),
+        };
+        let rs = likes.map(|item| Ok(item)).boxed();
+        Ok(rs)
     }
 }

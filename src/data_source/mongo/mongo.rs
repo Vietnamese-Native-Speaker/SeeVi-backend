@@ -3,11 +3,13 @@ use mongodb::bson::DateTime;
 use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Database};
 
+use crate::data_source::comment::comment_data_error::CommentDataSourceError;
+use crate::data_source::comment::like_data_source_error::LikeDataSourceError;
+use crate::models::comment::Like;
 use crate::models::cv_details::CVDetails;
 use crate::models::education::Education;
 use crate::models::friend_request::FriendRequest;
 use crate::models::sex::Sex;
-use crate::mongo::comment_data_error::CommentDataSourceError;
 use crate::mongo::mongo::bson::doc;
 use crate::services::cv_service::comment_service::CommentServiceError;
 use crate::services::cv_service::error::CVServiceError;
@@ -29,8 +31,8 @@ use mongodb::bson;
 use crate::models::cv::{self, CV};
 use crate::models::users::{self, User};
 
-use crate::data_source::CVDataSource;
 use crate::data_source::CVDataSourceError;
+use crate::data_source::{CVDataSource, LikeDataSource};
 
 const FRIEND_REQUEST_COLLECTION: &str = "friend_requests";
 const CV_COLLECTION: &str = "cvs";
@@ -525,20 +527,6 @@ impl From<CVDataSourceError> for CVServiceError {
         }
     }
 }
-impl From<CommentDataSourceError> for CommentServiceError {
-    fn from(error: CommentDataSourceError) -> Self {
-        match error {
-            CommentDataSourceError::IdNotFound(id) => CommentServiceError::IdNotFound(id),
-            CommentDataSourceError::EmptyContent => CommentServiceError::EmptyContent,
-            CommentDataSourceError::NoLikes => CommentServiceError::NoLikes,
-            CommentDataSourceError::NoBookmarks => CommentServiceError::NoBookmarks,
-            CommentDataSourceError::CreateCommentFailed => CommentServiceError::CreateCommentFailed,
-            CommentDataSourceError::UpdateCommentFailed => CommentServiceError::UpdateCommentFailed,
-            CommentDataSourceError::DeleteCommentFailed => CommentServiceError::DeleteCommentFailed,
-            CommentDataSourceError::DatabaseError => CommentServiceError::DatabaseError,
-        }
-    }
-}
 
 impl std::error::Error for CVDataSourceError {}
 
@@ -594,6 +582,22 @@ impl CVDetailsDataSource for MongoDB {
         }
     }
 }
+
+impl From<CommentDataSourceError> for CommentServiceError {
+    fn from(error: CommentDataSourceError) -> Self {
+        match error {
+            CommentDataSourceError::IdNotFound(id) => CommentServiceError::IdNotFound(id),
+            CommentDataSourceError::EmptyContent => CommentServiceError::EmptyContent,
+            CommentDataSourceError::NoLikes => CommentServiceError::NoLikes,
+            CommentDataSourceError::NoBookmarks => CommentServiceError::NoBookmarks,
+            CommentDataSourceError::CreateCommentFailed => CommentServiceError::CreateCommentFailed,
+            CommentDataSourceError::UpdateCommentFailed => CommentServiceError::UpdateCommentFailed,
+            CommentDataSourceError::DeleteCommentFailed => CommentServiceError::DeleteCommentFailed,
+            CommentDataSourceError::DatabaseError => CommentServiceError::DatabaseError,
+        }
+    }
+}
+
 impl std::error::Error for CommentDataSourceError {}
 
 #[async_trait]
@@ -736,5 +740,39 @@ impl CommentDataSource for MongoDB {
             },
             Err(_) => Err(CommentDataSourceError::DatabaseError),
         }
+    }
+}
+
+impl From<LikeDataSourceError> for CommentServiceError {
+    fn from(error: LikeDataSourceError) -> Self {
+        match error {
+            LikeDataSourceError::DatabaseError => CommentServiceError::DatabaseError,
+        }
+    }
+}
+
+impl std::error::Error for LikeDataSourceError {}
+#[async_trait]
+impl LikeDataSource for MongoDB {
+    type Error = LikeDataSourceError;
+
+    async fn add_like(&self, user_id: ObjectId, comment_id: ObjectId) -> Result<(), Self::Error> {
+        unimplemented!()
+    }
+
+    async fn delete_like(
+        &self,
+        user_id: ObjectId,
+        comment_id: ObjectId,
+    ) -> Result<(), Self::Error> {
+        unimplemented!()
+    }
+
+    async fn get_likes_count(&self, comment_id: ObjectId) -> Result<i32, Self::Error> {
+        unimplemented!()
+    }
+
+    async fn get_likes(&self, comment_id: ObjectId) -> Result<BoxStream<Like>, Self::Error> {
+        unimplemented!()
     }
 }

@@ -14,9 +14,21 @@ pub struct Key {
 #[graphql(complex)]
 pub struct Like {
     #[serde(rename = "_id")]
-    key: Key,
+    pub key: Key,
     #[graphql(skip)]
     pub created: DateTime,
+}
+
+impl Like {
+    pub fn new(user_id: ScalarObjectId, comment_id: ScalarObjectId) -> Self {
+        Self {
+            key: Key {
+                user_id,
+                comment_id,
+            },
+            created: DateTime::now(),
+        }
+    }
 }
 
 #[ComplexObject]

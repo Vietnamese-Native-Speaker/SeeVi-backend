@@ -4,7 +4,11 @@ use crate::{
     data_source::mongo::{MongoDB, MongoForTesting},
     models::users::{CreateUserInput, User},
     object_id::ScalarObjectId,
-    services::{auth_service::AuthService, user_service::UserService, cv_service::{cv_service::CVService, comment_service::CommentService}},
+    services::{
+        auth_service::AuthService,
+        cv_service::{comment_service::CommentService, cv_service::CVService},
+        user_service::UserService,
+    },
 };
 
 use super::{authorization, GqlResult};
@@ -98,7 +102,7 @@ impl Mutation {
             ctx.data_opt::<MongoDB>()
                 .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
             cv_id.into(),
-            title
+            title,
         )
         .await;
         authorization(ctx)?;
@@ -265,7 +269,7 @@ impl Mutation {
             Err(e) => Err(e.into()),
         }
     }
-    
+
     async fn share_comment(
         &self,
         ctx: &Context<'_>,
@@ -332,7 +336,7 @@ impl Mutation {
         comment_id: ScalarObjectId,
         user_id: ScalarObjectId,
     ) -> GqlResult<bool> {
-        let rs = CommentService::add_like(
+        let rs = CommentService::add_like_comment(
             ctx.data_opt::<MongoDB>()
                 .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
             user_id.into(),
@@ -352,7 +356,7 @@ impl Mutation {
         comment_id: ScalarObjectId,
         user_id: ScalarObjectId,
     ) -> GqlResult<bool> {
-        let rs = CommentService::delete_like(
+        let rs = CommentService::remove_like_comment(
             ctx.data_opt::<MongoDB>()
                 .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
             user_id.into(),

@@ -1,4 +1,6 @@
-mod like;
+pub mod comment_data_error;
+pub mod like;
+pub mod like_data_source_error;
 use async_graphql::futures_util::stream::BoxStream;
 use async_trait::async_trait;
 use mongodb::bson::{self, oid::ObjectId};
