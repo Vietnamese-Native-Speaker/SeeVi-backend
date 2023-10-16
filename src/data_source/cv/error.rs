@@ -34,11 +34,20 @@ pub enum CVDataSourceError {
 
     // id is invalid
     InvalidId(bson::oid::ObjectId),
+
+    // Cannot find CV
+    QueryFail,
+
+    /// Database error
+    DatabaseError,
 }
 
 impl fmt::Display for CVDataSourceError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            CVDataSourceError::DatabaseError => {
+                write!(f, "Database error")
+            }
             CVDataSourceError::IdNotFound(uuid) => {
                 write!(f, "Id {:?} is not found", uuid)
             }
@@ -68,6 +77,9 @@ impl fmt::Display for CVDataSourceError {
             }
             CVDataSourceError::AuthorIdNotFound(uuid) => {
                 write!(f, "Author id {:?} is not found", uuid)
+            }
+            CVDataSourceError::QueryFail => {
+                write!(f, "Fail to find CV")
             }
         }
     }
@@ -130,5 +142,11 @@ mod tests {
     fn test_too_long_title() {
         let err = CVDataSourceError::TooLongTitle;
         assert_eq!(format!("{}", err), format!("Title is too long"));
+    }
+
+    #[test]
+    fn test_query_fail() {
+        let err = CVDataSourceError::QueryFail;
+        assert_eq!(format!("{}", err), format!("Fail to find CV"));
     }
 }

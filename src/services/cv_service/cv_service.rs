@@ -1,9 +1,13 @@
+use async_graphql::futures_util::stream::BoxStream;
 use mongodb::bson::oid::ObjectId;
 
-use crate::data_source::{CVDataSource, CVDataSourceError, CommentDataSource};
+use crate::data_source::{CVDataSource, CVDataSourceError, CVDetailsDataSource, CommentDataSource};
 use crate::models::comment::CreateCommentInput;
-use crate::models::cv::{UpdateCVInput, CV, CreateCVInput};
+use crate::models::cv::{CreateCVInput, UpdateCVInput, CV};
 
+use crate::models::cv_details::CVDetails;
+
+use super::error::CVServiceError;
 
 pub struct CVService {}
 
@@ -100,17 +104,11 @@ impl CVService {
             Ok(comment) => {
                 let rs = database.add_comment_to_cv(cv_id, comment).await;
                 match rs {
-                    Ok(cv) => {
-                        Ok(cv)
-                    }
-                    Err(err) => {
-                        Err(err.into())
-                    }
+                    Ok(cv) => Ok(cv),
+                    Err(err) => Err(err.into()),
                 }
             }
-            Err(_err) => {
-                Err(CVDataSourceError::AddCommentFailed)
-            }
+            Err(_err) => Err(CVDataSourceError::AddCommentFailed),
         }
     }
 
@@ -121,5 +119,21 @@ impl CVService {
     ) -> Result<CV, CVDataSourceError> {
         let rs = database.remove_comment_from_cv(cv_id, comment_id).await;
         rs.map_err(|err| err.into())
+    }
+
+    pub async fn find_suggested_cvs(
+        database: &(impl CVDetailsDataSource + std::marker::Sync),
+        cv_details: CVDetails,
+    ) -> Result<BoxStream<CV>, CVServiceError> {
+        let stream = database.get_cvs_by_filter(cv_details).await;
+        stream.map_err(|err| err.into())
+    }
+
+    pub async fn get_cvs_by_user_id(
+        database: &(impl CVDataSource + std::marker::Sync),
+        user_id: ObjectId,
+    ) -> Result<BoxStream<Result<CV, CVDataSourceError>>, CVDataSourceError> {
+        let rs = database.get_cvs_by_user_id(user_id).await;
+        rs
     }
 }
