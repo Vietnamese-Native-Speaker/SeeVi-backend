@@ -26,7 +26,6 @@ pub struct Comment {
     #[graphql(skip)]
     pub created: DateTime,
     pub bookmarks: u32,
-    pub shares: u32,
 
     #[graphql(skip)]
     pub replies: Vec<ScalarObjectId>,
@@ -47,7 +46,6 @@ impl Comment {
             content,
             created: bson::DateTime::now(),
             bookmarks: 0,
-            shares: 0,
             replies: vec![],
         }
     }

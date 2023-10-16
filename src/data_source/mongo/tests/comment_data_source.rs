@@ -17,7 +17,6 @@ fn create_test_comment(
         content: content,
         created: mongodb::bson::DateTime::now(),
         bookmarks: 0,
-        shares: 0,
         replies: vec![],
     }
 }
@@ -117,7 +116,6 @@ async fn test_find_and_update_comment() {
         "updated content"
     );
     assert_eq!(find_updated_comment.clone().unwrap().bookmarks, 4);
-    assert_eq!(find_updated_comment.clone().unwrap().shares, 5);
 }
 
 #[tokio::test]

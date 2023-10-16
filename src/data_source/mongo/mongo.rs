@@ -4,8 +4,8 @@ use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Database};
 
 use crate::data_source::comment::comment_data_error::CommentDataSourceError;
-use crate::data_source::comment::like_data_source_error::LikeDataSourceError;
-use crate::models::comment::Like;
+use crate::data_source::comment::{LikeDataSource, LikeDataSourceError};
+use crate::models::comment::like::Key;
 use crate::models::cv_details::CVDetails;
 use crate::models::education::Education;
 use crate::models::friend_request::FriendRequest;
@@ -19,7 +19,7 @@ use crate::{
         CVDetailsDataSource, CommentDataSource, FriendsListDataSource, FriendsListError,
         UserDataSource, UserDataSourceError,
     },
-    models::comment::{Comment, CreateCommentInput, UpdateCommentInput},
+    models::comment::{Comment, CreateCommentInput, Like, UpdateCommentInput},
 };
 use async_graphql::futures_util::stream::BoxStream;
 use async_graphql::futures_util::stream::StreamExt;
@@ -31,15 +31,15 @@ use mongodb::bson;
 use crate::models::cv::{self, CV};
 use crate::models::users::{self, User};
 
+use crate::data_source::CVDataSource;
 use crate::data_source::CVDataSourceError;
-use crate::data_source::{CVDataSource, LikeDataSource};
 
 const FRIEND_REQUEST_COLLECTION: &str = "friend_requests";
 const CV_COLLECTION: &str = "cvs";
 const USER_COLLECTION: &str = "users";
 const APP_NAME: &str = "SeeVi";
 const COMMENT_COLLECTION: &str = "comments";
-
+const LIKE_COLLECTION: &str = "likes";
 pub struct MongoDB {
     client: Client,
     pub db: Database,
@@ -743,36 +743,101 @@ impl CommentDataSource for MongoDB {
     }
 }
 
+impl std::error::Error for LikeDataSourceError {}
+
 impl From<LikeDataSourceError> for CommentServiceError {
-    fn from(error: LikeDataSourceError) -> Self {
-        match error {
-            LikeDataSourceError::DatabaseError => CommentServiceError::DatabaseError,
+    fn from(value: LikeDataSourceError) -> Self {
+        match value {
+            LikeDataSourceError::AddLikesFail => CommentServiceError::UpdateCommentFailed,
+            LikeDataSourceError::DeleteLikesFail => CommentServiceError::UpdateCommentFailed,
+            LikeDataSourceError::InvalidCommentId(id) => CommentServiceError::IdNotFound(id),
+            LikeDataSourceError::InvalidUserId(id) => CommentServiceError::IdNotFound(id),
+            LikeDataSourceError::LikeNotFound => CommentServiceError::NoLikes,
+            LikeDataSourceError::LikesNumberNotFound => CommentServiceError::NoLikes,
+            LikeDataSourceError::LikeAlreadyExists => CommentServiceError::UpdateCommentFailed,
+            LikeDataSourceError::QueryFail => CommentServiceError::UpdateCommentFailed,
         }
     }
 }
 
-impl std::error::Error for LikeDataSourceError {}
 #[async_trait]
 impl LikeDataSource for MongoDB {
     type Error = LikeDataSourceError;
 
-    async fn add_like(&self, user_id: ObjectId, comment_id: ObjectId) -> Result<(), Self::Error> {
-        unimplemented!()
+    async fn add_like(
+        &self,
+        user_id: bson::oid::ObjectId,
+        comment_id: bson::oid::ObjectId,
+    ) -> Result<(), Self::Error> {
+        let comment_collection: mongodb::Collection<Comment> = self.db.collection(LIKE_COLLECTION);
+        let like_collection: mongodb::Collection<Like> = self.db.collection(COMMENT_COLLECTION);
+        let filter = bson::doc! {
+            "key.user_id": user_id.clone(),
+            "key.comment_id": comment_id.clone(),
+        };
+        let result_exist = like_collection.find_one(filter, None).await;
+        match result_exist {
+            Ok(like_option) => match like_option {
+                Some(_) => Err(LikeDataSourceError::LikeAlreadyExists),
+                None => {
+                    let like = Like {
+                        key: Key {
+                            user_id: user_id.clone().into(),
+                            comment_id: comment_id.clone().into(),
+                        },
+                        created: DateTime::now(),
+                    };
+                    let result_add = like_collection.insert_one(like, None).await;
+                    match result_add {
+                        Ok(_) => Ok(()),
+                        Err(_) => Err(LikeDataSourceError::AddLikesFail),
+                    }
+                }
+            },
+            Err(err) => Err(LikeDataSourceError::QueryFail),
+        }
     }
 
     async fn delete_like(
         &self,
-        user_id: ObjectId,
-        comment_id: ObjectId,
+        user_id: bson::oid::ObjectId,
+        comment_id: bson::oid::ObjectId,
     ) -> Result<(), Self::Error> {
-        unimplemented!()
+        let comment_collection: mongodb::Collection<Comment> = self.db.collection(LIKE_COLLECTION);
+        let like_collection: mongodb::Collection<Like> = self.db.collection(COMMENT_COLLECTION);
+        let filter = bson::doc! {
+            "key.user_id": user_id,
+            "key.comment_id": comment_id,
+        };
+        let result_delete = like_collection.find_one_and_delete(filter, None).await;
+        match result_delete {
+            Ok(like_option) => Ok(()),
+            Err(err) => Err(LikeDataSourceError::DeleteLikesFail),
+        }
     }
 
-    async fn get_likes_count(&self, comment_id: ObjectId) -> Result<i32, Self::Error> {
-        unimplemented!()
+    async fn get_likes_count(&self, comment_id: bson::oid::ObjectId) -> Result<i32, Self::Error> {
+        let collection: mongodb::Collection<Comment> = self.db.collection(COMMENT_COLLECTION);
+        let filter = bson::doc! {"_id.comment_id": comment_id};
+        let result = collection.count_documents(filter, None).await;
+        match result {
+            Ok(count) => Ok(count as i32),
+            Err(err) => Err(LikeDataSourceError::QueryFail),
+        }
     }
 
-    async fn get_likes(&self, comment_id: ObjectId) -> Result<BoxStream<Like>, Self::Error> {
-        unimplemented!()
+    async fn get_likes(
+        &self,
+        comment_id: bson::oid::ObjectId,
+    ) -> Result<BoxStream<Like>, Self::Error> {
+        let collection: mongodb::Collection<Like> = self.db.collection(LIKE_COLLECTION);
+        let filter = bson::doc! {
+            "key.comment_id": comment_id,
+        };
+        let cursor_result = collection.find(filter, None).await;
+        match cursor_result {
+            Ok(cursor) => Ok(cursor.map(|like| like.unwrap()).boxed()),
+            Err(err) => Err(LikeDataSourceError::LikeNotFound),
+        }
     }
 }

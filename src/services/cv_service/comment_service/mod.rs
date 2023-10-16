@@ -181,28 +181,7 @@ impl CommentService {
             }
         }
     }
-    pub async fn add_share_comment(
-        cmt_database: &(impl CommentDataSource + std::marker::Sync),
-        comment_id: ObjectId,
-    ) -> Result<Comment, CommentServiceError> {
-        let cmt = cmt_database.get_comment_by_id(comment_id).await;
-        match cmt {
-            Ok(cmt) => {
-                let input = UpdateCommentInput::builder()
-                    .with_shares(cmt.shares + 1)
-                    .build()
-                    .unwrap();
-                let rs = cmt_database
-                    .find_and_update_comment(comment_id, input)
-                    .await;
-                match rs {
-                    Ok(rs) => Ok(rs),
-                    Err(err) => Err(err.into()),
-                }
-            }
-            Err(err) => Err(err.into()),
-        }
-    }
+
     pub async fn add_reply_comment(
         cmt_database: &(impl CommentDataSource + std::marker::Sync),
         comment_id: ObjectId,
@@ -233,6 +212,7 @@ impl CommentService {
             Err(err) => Err(err.into()),
         }
     }
+
     pub async fn remove_reply_comment(
         cmt_database: &(impl CommentDataSource + std::marker::Sync),
         comment_id: ObjectId,

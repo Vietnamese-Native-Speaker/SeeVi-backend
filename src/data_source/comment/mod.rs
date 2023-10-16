@@ -1,6 +1,6 @@
 pub mod comment_data_error;
+pub mod error;
 pub mod like;
-pub mod like_data_source_error;
 use async_graphql::futures_util::stream::BoxStream;
 use async_trait::async_trait;
 use mongodb::bson::{self, oid::ObjectId};
@@ -10,6 +10,8 @@ use crate::{
     services::cv_service::comment_service::CommentServiceError,
 };
 
+pub use error::LikeDataSourceError;
+pub use like::LikeDataSource;
 #[async_trait]
 pub trait CommentDataSource {
     type Error: std::error::Error + Send + Sync + Into<CommentServiceError>;

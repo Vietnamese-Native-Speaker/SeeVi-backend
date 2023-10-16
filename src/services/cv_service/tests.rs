@@ -3,7 +3,7 @@ use mongodb::bson::{self, bson};
 
 use crate::{
     models::{
-        comment::{Comment, CreateCommentInput, UpdateCommentInput},
+        comment::CreateCommentInput,
         cv::CreateCVInput,
     },
     services::tests::MockDatabase,
@@ -85,12 +85,6 @@ async fn test_comment_services() {
         .await
         .unwrap();
     assert_eq!(0, comment.bookmarks);
-
-    // test add share to comment
-    let comment = CommentService::add_share_comment(&db, cv.comments[0])
-        .await
-        .unwrap();
-    assert_eq!(1, comment.shares);
 
     // test add reply to comment
     let comment = CommentService::add_reply_comment(
