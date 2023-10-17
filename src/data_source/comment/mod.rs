@@ -1,7 +1,8 @@
+pub mod bookmark;
+pub mod bookmark_data_error;
 pub mod comment_data_error;
 pub mod error;
 pub mod like;
-pub mod bookmark;
 use async_graphql::futures_util::stream::BoxStream;
 use async_trait::async_trait;
 use mongodb::bson::{self, oid::ObjectId};

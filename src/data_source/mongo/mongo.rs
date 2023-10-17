@@ -3,9 +3,11 @@ use mongodb::bson::DateTime;
 use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Database};
 
+use crate::data_source::comment::bookmark_data_error::BookmarkDataSourceError;
 use crate::data_source::comment::comment_data_error::CommentDataSourceError;
 use crate::data_source::comment::{LikeDataSource, LikeDataSourceError};
 use crate::models::comment::like::Key;
+use crate::models::comment::Bookmark;
 use crate::models::cv_details::CVDetails;
 use crate::models::education::Education;
 use crate::models::friend_request::FriendRequest;
@@ -31,8 +33,8 @@ use mongodb::bson;
 use crate::models::cv::{self, CV};
 use crate::models::users::{self, User};
 
-use crate::data_source::CVDataSource;
 use crate::data_source::CVDataSourceError;
+use crate::data_source::{BookmarkDataSource, CVDataSource};
 
 const FRIEND_REQUEST_COLLECTION: &str = "friend_requests";
 const CV_COLLECTION: &str = "cvs";
@@ -839,5 +841,55 @@ impl LikeDataSource for MongoDB {
             Ok(cursor) => Ok(cursor.map(|like| like.unwrap()).boxed()),
             Err(err) => Err(LikeDataSourceError::LikeNotFound),
         }
+    }
+}
+
+impl std::error::Error for BookmarkDataSourceError {}
+
+impl From<BookmarkDataSourceError> for CommentServiceError {
+    fn from(value: BookmarkDataSourceError) -> Self {
+        match value {
+            BookmarkDataSourceError::QueryFail => CommentServiceError::UpdateCommentFailed,
+        }
+    }
+}
+
+#[async_trait]
+impl BookmarkDataSource for MongoDB {
+    type Error = BookmarkDataSourceError;
+
+    async fn add_bookmark(
+        &self,
+        user_id: ObjectId,
+        comment_id: ObjectId,
+    ) -> Result<(), Self::Error> {
+        unimplemented!()
+    }
+
+    async fn delete_bookmark(
+        &self,
+        user_id: ObjectId,
+        comment_id: ObjectId,
+    ) -> Result<(), Self::Error> {
+        unimplemented!()
+    }
+
+    async fn get_bookmarks_of_user(
+        &self,
+        user_id: ObjectId,
+    ) -> Result<BoxStream<Result<Bookmark, Self::Error>>, Self::Error> {
+        unimplemented!()
+    }
+
+    async fn get_bookmark(
+        &self,
+        user_id: ObjectId,
+        comment_id: ObjectId,
+    ) -> Result<Option<Bookmark>, Self::Error> {
+        unimplemented!()
+    }
+
+    async fn get_bookmarks_count(&self, comment_id: ObjectId) -> Result<i32, Self::Error> {
+        unimplemented!()
     }
 }

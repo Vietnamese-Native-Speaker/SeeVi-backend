@@ -27,5 +27,11 @@ pub trait BookmarkDataSource {
         user_id: ObjectId,
     ) -> Result<BoxStream<Result<Bookmark, Self::Error>>, Self::Error>;
 
-    async fn get_bookmark(&self, user_id: ObjectId, comment_id: ObjectId) -> Result<Option<Bookmark>, Self::Error>;
+    async fn get_bookmark(
+        &self,
+        user_id: ObjectId,
+        comment_id: ObjectId,
+    ) -> Result<Option<Bookmark>, Self::Error>;
+
+    async fn get_bookmarks_count(&self, comment_id: ObjectId) -> Result<i32, Self::Error>;
 }
