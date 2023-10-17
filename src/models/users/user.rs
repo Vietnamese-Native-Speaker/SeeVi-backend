@@ -56,7 +56,7 @@ pub struct User {
     pub city: Option<String>,
     pub experiences: Vec<Experience>,
     pub personalities: Vec<String>,
-    pub sex: Option<Sex>,
+    pub sex: Sex,
 }
 
 #[async_graphql::ComplexObject]

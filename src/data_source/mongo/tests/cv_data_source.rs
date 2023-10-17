@@ -26,6 +26,7 @@ fn create_demo_user_input() -> CreateUserInput {
         .with_primary_email("primary_email")
         .with_other_mail("other_mails")
         .with_other_mail("other_mails2")
+        .with_sex(Sex::Male)
         .with_education(Education {
             school: "school 1".to_string(),
             major: "major 1".to_string(),
@@ -95,6 +96,7 @@ fn create_demo_user_input2() -> CreateUserInput {
         .with_first_name("First Name 2")
         .with_last_name("Last Name 2")
         .with_country("country")
+        .with_sex(Sex::Male)
         .with_skill("skill")
         .with_primary_email("primary_email")
         .with_other_mail("other_mails")

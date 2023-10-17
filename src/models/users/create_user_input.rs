@@ -38,8 +38,7 @@ pub struct CreateUserInput {
     pub level: Option<Level>,
     #[builder(default)]
     pub city: Option<String>,
-    #[builder(default)]
-    pub sex: Option<Sex>,
+    pub sex: Sex,
     #[builder(setter(custom), field(type = "Vec<Experience>"))]
     pub experiences: Vec<Experience>,
     #[builder(setter(custom), field(type = "Vec<String>"))]

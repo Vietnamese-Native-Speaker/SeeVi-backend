@@ -1,7 +1,7 @@
 use async_graphql::futures_util::StreamExt;
 
 use crate::{
-    models::users::{CreateUserInput, UpdateUserInput},
+    models::{users::{CreateUserInput, UpdateUserInput}, sex::Sex},
     services::tests::MockDatabase,
 };
 
@@ -12,6 +12,7 @@ fn mock_user_input() -> CreateUserInput {
         .with_username("test")
         .with_password("test")
         .with_primary_email("test@mail.com")
+        .with_sex(Sex::Male)
         .build()
         .unwrap()
 }
