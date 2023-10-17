@@ -6,7 +6,11 @@ use crate::{
     object_id::ScalarObjectId,
     services::{
         auth_service::AuthService,
-        cv_service::{comment_service::CommentService, cv_service::CVService},
+        cv_service::{
+            bookmark_service::BookmarkService, comment_service::CommentService,
+            cv_service::CVService, like_service::LikeService as CVLikeService,
+            share_service::ShareService,
+        },
         user_service::UserService,
     },
 };
@@ -314,5 +318,89 @@ impl Mutation {
             Ok(_) => Ok(true),
             Err(e) => Err(e.into()),
         }
+    }
+
+    async fn share_cv(
+        &self,
+        ctx: &Context<'_>,
+        user_id: ScalarObjectId,
+        cv_id: ScalarObjectId,
+    ) -> GqlResult<bool> {
+        let db = ctx
+            .data_opt::<MongoDB>()
+            .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
+        authorization(ctx)?;
+        let rs = ShareService::share_cv(db, user_id.into(), cv_id.into()).await;
+        rs.map_err(|e| e.into()).map(|_| true)
+    }
+
+    async fn unshare_cv(
+        &self,
+        ctx: &Context<'_>,
+        user_id: ScalarObjectId,
+        cv_id: ScalarObjectId,
+    ) -> GqlResult<bool> {
+        let db = ctx
+            .data_opt::<MongoDB>()
+            .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
+        authorization(ctx)?;
+        let rs = ShareService::unshare_cv(db, user_id.into(), cv_id.into()).await;
+        rs.map_err(|e| e.into()).map(|_| true)
+    }
+
+    async fn like_cv(
+        &self,
+        ctx: &Context<'_>,
+        user_id: ScalarObjectId,
+        cv_id: ScalarObjectId,
+    ) -> GqlResult<bool> {
+        let db = ctx
+            .data_opt::<MongoDB>()
+            .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
+        authorization(ctx)?;
+        let rs = CVLikeService::like_cv(db, user_id.into(), cv_id.into()).await;
+        rs.map_err(|e| e.into()).map(|_| true)
+    }
+
+    async fn unlike_cv(
+        &self,
+        ctx: &Context<'_>,
+        user_id: ScalarObjectId,
+        cv_id: ScalarObjectId,
+    ) -> GqlResult<bool> {
+        let db = ctx
+            .data_opt::<MongoDB>()
+            .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
+        authorization(ctx)?;
+        let rs = CVLikeService::unlike_cv(db, user_id.into(), cv_id.into()).await;
+        rs.map_err(|e| e.into()).map(|_| true)
+    }
+
+    async fn bookmark_cv(
+        &self,
+        ctx: &Context<'_>,
+        user_id: ScalarObjectId,
+        cv_id: ScalarObjectId,
+    ) -> GqlResult<bool> {
+        let db = ctx
+            .data_opt::<MongoDB>()
+            .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
+        authorization(ctx)?;
+        let rs = BookmarkService::bookmark_cv(db, user_id.into(), cv_id.into()).await;
+        rs.map_err(|e| e.into()).map(|_| true)
+    }
+
+    async fn unbookmark_cv(
+        &self,
+        ctx: &Context<'_>,
+        user_id: ScalarObjectId,
+        cv_id: ScalarObjectId,
+    ) -> GqlResult<bool> {
+        let db = ctx
+            .data_opt::<MongoDB>()
+            .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
+        authorization(ctx)?;
+        let rs = BookmarkService::unbookmark_cv(db, user_id.into(), cv_id.into()).await;
+        rs.map_err(|e| e.into()).map(|_| true)
     }
 }
