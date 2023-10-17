@@ -1,4 +1,7 @@
-use std::ops::{Deref, DerefMut};
+use std::{
+    ops::{Deref, DerefMut},
+    sync::Arc,
+};
 
 use super::MongoDB;
 use mongodb::{
@@ -14,6 +17,12 @@ impl MongoForTesting {
     pub async fn init() -> Self {
         let uuid = Uuid::new().to_string();
         let mongo = MongoDB::init_with_database_name(&uuid).await;
+        Self(mongo)
+    }
+}
+
+impl From<MongoDB> for MongoForTesting {
+    fn from(mongo: MongoDB) -> Self {
         Self(mongo)
     }
 }
