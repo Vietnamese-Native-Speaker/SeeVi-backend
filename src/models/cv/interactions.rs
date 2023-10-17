@@ -24,6 +24,14 @@ impl Like {
             created: DateTime::now(),
         }
     }
+
+    pub fn user_id(&self) -> &ObjectId {
+        &self.key.user_id
+    }
+
+    pub fn cv_id(&self) -> &ObjectId {
+        &self.key.cv_id
+    }
 }
 
 #[ComplexObject]
@@ -49,6 +57,14 @@ impl Bookmark {
             created: DateTime::now(),
         }
     }
+
+    pub fn user_id(&self) -> &ObjectId {
+        &self.key.user_id
+    }
+
+    pub fn cv_id(&self) -> &ObjectId {
+        &self.key.cv_id
+    }
 }
 
 #[ComplexObject]
@@ -73,6 +89,14 @@ impl Share {
             key: Key { user_id, cv_id },
             created: DateTime::now(),
         }
+    }
+
+    pub fn user_id(&self) -> &ObjectId {
+        &self.key.user_id
+    }
+
+    pub fn cv_id(&self) -> &ObjectId {
+        &self.key.cv_id
     }
 }
 
