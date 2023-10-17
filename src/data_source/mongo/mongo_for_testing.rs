@@ -1,7 +1,10 @@
 use std::ops::{Deref, DerefMut};
 
 use super::MongoDB;
-use mongodb::bson::Uuid;
+use mongodb::{
+    bson::{bson, Uuid},
+    options::ClientOptions,
+};
 
 /// Wrapper for MongoDB for testing purpose. It will create a new database with a random name
 /// and drop it when it is dropped.
@@ -18,8 +21,11 @@ impl MongoForTesting {
 impl Drop for MongoForTesting {
     fn drop(&mut self) {
         let db = self.0.db.clone();
-        tokio::task::spawn_blocking(|| async move {
+        let db_name = db.name().to_string();
+        futures::executor::block_on(async move {
             db.drop(None).await.unwrap();
+            let names = self.client().await.list_database_names(None, None).await;
+            assert!(!names.unwrap().contains(&db_name));
         });
     }
 }

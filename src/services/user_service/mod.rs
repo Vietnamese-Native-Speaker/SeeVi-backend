@@ -2,14 +2,14 @@ pub mod error;
 #[cfg(test)]
 mod tests;
 
-use crate::{models::users, services::user_service::error::UserServiceError};
+use crate::services::user_service::error::UserServiceError;
 use async_graphql::futures_util::TryStreamExt;
 use async_graphql::futures_util::{stream::BoxStream, StreamExt};
 use mongodb::bson::oid::ObjectId;
 
 use crate::{
     data_source::{
-        UserDataSource, UserDataSourceError, {FriendsListDataSource, FriendsListError},
+        UserDataSource, {FriendsListDataSource, FriendsListError},
     },
     models::{
         friend_request::FriendRequest,

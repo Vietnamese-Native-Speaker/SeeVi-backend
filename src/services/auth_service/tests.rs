@@ -1,7 +1,8 @@
 use super::super::tests::MockDatabase;
 use crate::models::education::Education;
+use crate::models::sex::Sex;
 use crate::models::users::create_user_input::CreateUserInputBuilder;
-use crate::models::users::{CreateUserInput, UpdateUserInput, User};
+use crate::models::users::CreateUserInput;
 use crate::services::auth_service::{AuthService, Claims};
 use mongodb::bson::Uuid;
 
@@ -18,12 +19,24 @@ pub fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
         .with_other_mail("test_mail1")
         .with_other_mail("test_mail2")
         .with_about("test_about")
+        .with_sex(Sex::Male)
         .with_avatar(test_uuid)
         .with_cover_photo(test_uuid)
         .with_education(Education {
-            institution: "University of Example 1".to_string(),
-            course: Some("Computer Science".to_string()),
-            degree: Some("Bachelor's Degree".to_string()),
+            school: "school 1".to_string(),
+            major: "major 1".to_string(),
+            minor: Some("minor 1".to_string()),
+            degree: "degree 1".to_string(),
+            start_date: None,
+            end_date: None,
+        })
+        .with_education(Education {
+            school: "school 2".to_string(),
+            major: "major 2".to_string(),
+            minor: Some("minor 2".to_string()),
+            degree: "degree 2".to_string(),
+            start_date: None,
+            end_date: None,
         })
         .build()
         .unwrap();
@@ -64,19 +77,32 @@ async fn register_user_test() {
     );
     assert_eq!(user2.primary_email, "test_primary_email");
     assert_eq!(
-        user2.other_mails,
+        user2.other_emails,
         vec!["test_mail1".to_string(), "test_mail2".to_string()]
     );
     assert_eq!(user2.about, Some("test_about".to_string()));
     assert_eq!(user2.avatar, Some(uuid.clone()));
     assert_eq!(user2.cover_photo, Some(uuid.clone()));
     assert_eq!(
-        user2.education,
-        vec![Education {
-            institution: "University of Example 1".to_string(),
-            course: Some("Computer Science".to_string()),
-            degree: Some("Bachelor's Degree".to_string()),
-        }]
+        user2.educations,
+        vec![
+            Education {
+                school: "school 1".to_string(),
+                major: "major 1".to_string(),
+                minor: Some("minor 1".to_string()),
+                degree: "degree 1".to_string(),
+                start_date: None,
+                end_date: None
+            },
+            Education {
+                school: "school 2".to_string(),
+                major: "major 2".to_string(),
+                minor: Some("minor 2".to_string()),
+                degree: "degree 2".to_string(),
+                start_date: None,
+                end_date: None
+            }
+        ]
     );
 }
 

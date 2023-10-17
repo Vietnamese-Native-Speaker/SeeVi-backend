@@ -2668,6 +2668,8 @@ dependencies = [
  "bcrypt",
  "derive_builder",
  "dotenv",
+ "futures",
+ "futures-core",
  "google-cloud-auth",
  "google-cloud-default",
  "google-cloud-storage",
@@ -2681,6 +2683,7 @@ dependencies = [
  "serial_test",
  "struct_iterable",
  "tokio",
+ "tokio-stream",
  "warp",
 ]
 

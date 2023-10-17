@@ -285,8 +285,10 @@ async fn send_accept_decline_friends_request() {
     let friends_list = friends_list_rs
         .get("data")
         .expect("should have 'data' field")
-        .get("friendslist")
-        .expect("should have 'friendslist' field")
+        .get("userDetail")
+        .expect("should have 'userDetail' field")
+        .get("friends")
+        .expect("should have 'friends' field")
         .get("edges")
         .expect("should have 'edges' field")
         .as_array()
