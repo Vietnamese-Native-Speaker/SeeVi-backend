@@ -328,5 +328,4 @@ async fn test_find_friend_requests_accepted() {
         .collect::<Vec<_>>()
         .await;
     assert_eq!(request_list.len(), 1);
-    panic!()
 }
