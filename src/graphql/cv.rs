@@ -237,4 +237,24 @@ impl CV {
         )
         .await
     }
+
+    async fn likes_count(&self, ctx: &Context<'_>) -> gql::Result<u64> {
+        let db = ctx
+            .data_opt::<MongoDB>()
+            .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
+        LikeService::get_likes_count(db, self.id.into())
+            .await
+            .map(|count| count as u64)
+            .map_err(|err| err.into())
+    }
+
+    async fn shares_count(&self, ctx: &Context<'_>) -> gql::Result<u64> {
+        let db = ctx
+            .data_opt::<MongoDB>()
+            .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
+        ShareService::get_shares_count_of_cv(db, self.id.into())
+            .await
+            .map(|count| count as u64)
+            .map_err(|err| err.into())
+    }
 }
