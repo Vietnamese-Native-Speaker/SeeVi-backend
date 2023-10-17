@@ -5,6 +5,7 @@ use crate::models::cv::CreateCVInput;
 use crate::models::cv_details::cv_details::CVDetailsBuilder;
 use crate::models::cv_details::CVDetails;
 use crate::models::education::Education;
+use crate::models::experience::{Experience, ExperienceBuilder};
 use crate::models::range_values::RangeValues;
 use crate::models::sex::Sex;
 use crate::models::users::create_user_input::CreateUserInputBuilder;
@@ -48,7 +49,16 @@ fn create_demo_user_input() -> CreateUserInput {
         .with_personalities("personality")
         .with_rating(4.0)
         .with_sex(Sex::Male)
-        .with_experiences("year_of_experience")
+        .with_experience(
+            ExperienceBuilder::default()
+                .with_title("title")
+                .with_company("company")
+                .with_location("here")
+                .with_description("short description")
+                .with_employment_type("full time")
+                .build()
+                .unwrap(),
+        )
         .build()
         .unwrap()
 }
@@ -65,7 +75,14 @@ fn create_demo_cv_details() -> CVDetails {
         .with_search_words("title")
         .with_search_words("tag3")
         .with_sex(Sex::Male)
-        .with_experiences("year_of_experience")
+        .with_experiences(vec![ExperienceBuilder::default()
+            .with_title("title")
+            .with_company("company")
+            .with_location("here")
+            .with_description("short description")
+            .with_employment_type("full time")
+            .build()
+            .unwrap()])
         .build()
         .unwrap()
 }

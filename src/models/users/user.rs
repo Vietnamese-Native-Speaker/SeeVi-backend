@@ -5,6 +5,7 @@ use mongodb::bson::Uuid;
 use serde::{Deserialize, Serialize};
 
 use crate::models::cv::CV;
+use crate::models::experience::Experience;
 use crate::{
     data_source::mongo::{MongoDB, MongoForTesting},
     services::cv_service::cv_service::CVService,
@@ -53,7 +54,7 @@ pub struct User {
     pub saved_cvs: Vec<Uuid>,
     pub liked_cvs: Vec<Uuid>,
     pub city: Option<String>,
-    pub experiences: Option<String>,
+    pub experiences: Vec<Experience>,
     pub personalities: Vec<String>,
     pub sex: Option<Sex>,
 }

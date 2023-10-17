@@ -1,5 +1,6 @@
 use mongodb::bson::Uuid;
 
+pub mod experience;
 pub mod comment;
 pub mod users;
 pub mod cv;
