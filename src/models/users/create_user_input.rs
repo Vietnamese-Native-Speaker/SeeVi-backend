@@ -2,7 +2,7 @@ use async_graphql::InputObject;
 use mongodb::bson::Uuid;
 use serde::{Deserialize, Serialize};
 
-use crate::models::{education::Education, sex::Sex};
+use crate::models::{education::Education, experience::Experience, sex::Sex};
 use derive_builder::Builder;
 
 use super::user::Level;
@@ -38,10 +38,9 @@ pub struct CreateUserInput {
     pub level: Option<Level>,
     #[builder(default)]
     pub city: Option<String>,
-    #[builder(default)]
-    pub sex: Option<Sex>,
-    #[builder(default)]
-    pub experiences: Option<String>,
+    pub sex: Sex,
+    #[builder(setter(custom), field(type = "Vec<Experience>"))]
+    pub experiences: Vec<Experience>,
     #[builder(setter(custom), field(type = "Vec<String>"))]
     pub personalities: Vec<String>,
 }
@@ -68,6 +67,11 @@ impl CreateUserInputBuilder {
     }
     pub fn with_personalities<T: Into<String>>(mut self, personality: T) -> Self {
         self.personalities.push(personality.into());
+        self
+    }
+
+    pub fn with_experience(mut self, experience: Experience) -> Self {
+        self.experiences.push(experience);
         self
     }
 }
