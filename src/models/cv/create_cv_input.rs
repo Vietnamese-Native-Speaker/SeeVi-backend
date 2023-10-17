@@ -14,6 +14,17 @@ pub struct CreateCVInput {
     pub tags: Vec<String>,
 }
 
+impl Clone for CreateCVInputBuilder {
+    fn clone(&self) -> Self {
+        Self {
+            author_id: self.author_id.clone(),
+            title: self.title.clone(),
+            description: self.description.clone(),
+            tags: self.tags.clone(),
+        }
+    }
+}
+
 impl CreateCVInput {
     // This method will help users to discover the builder
     pub fn builder() -> CreateCVInputBuilder {

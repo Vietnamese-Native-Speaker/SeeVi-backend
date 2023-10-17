@@ -51,6 +51,31 @@ impl CreateUserInput {
     }
 }
 
+impl Clone for CreateUserInputBuilder {
+    fn clone(&self) -> Self {
+        Self {
+            username: self.username.clone(),
+            password: self.password.clone(),
+            first_name: self.first_name.clone(),
+            last_name: self.last_name.clone(),
+            country: self.country.clone(),
+            skills: self.skills.clone(),
+            primary_email: self.primary_email.clone(),
+            other_emails: self.other_emails.clone(),
+            about: self.about.clone(),
+            avatar: self.avatar.clone(),
+            cover_photo: self.cover_photo.clone(),
+            educations: self.educations.clone(),
+            rating: self.rating.clone(),
+            level: self.level.clone(),
+            city: self.city.clone(),
+            experiences: self.experiences.clone(),
+            sex: self.sex.clone(),
+            personalities: self.personalities.clone(),
+        }
+    }
+}
+
 impl CreateUserInputBuilder {
     pub fn with_other_mail(mut self, other_mails: impl Into<String>) -> Self {
         self.other_emails.push(other_mails.into());

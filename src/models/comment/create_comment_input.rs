@@ -1,9 +1,9 @@
 use async_graphql::InputObject;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::object_id::ScalarObjectId;
 
-#[derive(Serialize, Deserialize, Clone, InputObject)]
+#[derive(Serialize, Deserialize, Clone, InputObject, Builder)]
 pub struct CreateCommentInput {
     pub author: ScalarObjectId,
     pub content: String,
