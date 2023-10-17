@@ -7,6 +7,8 @@ use crate::{
 
 pub mod mutation;
 pub mod query;
+mod cv;
+mod user;
 
 pub type GqlResult<T> = Result<T, async_graphql::Error>;
 
