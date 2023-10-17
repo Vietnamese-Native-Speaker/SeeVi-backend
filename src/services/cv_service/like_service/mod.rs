@@ -112,7 +112,7 @@ impl LikeService {
             .map(|stream| stream.map(|item| Ok(item)).boxed())
     }
 
-    pub async fn get_likes_count(
+    pub async fn get_likes_count_of_cv(
         db: &(impl LikeDataSource + UserDataSource + CVDataSource + std::marker::Sync),
         cv_id: ObjectId,
     ) -> Result<i32, CVServiceError> {

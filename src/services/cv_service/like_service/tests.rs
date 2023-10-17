@@ -123,7 +123,7 @@ async fn basic() {
         .await
         .unwrap();
 
-    let likes_count = LikeService::get_likes_count(&db, cv_id.into())
+    let likes_count = LikeService::get_likes_count_of_cv(&db, cv_id.into())
         .await
         .unwrap();
     assert_eq!(likes_count, 3);
@@ -145,7 +145,7 @@ async fn basic() {
         .await
         .unwrap();
 
-    let likes_count = LikeService::get_likes_count(&db, cv_id.into())
+    let likes_count = LikeService::get_likes_count_of_cv(&db, cv_id.into())
         .await
         .unwrap();
     assert_eq!(likes_count, 2);

@@ -242,7 +242,7 @@ impl CV {
         let db = ctx
             .data_opt::<MongoDB>()
             .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>());
-        LikeService::get_likes_count(db, self.id.into())
+        LikeService::get_likes_count_of_cv(db, self.id.into())
             .await
             .map(|count| count as u64)
             .map_err(|err| err.into())
