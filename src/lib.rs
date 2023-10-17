@@ -1,21 +1,21 @@
 #[macro_use]
 extern crate derive_builder;
 
-use std::convert::Infallible;
+use std::{convert::Infallible, sync::Arc};
 
 use async_graphql::{EmptySubscription, Schema};
 use async_graphql_warp::{GraphQLBadRequest, GraphQLResponse};
-use data_source::mongo::{self, MongoForTesting};
+use data_source::mongo::{self, MongoDB, MongoForTesting};
 use filters::{graphql_sdl, with_auth_header};
 use graphql::{mutation::Mutation, query::Query};
-use mock_data_generation::generate_mock_data;
+use mock_data::populate_mocked_data;
 use warp::{hyper::StatusCode, Filter, Rejection};
 
 pub mod data_source;
 pub mod error;
 pub mod filters;
 pub mod graphql;
-pub mod mock_data_generation;
+pub mod mock_data;
 pub mod models;
 pub mod object_id;
 pub mod services;
@@ -28,8 +28,10 @@ pub struct State {
 pub async fn run_server_for_test() {
     pretty_env_logger::init();
 
-    let mongo_ds = MongoForTesting::init().await;
-    generate_mock_data(&mongo_ds).await;
+    let mongo_ds = MongoDB::init_with_database_name("seevi_test").await;
+    populate_mocked_data(mongo_ds.clone()).await;
+
+    let mongo_ds = MongoForTesting::from(mongo_ds);
 
     let schema = Schema::build(Query, Mutation, EmptySubscription)
         .data(mongo_ds)
