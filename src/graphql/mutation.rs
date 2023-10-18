@@ -92,6 +92,46 @@ impl Mutation {
         }
     }
 
+    async fn create_cv(
+        &self,
+        ctx: &Context<'_>,
+        user_id: ScalarObjectId,
+        title: String,
+        description: String,
+    ) -> GqlResult<bool> {
+        let rs = CVService::create_cv(
+            ctx.data_opt::<MongoDB>()
+                .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
+            user_id.into(),
+            title,
+            description,
+        )
+        .await;
+        authorization(ctx)?;
+        match rs {
+            Ok(_) => Ok(true),
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    async fn delete_cv(
+        &self,
+        ctx: &Context<'_>,
+        cv_id: ScalarObjectId,
+    ) -> GqlResult<bool> {
+        let rs = CVService::delete_cv(
+            ctx.data_opt::<MongoDB>()
+                .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
+            cv_id.into(),
+        )
+        .await;
+        authorization(ctx)?;
+        match rs {
+            Ok(_) => Ok(true),
+            Err(e) => Err(e.into()),
+        }
+    }
+
     async fn change_cv_title(
         &self,
         ctx: &Context<'_>,
