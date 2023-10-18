@@ -14,9 +14,25 @@ pub struct CVService {}
 impl CVService {
     pub async fn create_cv(
         database: &(impl CVDataSource + std::marker::Sync),
-        input: CreateCVInput,
+        user_id: ObjectId,
+        title: String,
+        description: String,
     ) -> Result<CV, CVDataSourceError> {
+        let input = CreateCVInput::builder()
+            .with_author_id(user_id)
+            .with_title(title)
+            .with_description(description)
+            .build()
+            .unwrap();
         let rs = database.create_cv(input).await;
+        rs.map_err(|err| err.into())
+    }
+
+    pub async fn delete_cv(
+        database: &(impl CVDataSource + std::marker::Sync),
+        cv_id: ObjectId,
+    ) -> Result<(), CVDataSourceError> {
+        let rs = database.delete_cv(cv_id).await;
         rs.map_err(|err| err.into())
     }
 
