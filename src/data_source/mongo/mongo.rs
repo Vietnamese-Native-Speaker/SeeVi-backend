@@ -8,6 +8,7 @@ use crate::data_source::comment::{LikeDataSource, LikeDataSourceError};
 use crate::models::comment::like::Key;
 use crate::models::cv_details::CVDetails;
 use crate::models::education::Education;
+use crate::models::experience::Experience;
 use crate::models::friend_request::FriendRequest;
 use crate::models::sex::Sex;
 use crate::mongo::mongo::bson::doc;
@@ -40,6 +41,8 @@ const USER_COLLECTION: &str = "users";
 const APP_NAME: &str = "SeeVi";
 const COMMENT_COLLECTION: &str = "comments";
 const LIKE_COLLECTION: &str = "likes";
+
+#[derive(Clone)]
 pub struct MongoDB {
     client: Client,
     pub db: Database,
@@ -98,9 +101,12 @@ fn update_input_to_bson(input: users::UpdateUserInput) -> bson::Document {
             bson::to_bson::<Vec<Education>>(&education).unwrap(),
         )
     });
-    input
-        .experiences
-        .map(|exp| update.insert("experiences", exp));
+    input.experiences.map(|exp| {
+        update.insert(
+            "experiences",
+            bson::to_bson::<Vec<Experience>>(&exp).unwrap(),
+        )
+    });
     let update = bson::doc! {"$set": update};
     update
 }
@@ -541,7 +547,7 @@ impl CVDetailsDataSource for MongoDB {
             "country": cv_details.country,
             "city": cv_details.city,
             "personalities" : { "$in" : cv_details.personalities},
-            "experiences" : cv_details.experiences,
+            "experiences" : { "$in": bson::to_bson(&cv_details.experiences).unwrap() },
             "sex": bson::to_bson::<Sex>(&cv_details.sex.unwrap()).unwrap()
         };
         if cv_details.major != None {

@@ -4,6 +4,7 @@ use crate::data_source::UserDataSource;
 use crate::data_source::UserDataSourceError;
 use crate::models::education::Education;
 use crate::models::friend_request::FriendRequest;
+use crate::models::sex::Sex;
 use crate::models::users::{
     create_user_input::{CreateUserInput, CreateUserInputBuilder},
     update_user_input::UpdateUserInputBuilder,
@@ -20,6 +21,7 @@ fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
         .with_last_name("last_name")
         .with_country("country")
         .with_skill("skill")
+        .with_sex(Sex::Male)
         .with_primary_email("primary_email")
         .with_other_mail("other_mails")
         .with_other_mail("other_mails2")
@@ -29,7 +31,7 @@ fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
             minor: Some("minor 1".to_string()),
             degree: "degree 1".to_string(),
             start_date: None,
-            end_date: None
+            end_date: None,
         })
         .with_education(Education {
             school: "school 2".to_string(),
@@ -37,7 +39,7 @@ fn create_demo_user_input(test_uuid: Uuid) -> CreateUserInput {
             minor: Some("minor 2".to_string()),
             degree: "degree 2".to_string(),
             start_date: None,
-            end_date: None
+            end_date: None,
         })
         .with_about("about".to_string())
         .with_avatar(test_uuid)
@@ -69,24 +71,27 @@ async fn test_create_user_and_get_user_by_username() {
     assert_eq!(check_input.avatar, Some(uuid));
     assert_eq!(check_input.cover_photo, Some(uuid));
     assert_eq!(check_input.friends_list, vec![]);
-    assert_eq!(check_input.educations, vec![
-        Education {
-            school: "school 1".to_string(),
-            major: "major 1".to_string(),
-            minor: Some("minor 1".to_string()),
-            degree: "degree 1".to_string(),
-            start_date: None,
-            end_date: None
-        },
-        Education {
-            school: "school 2".to_string(),
-            major: "major 2".to_string(),
-            minor: Some("minor 2".to_string()),
-            degree: "degree 2".to_string(),
-            start_date: None,
-            end_date: None
-        }
-    ]);
+    assert_eq!(
+        check_input.educations,
+        vec![
+            Education {
+                school: "school 1".to_string(),
+                major: "major 1".to_string(),
+                minor: Some("minor 1".to_string()),
+                degree: "degree 1".to_string(),
+                start_date: None,
+                end_date: None
+            },
+            Education {
+                school: "school 2".to_string(),
+                major: "major 2".to_string(),
+                minor: Some("minor 2".to_string()),
+                degree: "degree 2".to_string(),
+                start_date: None,
+                end_date: None
+            }
+        ]
+    );
 
     assert_eq!(check_input.rating, None);
     assert_eq!(check_input.level, None);
@@ -123,24 +128,27 @@ async fn test_get_user_by_id() {
     assert_eq!(check_input.avatar, Some(uuid));
     assert_eq!(check_input.cover_photo, Some(uuid));
     assert_eq!(check_input.friends_list, vec![]);
-    assert_eq!(check_input.educations, vec![
-        Education {
-            school: "school 1".to_string(),
-            major: "major 1".to_string(),
-            minor: Some("minor 1".to_string()),
-            degree: "degree 1".to_string(),
-            start_date: None,
-            end_date: None
-        },
-        Education {
-            school: "school 2".to_string(),
-            major: "major 2".to_string(),
-            minor: Some("minor 2".to_string()),
-            degree: "degree 2".to_string(),
-            start_date: None,
-            end_date: None
-        }
-    ]);
+    assert_eq!(
+        check_input.educations,
+        vec![
+            Education {
+                school: "school 1".to_string(),
+                major: "major 1".to_string(),
+                minor: Some("minor 1".to_string()),
+                degree: "degree 1".to_string(),
+                start_date: None,
+                end_date: None
+            },
+            Education {
+                school: "school 2".to_string(),
+                major: "major 2".to_string(),
+                minor: Some("minor 2".to_string()),
+                degree: "degree 2".to_string(),
+                start_date: None,
+                end_date: None
+            }
+        ]
+    );
     assert_eq!(check_input.rating, None);
     assert_eq!(check_input.level, None);
     assert_eq!(check_input.shared_cvs, vec![]);
@@ -184,7 +192,7 @@ async fn test_update_user_info() {
             minor: Some("minor 3".to_string()),
             degree: "degree 3".to_string(),
             start_date: None,
-            end_date: None
+            end_date: None,
         }])
         .with_skills(vec!["skill".to_string(), "skill2".to_string()])
         .with_primary_email("primary_email2".to_string())
@@ -210,14 +218,17 @@ async fn test_update_user_info() {
     assert_eq!(check_input2.avatar, Some(uuid));
     assert_eq!(check_input2.cover_photo, Some(uuid));
     assert_eq!(check_input2.friends_list, vec![]);
-    assert_eq!(check_input2.educations, vec![Education {
-        school: "school 3".to_string(),
-        major: "major 3".to_string(),
-        minor: Some("minor 3".to_string()),
-        degree: "degree 3".to_string(),
-        start_date: None,
-        end_date: None
-    }]);
+    assert_eq!(
+        check_input2.educations,
+        vec![Education {
+            school: "school 3".to_string(),
+            major: "major 3".to_string(),
+            minor: Some("minor 3".to_string()),
+            degree: "degree 3".to_string(),
+            start_date: None,
+            end_date: None
+        }]
+    );
     assert_eq!(check_input2.rating, None);
     assert_eq!(check_input2.level, None);
     assert_eq!(check_input2.shared_cvs, vec![]);

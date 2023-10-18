@@ -1,6 +1,6 @@
 use async_graphql::InputObject;
 use serde::{Deserialize, Serialize};
-use crate::models::{sex::Sex, range_values::RangeValues};
+use crate::models::{sex::Sex, range_values::RangeValues, experience::Experience};
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Builder, InputObject)]
 #[builder(pattern = "owned", setter(into, prefix = "with", strip_option))]
@@ -9,7 +9,7 @@ pub struct CVDetails {
     pub city: Option<String>,
     #[builder(setter(custom), field(type = "Vec<String>"))]
     pub personalities: Vec<String>,
-    pub experiences: Option<String>,
+    pub experiences: Vec<Experience>,
     pub major: Option<String>,
     #[builder(setter(custom), field(type = "Vec<String>"))]
     pub search_words: Vec<String>,
