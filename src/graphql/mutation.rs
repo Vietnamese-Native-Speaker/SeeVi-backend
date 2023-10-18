@@ -238,10 +238,12 @@ impl Mutation {
         &self,
         ctx: &Context<'_>,
         comment_id: ScalarObjectId,
+        author_id: ScalarObjectId,
     ) -> GqlResult<bool> {
         let rs = CommentService::add_bookmark(
             ctx.data_opt::<MongoDB>()
                 .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
+            author_id.into(),
             comment_id.into(),
         )
         .await;
@@ -256,10 +258,12 @@ impl Mutation {
         &self,
         ctx: &Context<'_>,
         comment_id: ScalarObjectId,
+        author_id: ScalarObjectId,
     ) -> GqlResult<bool> {
         let rs = CommentService::remove_bookmark(
             ctx.data_opt::<MongoDB>()
                 .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
+            author_id.into(),
             comment_id.into(),
         )
         .await;
