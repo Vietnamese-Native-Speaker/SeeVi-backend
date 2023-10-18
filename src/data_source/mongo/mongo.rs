@@ -41,6 +41,8 @@ const USER_COLLECTION: &str = "users";
 const APP_NAME: &str = "SeeVi";
 const COMMENT_COLLECTION: &str = "comments";
 const LIKE_COLLECTION: &str = "likes";
+
+#[derive(Clone)]
 pub struct MongoDB {
     client: Client,
     pub db: Database,
