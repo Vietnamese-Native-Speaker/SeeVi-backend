@@ -1,6 +1,4 @@
 pub mod bookmark;
-pub mod bookmark_data_error;
-pub mod comment_data_error;
 pub mod error;
 pub mod like;
 use async_graphql::futures_util::stream::BoxStream;
@@ -12,7 +10,7 @@ use crate::{
     services::cv_service::comment_service::CommentServiceError,
 };
 
-pub use error::LikeDataSourceError;
+pub use like::error::LikeDataSourceError;
 pub use like::LikeDataSource;
 
 #[async_trait]

@@ -3,8 +3,7 @@ use mongodb::bson::DateTime;
 use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Database};
 
-use crate::data_source::comment::bookmark_data_error::BookmarkDataSourceError;
-use crate::data_source::comment::comment_data_error::CommentDataSourceError;
+use crate::data_source::comment::error::CommentDataSourceError;
 use crate::data_source::comment::{LikeDataSource, LikeDataSourceError};
 use crate::models::comment::like::Key;
 use crate::models::comment::Bookmark;
@@ -33,8 +32,10 @@ use mongodb::bson;
 use crate::models::cv::{self, CV};
 use crate::models::users::{self, User};
 
+use crate::data_source::comment::bookmark::error::BookmarkDataSourceError;
+use crate::data_source::comment::bookmark::BookmarkDataSource;
+use crate::data_source::CVDataSource;
 use crate::data_source::CVDataSourceError;
-use crate::data_source::{BookmarkDataSource, CVDataSource};
 
 const FRIEND_REQUEST_COLLECTION: &str = "friend_requests";
 const CV_COLLECTION: &str = "cvs";

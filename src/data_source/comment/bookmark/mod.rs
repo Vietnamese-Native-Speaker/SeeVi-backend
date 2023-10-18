@@ -1,3 +1,5 @@
+pub mod error;
+
 use async_graphql::futures_util::stream::BoxStream;
 use async_trait::async_trait;
 use mongodb::bson::oid::ObjectId;
