@@ -2,7 +2,7 @@ use super::ShareService;
 use crate::{
     models::{
         cv::{create_cv_input::CreateCVInputBuilder, interactions::Share, Like as CVLike, CV},
-        users::create_user_input::CreateUserInputBuilder,
+        users::create_user_input::CreateUserInputBuilder, sex::Sex,
     },
     services::{cv_service::cv_service::CVService, user_service::UserService},
 };
@@ -127,6 +127,7 @@ async fn basic() {
             .with_primary_email("email1@email.com")
             .with_username("testuser1")
             .with_password("testuser1")
+            .with_sex(Sex::Male)
             .build()
             .unwrap(),
     )
@@ -139,6 +140,7 @@ async fn basic() {
             .with_primary_email("email2@email.com")
             .with_username("testuser2")
             .with_password("testuser2")
+            .with_sex(Sex::Male)
             .build()
             .unwrap(),
     )
@@ -151,6 +153,7 @@ async fn basic() {
             .with_primary_email("email3@email.com")
             .with_username("testuser3")
             .with_password("testuser3")
+            .with_sex(Sex::Female)
             .build()
             .unwrap(),
     )
