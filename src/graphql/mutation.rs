@@ -2,7 +2,7 @@ use async_graphql::{Context, ErrorExtensions, Object};
 
 use crate::{
     data_source::mongo::{MongoDB, MongoForTesting},
-    models::users::{CreateUserInput, User},
+    models::{users::{CreateUserInput, User}, cv::CV},
     object_id::ScalarObjectId,
     services::{
         auth_service::AuthService,
@@ -102,7 +102,7 @@ impl Mutation {
         user_id: ScalarObjectId,
         title: String,
         description: String,
-    ) -> GqlResult<bool> {
+    ) -> GqlResult<CV> {
         let rs = CVService::create_cv(
             ctx.data_opt::<MongoDB>()
                 .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
@@ -113,7 +113,7 @@ impl Mutation {
         .await;
         authorization(ctx)?;
         match rs {
-            Ok(_) => Ok(true),
+            Ok(cv) => Ok(cv),
             Err(e) => Err(e.into()),
         }
     }
@@ -141,7 +141,7 @@ impl Mutation {
         ctx: &Context<'_>,
         cv_id: ScalarObjectId,
         title: String,
-    ) -> GqlResult<bool> {
+    ) -> GqlResult<CV> {
         let rs = CVService::change_title(
             ctx.data_opt::<MongoDB>()
                 .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
@@ -151,7 +151,7 @@ impl Mutation {
         .await;
         authorization(ctx)?;
         match rs {
-            Ok(_) => Ok(true),
+            Ok(cv) => Ok(cv),
             Err(e) => Err(e.into()),
         }
     }
@@ -161,7 +161,7 @@ impl Mutation {
         ctx: &Context<'_>,
         cv_id: ScalarObjectId,
         description: String,
-    ) -> GqlResult<bool> {
+    ) -> GqlResult<CV> {
         let rs = CVService::change_description(
             ctx.data_opt::<MongoDB>()
                 .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
@@ -171,7 +171,7 @@ impl Mutation {
         .await;
         authorization(ctx)?;
         match rs {
-            Ok(_) => Ok(true),
+            Ok(cv) => Ok(cv),
             Err(e) => Err(e.into()),
         }
     }
@@ -181,7 +181,7 @@ impl Mutation {
         ctx: &Context<'_>,
         cv_id: ScalarObjectId,
         tag: String,
-    ) -> GqlResult<bool> {
+    ) -> GqlResult<CV> {
         let rs = CVService::add_tag(
             ctx.data_opt::<MongoDB>()
                 .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
@@ -191,7 +191,7 @@ impl Mutation {
         .await;
         authorization(ctx)?;
         match rs {
-            Ok(_) => Ok(true),
+            Ok(cv) => Ok(cv),
             Err(e) => Err(e.into()),
         }
     }
@@ -201,7 +201,7 @@ impl Mutation {
         ctx: &Context<'_>,
         cv_id: ScalarObjectId,
         tag: String,
-    ) -> GqlResult<bool> {
+    ) -> GqlResult<CV> {
         let rs = CVService::remove_tag(
             ctx.data_opt::<MongoDB>()
                 .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
@@ -211,7 +211,7 @@ impl Mutation {
         .await;
         authorization(ctx)?;
         match rs {
-            Ok(_) => Ok(true),
+            Ok(cv) => Ok(cv),
             Err(e) => Err(e.into()),
         }
     }
@@ -222,7 +222,7 @@ impl Mutation {
         cv_id: ScalarObjectId,
         author_id: ScalarObjectId,
         content: String,
-    ) -> GqlResult<bool> {
+    ) -> GqlResult<CV> {
         let rs = CVService::add_comment(
             ctx.data_opt::<MongoDB>()
                 .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
@@ -233,7 +233,7 @@ impl Mutation {
         .await;
         authorization(ctx)?;
         match rs {
-            Ok(_) => Ok(true),
+            Ok(cv) => Ok(cv),
             Err(e) => Err(e.into()),
         }
     }
@@ -243,7 +243,7 @@ impl Mutation {
         ctx: &Context<'_>,
         cv_id: ScalarObjectId,
         comment_id: ScalarObjectId,
-    ) -> GqlResult<bool> {
+    ) -> GqlResult<CV> {
         let rs = CVService::remove_comment(
             ctx.data_opt::<MongoDB>()
                 .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
@@ -253,7 +253,7 @@ impl Mutation {
         .await;
         authorization(ctx)?;
         match rs {
-            Ok(_) => Ok(true),
+            Ok(cv) => Ok(cv),
             Err(e) => Err(e.into()),
         }
     }
