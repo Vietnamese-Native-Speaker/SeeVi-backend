@@ -295,3 +295,249 @@ async fn send_accept_decline_friends_request() {
         .unwrap();
     assert_eq!(friends_list.len(), 1);
 }
+
+#[tokio::test]
+async fn test_cv_apis() {
+    dotenv::dotenv().ok();
+
+    let mongo_ds = MongoForTesting::init().await;
+
+    let schema = Schema::build(Query, Mutation, EmptySubscription)
+        .data(mongo_ds)
+        .finish();
+    let routes = default_route(schema);
+
+    // create a user
+    let user1 = make_register_request("ltp1", "ltp1", &routes).await;
+    print_json(&user1);
+
+    // login user
+    let login_rs1 = make_login_request("ltp1", "ltp1", &routes).await;
+    let access_token1 = login_rs1
+        .get("data")
+        .expect("should have 'data' field")
+        .get("login")
+        .expect("should have 'login' field")
+        .get("accessToken")
+        .expect("should have 'accessToken' field")
+        .as_str()
+        .unwrap()
+        .to_string();
+
+    // get user id
+    let user_id1 = user1
+        .get("data")
+        .expect("should have 'data' field")
+        .get("userRegister")
+        .expect("should have 'userRegister' field")
+        .get("id")
+        .expect("should have 'id' field")
+        .as_str()
+        .unwrap()
+        .to_string()
+        .parse::<ObjectId>()
+        .map(Into::<ScalarObjectId>::into)
+        .unwrap();
+
+    // create a cv
+    let create_cv_rs = common::create_cv(
+        access_token1.clone(),
+        user_id1.clone(),
+        "test title",
+        "test description",
+        &routes
+    ).await;
+    print_json(&create_cv_rs);
+    assert_eq!(create_cv_rs.get("data").unwrap().get("createCv").unwrap().get("title").unwrap().as_str().unwrap(), "test title");
+
+    // get cv id
+    let cv_id = create_cv_rs
+        .get("data")
+        .expect("should have 'data' field")
+        .get("createCv")
+        .expect("should have 'createCv' field")
+        .get("id")
+        .expect("should have 'id' field")
+        .as_str()
+        .unwrap()
+        .to_string()
+        .parse::<ObjectId>()
+        .map(Into::<ScalarObjectId>::into)
+        .unwrap();
+
+    // change cv title
+    let change_cv_title_rs = common::change_cv_title(
+        access_token1.clone(),
+        cv_id.clone(),
+        "test change title",
+        &routes
+    ).await;
+    assert_eq!(change_cv_title_rs.get("data").unwrap().get("changeCvTitle").unwrap().get("title").unwrap().as_str().unwrap(), "test change title");
+
+    // change cv description
+    let change_cv_description_rs = common::change_cv_description(
+        access_token1.clone(),
+        cv_id.clone(),
+        "test change description",
+        &routes
+    ).await;
+    assert_eq!(change_cv_description_rs.get("data").unwrap().get("changeCvDescription").unwrap().get("description").unwrap().as_str().unwrap(), "test change description");
+
+    // add tag
+    let add_tag_rs = common::add_tag(
+        access_token1.clone(),
+        cv_id.clone(),
+        "test tag",
+        &routes
+    ).await;
+    assert_eq!(add_tag_rs.get("data").unwrap().get("addTag").unwrap().get("tags").unwrap().get("edges").unwrap().as_array().unwrap().len(), 1);
+    
+    // remove tag
+    let remove_tag_rs = common::remove_tag(
+        access_token1.clone(),
+        cv_id.clone(),
+        "test tag",
+        &routes
+    ).await;
+    assert_eq!(remove_tag_rs.get("data").unwrap().get("removeTag").unwrap().get("tags").unwrap().get("edges").unwrap().as_array().unwrap().len(), 0);
+
+    // create user 2
+    let user2 = make_register_request("ltp2", "ltp2", &routes).await;
+    print_json(&user2);
+
+    // login user 2
+    let login_rs2 = make_login_request("ltp2", "ltp2", &routes).await;
+
+    // get token of user 2
+    let access_token2 = login_rs2
+        .get("data")
+        .expect("should have 'data' field")
+        .get("login")
+        .expect("should have 'login' field")
+        .get("accessToken")
+        .expect("should have 'accessToken' field")
+        .as_str()
+        .unwrap()
+        .to_string();
+
+    // get user id 2
+    let user_id2 = user2
+        .get("data")
+        .expect("should have 'data' field")
+        .get("userRegister")
+        .expect("should have 'userRegister' field")
+        .get("id")
+        .expect("should have 'id' field")
+        .as_str()
+        .unwrap()
+        .to_string()
+        .parse::<ObjectId>()
+        .map(Into::<ScalarObjectId>::into)
+        .unwrap();
+
+    // add comment from user 2 to cv
+    let add_comment_rs = common::add_comment(
+        access_token2.clone(),
+        user_id2.clone(),
+        cv_id.clone(),
+        "test comment",
+        &routes
+    ).await;
+    assert_eq!(add_comment_rs.get("data").unwrap().get("addComment").unwrap().get("comments").unwrap().get("edges").unwrap().as_array().unwrap().len(), 1);
+
+    assert_eq!(add_comment_rs.get("data").unwrap().get("addComment").unwrap().get("comments").unwrap().get("edges").unwrap().as_array().unwrap()[0].get("node").unwrap().get("content").unwrap().as_str().unwrap(), "test comment");
+
+    // get comment id
+    let comment_id = add_comment_rs
+        .get("data")
+        .expect("should have 'data' field")
+        .get("addComment")
+        .expect("should have 'addComment' field")
+        .get("comments")
+        .expect("should have 'comments' field")
+        .get("edges")
+        .expect("should have 'edges' field")
+        .as_array()
+        .unwrap()[0]
+        .get("node")
+        .expect("should have 'node' field")
+        .get("id")
+        .expect("should have 'id' field")
+        .as_str()
+        .unwrap()
+        .to_string()
+        .parse::<ObjectId>()
+        .map(Into::<ScalarObjectId>::into)
+        .unwrap();
+
+    // remove comment from user 2 to cv
+    let remove_comment_rs = common::remove_comment(
+        access_token2.clone(),
+        cv_id.clone(),
+        comment_id.clone(),
+        &routes
+    ).await;
+    assert_eq!(remove_comment_rs.get("data").unwrap().get("removeComment").unwrap().get("comments").unwrap().get("edges").unwrap().as_array().unwrap().len(), 0);
+
+    // like cv from user 2
+    let like_cv_rs = common::like_cv(
+        access_token2.clone(),
+        cv_id.clone(),
+        user_id2.clone(),
+        &routes
+    ).await;
+    assert_eq!(like_cv_rs.get("data").unwrap().get("shareCv").unwrap(), true); 
+
+    // unlike cv from user 2
+    let unlike_cv_rs = common::unlike_cv(
+        access_token2.clone(),
+        cv_id.clone(),
+        user_id2.clone(),
+        &routes
+    ).await;
+    assert_eq!(unlike_cv_rs.get("data").unwrap().get("unshareCv").unwrap(), true);
+
+    // share cv from user 2
+    let share_cv_rs = common::share_cv(
+        access_token2.clone(),
+        cv_id.clone(),
+        user_id2.clone(),
+        &routes
+    ).await;
+    assert_eq!(share_cv_rs.get("data").unwrap().get("shareCv").unwrap(), true);
+
+    // unshare cv from user 2
+    let unshare_cv_rs = common::unshare_cv(
+        access_token2.clone(),
+        cv_id.clone(),
+        user_id2.clone(),
+        &routes
+    ).await;
+    assert_eq!(unshare_cv_rs.get("data").unwrap().get("unshareCv").unwrap(), true);
+
+    // bookmark cv from user 2
+    let bookmark_cv_rs = common::bookmark_cv(
+        access_token2.clone(),
+        cv_id.clone(),
+        user_id2.clone(),
+        &routes
+    ).await;
+    assert_eq!(bookmark_cv_rs.get("data").unwrap().get("bookmarkCv").unwrap(), true);
+
+    // unbookmark cv from user 2
+    let unbookmark_cv_rs = common::unbookmark_cv(
+        access_token2.clone(),
+        cv_id.clone(),
+        user_id2.clone(),
+        &routes
+    ).await;
+    assert_eq!(unbookmark_cv_rs.get("data").unwrap().get("unbookmarkCv").unwrap(), true);
+
+    // delete cv
+    let delete_cv_rs = common::delete_cv(
+        access_token1.clone(),
+        cv_id.clone(),
+        &routes
+    ).await;
+    assert_eq!(delete_cv_rs.get("data").unwrap().get("deleteCv").unwrap(), true);
+} 

@@ -87,34 +87,61 @@ query cvs_list($filter: Cvdetails!, $after: String, $before: String, $first: Int
     }
 }"#;
 
+pub static CREATE_CV: &str = r#"
+mutation create_cv($user_id: ScalarObjectId!, $title: String!, $description: String!) {
+    createCv(userId: $user_id, title: $title, description: $description) {
+      id,
+      authorId,
+      title,
+      description
+    }
+}"#;
+
+pub static DELETE_CV: &str = r#"
+mutation delete_cv($id: ScalarObjectId!) {
+    deleteCv(cvId: $id)
+}"#;
+
 pub static CHANGE_CV_TITLE: &str = r#"
 mutation change_cv_title($id: ScalarObjectId!, $title: String!) {
-    changeCvTitle(cvId: $id, title: $title)
+    changeCvTitle(cvId: $id, title: $title) {
+		title
+  	}
 }"#;
 
 pub static CHANGE_CV_DESCRIPTION: &str = r#"
 mutation change_cv_description($id: ScalarObjectId!, $description: String!) {
-    changeCvDescription(cvId: $id, description: $description)
+    changeCvDescription(cvId: $id, description: $description) {
+        description
+    }
 }"#;
 
 pub static ADD_TAG: &str = r#"
 mutation add_tag($id: ScalarObjectId!, $tag: String!) {
-    addOneTag(cvId: $id, tag: $tag)
+    addOneTag(cvId: $id, tag: $tag) {
+        tags
+    }
 }"#;
 
 pub static REMOVE_TAG: &str = r#"
 mutation remove_tag($id: ScalarObjectId!, $tag: String!) {
-    removeOneTag(cvId: $id, tag: $tag)
+    removeOneTag(cvId: $id, tag: $tag) {
+        tags
+    }
 }"#;
 
 pub static ADD_COMMENT: &str = r#"
 mutation add_comment($id: ScalarObjectId!, $author: ScalarObjectId!, $content: String!) {
-    addComment(cvId: $id, authorId: $author, content: $content)
+    addComment(cvId: $id, authorId: $author, content: $content) {
+        comments
+    }
 }"#;
 
 pub static REMOVE_COMMENT: &str = r#"
 mutation remove_comment($id: ScalarObjectId!, $comment_id: ScalarObjectId!) {
-    removeComment(cvId: $id, commentId: $comment_id)
+    removeComment(cvId: $id, commentId: $comment_id) {
+        comments
+    }
 }"#;
 
 pub static SHARE_CV: &str = r#"
@@ -255,6 +282,26 @@ pub fn graphql_decline_friend_request(
     )
 }
 
+pub fn graphql_create_cv(user_id: ScalarObjectId, title: &str, description: &str) -> String {
+    make_graphql(
+        CREATE_CV,
+        "create_cv",
+        serde_json::json!({
+            "user_id": user_id.to_string(),
+            "title": title,
+            "description": description
+        }),
+    )
+}
+
+pub fn graphql_delete_cv(cv_id: ScalarObjectId) -> String {
+    make_graphql(
+        DELETE_CV,
+        "delete_cv",
+        serde_json::json!({ "id": cv_id.to_string() }),
+    )
+}
+
 pub fn graphql_cvs_list(
     filter: serde_json::Value,
     after: Option<String>,
@@ -319,7 +366,11 @@ pub fn graphql_remove_tag(cv_id: ScalarObjectId, tag: &str) -> String {
     )
 }
 
-pub fn graphql_add_comment(cv_id: ScalarObjectId, author_id: ScalarObjectId, content: &str) -> String {
+pub fn graphql_add_comment(
+    cv_id: ScalarObjectId,
+    author_id: ScalarObjectId,
+    content: &str,
+) -> String {
     make_graphql(
         ADD_COMMENT,
         "add_comment",
