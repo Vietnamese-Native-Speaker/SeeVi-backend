@@ -2,7 +2,7 @@ use async_graphql::{Context, ErrorExtensions, Object};
 
 use crate::{
     data_source::mongo::{MongoDB, MongoForTesting},
-    models::{users::{CreateUserInput, User}, cv::CV},
+    models::{users::{CreateUserInput, User}, cv::CV, comment::Comment},
     object_id::ScalarObjectId,
     services::{
         auth_service::AuthService,
@@ -263,7 +263,7 @@ impl Mutation {
         ctx: &Context<'_>,
         comment_id: ScalarObjectId,
         content: String,
-    ) -> GqlResult<bool> {
+    ) -> GqlResult<Comment> {
         let rs = CommentService::update_content_comment(
             ctx.data_opt::<MongoDB>()
                 .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
@@ -273,7 +273,7 @@ impl Mutation {
         .await;
         authorization(ctx)?;
         match rs {
-            Ok(_) => Ok(true),
+            Ok(comment) => Ok(comment),
             Err(e) => Err(e.into()),
         }
     }
