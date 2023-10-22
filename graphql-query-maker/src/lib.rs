@@ -18,13 +18,7 @@ fn make_function_body(operation: &Operation, query: &str) -> String {
     let variables = operation
         .variable_definitions
         .iter()
-        .map(|var| {
-            if var.nullable {
-                format!("\"{}\": {}.map(|v| v.into())", var.name, var.name)
-            } else {
-                format!("\"{}\": {}.into()", var.name, var.name)
-            }
-        })
+        .map(|var| format!("\"{}\": {}", var.name, var.name))
         .collect::<Vec<_>>();
     let variables = variables.join(", ");
     let variables_decl = format!("let variables = serde_json::json!({{{}}})", variables);
@@ -32,6 +26,7 @@ fn make_function_body(operation: &Operation, query: &str) -> String {
     format!(
         r#"{};
 let graphql = {}.replace("{{{{variables}}}}", &serde_json::to_string(&variables).unwrap());
+let graphql = format!("{{{{{{}}}}}}", graphql);
 graphql.to_string()"#,
         variables_decl, graphql
     )
@@ -77,16 +72,14 @@ graphql.to_string()"#,
 ///
 /// fn main() {
 ///    mutation_user_register(serde_json::json!({
-///        "user": {
-///            "username": "test",
-///            "password": "test"
-///        }
+///         "username": "test",
+///         "password": "test"
 ///    }));
 ///    query_friendslist(
-///        Option::<()>::None,
-///        Option::<()>::None,
-///        Option::<()>::None,
-///        Some(10),
+///        None,
+///        None,
+///        None,
+///        Some(serde_json::json!(10)),
 ///    );
 /// }
 /// ```
@@ -111,5 +104,4 @@ query loginSomething($info: LoginInfo!, $name: String!) {
 "#;
     let function = make_function_string(graphql);
     println!("{}", function.unwrap());
-    panic!()
 }

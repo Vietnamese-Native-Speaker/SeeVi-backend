@@ -22,6 +22,7 @@ pub(crate) fn make_function_declaration(operation: Operation) -> String {
     let function_variables = make_function_variables(&operation.variable_definitions);
     format!("pub fn {}({}) -> String", function_name, function_variables)
 }
+
 fn camel_to_snake(string: &str) -> String {
     let re = Regex::new("(.)([A-Z][a-z]+)").unwrap();
     let re2 = Regex::new("([a-z0-9])([A-Z])").unwrap();
@@ -36,6 +37,7 @@ fn camel_to_snake(string: &str) -> String {
         .to_lowercase()
         .to_string();
 }
+
 fn make_function_name(operation_name: &str, operation_type: OperationType) -> String {
     let operation_name = camel_to_snake(operation_name);
     match operation_type {

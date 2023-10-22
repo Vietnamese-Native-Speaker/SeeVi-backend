@@ -51,15 +51,8 @@ fn test_make_graphql() {
     query_refresh_token(serde_json::Value::Null);
     query_get_user();
     mutation_user_register(serde_json::json!({
-        "user": {
-            "username": "test",
-            "password": "test"
-        }
+        "username": "test",
+        "password": "test"
     }));
-    query_friendslist(
-        Option::<()>::None,
-        Option::<()>::None,
-        Option::<()>::None,
-        Some(10),
-    );
+    query_friendslist(None, None, None, Some(serde_json::json!(10)));
 }
