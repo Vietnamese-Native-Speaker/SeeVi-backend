@@ -57,20 +57,7 @@ fn create_demo_cv_input(author_id: ObjectId) -> CreateCVInput {
 
 #[tokio::test]
 #[serial]
-async fn test_add_like(){
-    let mongodb = MongoForTesting::init().await;
-    let user_input = create_demo_user_input();
-    let user = mongodb.create_user(user_input).await.unwrap();
-    let cv_input = create_demo_cv_input(user.id.clone().into());
-    let cv = mongodb.create_cv(cv_input).await.unwrap();
-    let result_add = mongodb.add_like(user.id.clone().into(), cv.id.clone().into()).await;
-    let count = mongodb.get_likes_count(cv.id.clone().into()).await.unwrap();
-    assert_eq!(count, 1);
-}
-
-#[tokio::test]
-#[serial]
-async fn test_get_likes_count(){
+async fn test_add_like_and_get_like_counts(){
     let mongodb = MongoForTesting::init().await;
     let user_input = create_demo_user_input();
     let user = mongodb.create_user(user_input).await.unwrap();

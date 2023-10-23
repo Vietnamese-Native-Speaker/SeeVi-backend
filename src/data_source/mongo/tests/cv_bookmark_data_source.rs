@@ -65,7 +65,7 @@ fn create_demo_cv_input(author_id: ObjectId) -> CreateCVInput {
 }
 #[tokio::test]
 #[serial]
-async fn test_add_bookmark(){
+async fn test_add_bookmark_and_get_bookmark(){
     let mongodb = MongoForTesting::init().await;
     let user_input = create_demo_user_input();
     let user = mongodb.create_user(user_input).await.unwrap();
@@ -89,19 +89,6 @@ async fn test_delete_bookmark(){
     let result_delete = mongodb.delete_bookmark(user.id.clone().into(), cv.id.clone().into()).await;
     let check_bookmark = mongodb.get_bookmark(user.id.clone().into(), cv.id.clone().into()).await;
     assert_eq!(check_bookmark, Err(BookmarkError::BookmarkNotFound));
-}
-#[tokio::test]
-#[serial]
-async fn test_get_bookmark(){
-    let mongodb = MongoForTesting::init().await;
-    let user_input = create_demo_user_input();
-    let user = mongodb.create_user(user_input).await.unwrap();
-    let cv_input = create_demo_cv_input(user.id.clone().into());
-    let cv = mongodb.create_cv(cv_input).await.unwrap();
-    let result_add = mongodb.add_bookmark(user.id.clone().into(), cv.id.clone().into()).await;
-    let check_bookmark = mongodb.get_bookmark(user.id.clone().into(), cv.id.clone().into()).await.unwrap();
-    assert_eq!(ScalarObjectId::from_object_id(*check_bookmark.cv_id()), cv.id);
-    assert_eq!(ScalarObjectId::from_object_id(*check_bookmark.user_id()), user.id);
 }
 
 #[tokio::test]
