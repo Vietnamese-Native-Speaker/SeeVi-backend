@@ -97,8 +97,8 @@ impl cv::like::LikeDataSource for MongoDB {
     async fn add_like(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<(), Self::Error>{
         let collection = self.db.collection::<Like>(CV_LIKE_COLLECTION);
         let filter = bson::doc!{
-            "key.user_id" : user_id.clone(),
-            "key.cv_id" : cv_id.clone()
+            "_id.user_id" : user_id.clone(),
+            "_id.cv_id" : cv_id.clone()
         };
         let check_exist = collection.find_one(filter, None).await;
         match check_exist{
@@ -122,8 +122,8 @@ impl cv::like::LikeDataSource for MongoDB {
     async fn delete_like(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<(), Self::Error>{
         let collection  = self.db.collection::<Like>(CV_LIKE_COLLECTION);
         let filter = bson::doc!{
-            "key.user_id": user_id,
-            "key.cv_id": cv_id
+            "_id.user_id": user_id,
+            "_id.cv_id": cv_id
         };
         let result = collection.find_one_and_delete(filter, None).await;
         match result{
@@ -135,7 +135,7 @@ impl cv::like::LikeDataSource for MongoDB {
     async fn get_likes_count(&self, cv_id: ObjectId) -> Result<i32, Self::Error> {
         let collection = self.db.collection::<Like>(CV_LIKE_COLLECTION);
         let filter = bson::doc!{
-            "key.cv_id": cv_id
+            "_id.cv_id": cv_id
         };
         let result = collection.count_documents(filter, None).await;
         match result{
@@ -147,7 +147,7 @@ impl cv::like::LikeDataSource for MongoDB {
     async fn get_likes(&self, cv_id: ObjectId) -> Result<BoxStream<Like>, Self::Error>{
         let collection = self.db.collection::<Like>(CV_LIKE_COLLECTION);
         let filter = bson::doc!{
-            "key.cv_id": cv_id
+            "_id.cv_id": cv_id
         };
         let result = collection.find(filter, None).await;
         match result{

@@ -16,7 +16,7 @@ use mongodb::bson;
 const CV_BOOKMARK_COLLECTION: &str = "cv_bookmarks";
 const CV_COLLECTION: &str = "cvs";
 /// Error type for `BookmarkDataSource` operations.
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub enum BookmarkError {
     // fail to add bookmark
     AddBookmarkFail,
@@ -90,14 +90,14 @@ impl BookmarkDataSource for MongoDB {
     async fn add_bookmark(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<(), Self::Error> {
         let collection = self.db.collection::<Bookmark>(CV_BOOKMARK_COLLECTION);
         let filter = bson::doc!{
-            "key.user_id": user_id.clone(),
-            "key.cv_id": cv_id
+            "_id.user_id": user_id.clone(),
+            "_id.cv_id": cv_id
         };
         let result_exist = collection.find_one(filter, None).await;
         match result_exist {
             Ok(bookmark_option) => {
                 match bookmark_option {
-                    Some(bookmark) => Err(BookmarkError::BookmarkAlreadyExists),
+                    Some(_) => Err(BookmarkError::BookmarkAlreadyExists),
                     None => {
                         let bookmark = Bookmark::new(user_id, cv_id);
                         let add_result = collection.insert_one(bookmark, None).await;
@@ -105,7 +105,6 @@ impl BookmarkDataSource for MongoDB {
                             Ok(_) => Ok(()),
                             Err(_) => Err(BookmarkError::AddBookmarkFail)
                         }
-
                     }
                 }
             },
@@ -116,8 +115,8 @@ impl BookmarkDataSource for MongoDB {
     async fn delete_bookmark(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<(), Self::Error> {
         let collection = self.db.collection::<Bookmark>(CV_BOOKMARK_COLLECTION);
         let filter = bson::doc!{
-            "key.user_id": user_id,
-            "key.cv_id": cv_id
+            "_id.user_id": user_id,
+            "_id.cv_id": cv_id
         };
         let result = collection.find_one_and_delete(filter, None).await;
         match result{
@@ -132,7 +131,7 @@ impl BookmarkDataSource for MongoDB {
     ) -> Result<BoxStream<Bookmark>, Self::Error> {
         let collection = self.db.collection::<Bookmark>(CV_BOOKMARK_COLLECTION);
         let filter = bson::doc!{
-            "key.user_id": user_id
+            "_id.user_id": user_id
         };
         let result = collection.find(filter, None).await;
         match result {
@@ -148,8 +147,8 @@ impl BookmarkDataSource for MongoDB {
     ) -> Result<Bookmark, Self::Error> {
         let collection = self.db.collection::<Bookmark>(CV_BOOKMARK_COLLECTION);
         let filter = bson::doc!{
-            "key.user_id": user_id,
-            "key.cv_id": cv_id
+            "_id.user_id": user_id,
+            "_id.cv_id": cv_id
         };
         let result = collection.find_one(filter, None).await;
         match result{
@@ -169,7 +168,7 @@ impl BookmarkDataSource for MongoDB {
     ) -> Result<BoxStream<Result<Bookmark, Self::Error>>, Self::Error> {
         let collection = self.db.collection::<Bookmark>(CV_BOOKMARK_COLLECTION);
         let filter = bson::doc!{
-            "key.cv_id": cv_id
+            "_id.cv_id": cv_id
         };
         let result = collection.find(filter, None).await;
         match result {
@@ -184,7 +183,7 @@ impl BookmarkDataSource for MongoDB {
     ) -> Result<BoxStream<Result<CV, Self::Error>>, Self::Error> {
         let bookmark_collection = self.db.collection::<Bookmark>(CV_BOOKMARK_COLLECTION);
         let bookmark_filter = bson::doc!{
-            "key.user_id": user_id
+            "_id.user_id": user_id
         };
         let result = bookmark_collection.find(bookmark_filter, None).await;
         match result{
@@ -192,7 +191,7 @@ impl BookmarkDataSource for MongoDB {
                 let list_cv_id = bookmark_cursor.map(|bookmark|bookmark.unwrap().cv_id().to_owned()).collect::<Vec<ObjectId>>().await;
                 let cv_collection = self.db.collection::<CV>(CV_COLLECTION);
                 let filter = bson::doc!{
-                    "id": {"$in": list_cv_id}
+                    "_id": {"$in": list_cv_id}
                 };
                 let find_result = cv_collection.find(filter, None).await;
                 match find_result {
@@ -208,7 +207,7 @@ impl BookmarkDataSource for MongoDB {
     async fn get_bookmarks_count_of_cv(&self, cv_id: ObjectId) -> Result<u64, Self::Error> {
         let collection = self.db.collection::<Bookmark>(CV_BOOKMARK_COLLECTION);
         let filter = bson::doc!{
-            "key.cv_id": cv_id
+            "_id.cv_id": cv_id
         };
         let result = collection.count_documents(filter, None).await;
         match result{

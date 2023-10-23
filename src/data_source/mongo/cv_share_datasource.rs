@@ -17,7 +17,7 @@ use mongodb::bson;
 const CV_SHARE_COLLECTION: &str = "shares";
 const CV_COLLECTION: &str = "cvs";
 /// Error type for `LikeDataSource` operations.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ShareError {
     // fail to add share
     AddShareFail,
@@ -93,8 +93,8 @@ impl ShareDataSource for MongoDB {
     async fn add_share(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<(), Self::Error> {
         let collection = self.db.collection::<Share>(CV_SHARE_COLLECTION);
         let filter = bson::doc!{
-            "key.user_id": user_id.clone(),
-            "key.cv_id": cv_id
+            "_id.user_id": user_id.clone(),
+            "_id.cv_id": cv_id
         };
         let result_exist = collection.find_one(filter, None).await;
         match result_exist {
@@ -118,8 +118,8 @@ impl ShareDataSource for MongoDB {
     async fn delete_share(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<(), Self::Error> {
         let collection = self.db.collection::<Share>(CV_SHARE_COLLECTION);
         let filter = bson::doc!{
-            "key.user_id": user_id,
-            "key.cv_id": cv_id
+            "_id.user_id": user_id,
+            "_id.cv_id": cv_id
         };
         let result = collection.find_one_and_delete(filter, None).await;
         match result{
@@ -134,7 +134,7 @@ impl ShareDataSource for MongoDB {
     ) -> Result<BoxStream<Share>, Self::Error> {
         let collection = self.db.collection::<Share>(CV_SHARE_COLLECTION);
         let filter = bson::doc!{
-            "key.user_id": user_id
+            "_id.user_id": user_id
         };
         let result = collection.find(filter, None).await;
         match result {
@@ -149,7 +149,7 @@ impl ShareDataSource for MongoDB {
     ) -> Result<BoxStream<Result<CV, Self::Error>>, Self::Error> {
         let share_collection = self.db.collection::<Share>(CV_SHARE_COLLECTION);
         let share_filter = bson::doc!{
-            "key.user_id": user_id
+            "_id.user_id": user_id
         };
         let result = share_collection.find(share_filter, None).await;
         match result{
@@ -157,7 +157,7 @@ impl ShareDataSource for MongoDB {
                 let list_cv_id = share_cursor.map(|share|share.unwrap().cv_id().to_owned()).collect::<Vec<ObjectId>>().await;
                 let cv_collection = self.db.collection::<CV>(CV_COLLECTION);
                 let filter = bson::doc!{
-                    "id": {"$in": list_cv_id}
+                    "_id": {"$in": list_cv_id}
                 };
                 let find_result = cv_collection.find(filter, None).await;
                 match find_result {
@@ -172,8 +172,8 @@ impl ShareDataSource for MongoDB {
     async fn get_share(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<Share, Self::Error> {
         let collection = self.db.collection::<Share>(CV_SHARE_COLLECTION);
         let filter = bson::doc!{
-            "key.user_id": user_id,
-            "key.cv_id": cv_id
+            "_id.user_id": user_id,
+            "_id.cv_id": cv_id
         };
         let result = collection.find_one(filter, None).await;
         match result{
@@ -193,7 +193,7 @@ impl ShareDataSource for MongoDB {
     ) -> Result<BoxStream<Result<Share, Self::Error>>, Self::Error> {
         let collection = self.db.collection::<Share>(CV_SHARE_COLLECTION);
         let filter = bson::doc!{
-            "key.cv_id": cv_id
+            "_id.cv_id": cv_id
         };
         let result = collection.find(filter, None).await;
         match result {
@@ -205,7 +205,7 @@ impl ShareDataSource for MongoDB {
     async fn get_shares_count_of_cv(&self, cv_id: ObjectId) -> Result<i32, Self::Error> {
         let collection = self.db.collection::<Share>(CV_SHARE_COLLECTION);
         let filter = bson::doc!{
-            "key.cv_id": cv_id
+            "_id.cv_id": cv_id
         };
         let result = collection.count_documents(filter, None).await;
         match result{
