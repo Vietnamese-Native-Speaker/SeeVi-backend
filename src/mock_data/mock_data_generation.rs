@@ -1,10 +1,8 @@
-use std::sync::Arc;
-
-use futures::{future::join_all, join, FutureExt};
+use futures::{future::join_all, FutureExt};
 
 use crate::{
-    data_source::{mongo::{MongoForTesting, MongoDB}, CVDataSource, CommentDataSource, UserDataSource},
-    models::comment::create_comment_input::CreateCommentInputBuilder,
+    data_source::{mongo::MongoDB, CVDataSource, CommentDataSource, UserDataSource},
+    models::comment::CreateCommentInputBuilder,
     object_id::ScalarObjectId,
 };
 
@@ -14,10 +12,7 @@ use super::{
     users::USER_INPUTS,
 };
 
-async fn add_cvs_to_user(
-    mongodb: MongoDB,
-    user_id: ScalarObjectId,
-) -> Vec<ScalarObjectId> {
+async fn add_cvs_to_user(mongodb: MongoDB, user_id: ScalarObjectId) -> Vec<ScalarObjectId> {
     let mut cv_inputs = CV_INPUTS.clone();
     let handlers = cv_inputs.iter_mut().map(|cv_input| {
         let cv = cv_input.clone().with_author_id(user_id).build().unwrap();

@@ -1,9 +1,11 @@
+use crate::data_source::BookmarkDataSource;
 use crate::data_source::CVDataSource;
 use crate::data_source::CVDataSourceError;
 use crate::data_source::CommentDataSource;
 use crate::data_source::LikeDataSource;
 use crate::data_source::UserDataSource;
 use crate::data_source::{FriendsListDataSource, FriendsListError};
+use crate::models::comment::Bookmark;
 use crate::models::comment::Comment;
 use crate::models::comment::CreateCommentInput;
 use crate::models::comment::Like;
@@ -29,6 +31,7 @@ pub struct MockDatabase {
     cvs: Mutex<Vec<CV>>,
     comments: Mutex<Vec<Comment>>,
     likes: Mutex<Vec<Like>>,
+    bookmarks: Mutex<Vec<Bookmark>>,
 }
 
 impl MockDatabase {
@@ -39,6 +42,7 @@ impl MockDatabase {
             cvs: Mutex::new(Vec::new()),
             comments: Mutex::new(Vec::new()),
             likes: Mutex::new(Vec::new()),
+            bookmarks: Mutex::new(Vec::new()),
         }
     }
 }
@@ -496,34 +500,34 @@ impl LikeDataSource for MockDatabase {
     type Error = DummyLikeDataSource;
     async fn add_like(
         &self,
-        _user_id: bson::oid::ObjectId,
-        _comment_id: bson::oid::ObjectId,
+        user_id: bson::oid::ObjectId,
+        comment_id: bson::oid::ObjectId,
     ) -> Result<(), Self::Error> {
         let mut likes = self.likes.lock().unwrap();
         for like in likes.iter_mut() {
-            if like.key.user_id == _user_id.clone().into()
-                && like.key.comment_id == _comment_id.clone().into()
+            if like.key.user_id == user_id.clone().into()
+                && like.key.comment_id == comment_id.clone().into()
             {
                 return Err(DummyLikeDataSource("like already exists".to_string()));
             }
         }
-        likes.push(Like::new(_user_id.into(), _comment_id.into()));
+        likes.push(Like::new(user_id.into(), comment_id.into()));
         Ok(())
     }
 
     async fn delete_like(
         &self,
-        _user_id: bson::oid::ObjectId,
-        _comment_id: bson::oid::ObjectId,
+        user_id: bson::oid::ObjectId,
+        comment_id: bson::oid::ObjectId,
     ) -> Result<(), Self::Error> {
         let mut likes = self.likes.lock().unwrap();
         for like in likes.iter_mut() {
-            if like.key.user_id == _user_id.clone().into()
-                && like.key.comment_id == _comment_id.clone().into()
+            if like.key.user_id == user_id.clone().into()
+                && like.key.comment_id == comment_id.clone().into()
             {
                 likes.retain(|like| {
-                    like.key.user_id != _user_id.clone().into()
-                        && like.key.comment_id != _comment_id.into()
+                    like.key.user_id != user_id.clone().into()
+                        && like.key.comment_id != comment_id.into()
                 });
                 return Ok(());
             }
@@ -531,11 +535,11 @@ impl LikeDataSource for MockDatabase {
         Err(DummyLikeDataSource("like not found".to_string()))
     }
 
-    async fn get_likes_count(&self, _comment_id: bson::oid::ObjectId) -> Result<i32, Self::Error> {
+    async fn get_likes_count(&self, comment_id: bson::oid::ObjectId) -> Result<i32, Self::Error> {
         let likes = self.likes.lock().unwrap();
         let mut count = 0;
         for like in likes.iter() {
-            if like.key.comment_id == _comment_id.clone().into() {
+            if like.key.comment_id == comment_id.clone().into() {
                 count += 1;
             }
         }
@@ -544,14 +548,114 @@ impl LikeDataSource for MockDatabase {
 
     async fn get_likes(
         &self,
-        _comment_id: bson::oid::ObjectId,
+        comment_id: bson::oid::ObjectId,
     ) -> Result<BoxStream<Like>, Self::Error> {
         let likes = self.likes.lock().unwrap().clone();
         let stream = futures_util::stream::iter(likes.into_iter());
         let stream = stream.filter(move |like| {
             let like = like.clone();
-            async move { like.key.comment_id == _comment_id.clone().into() }
+            async move { like.key.comment_id == comment_id.clone().into() }
         });
         Ok(stream.map(|like| like).boxed())
+    }
+}
+
+#[derive(Debug)]
+pub struct DummyBookmarkDataSource(String);
+
+impl std::fmt::Display for DummyBookmarkDataSource {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl From<DummyBookmarkDataSource> for CommentServiceError {
+    fn from(_: DummyBookmarkDataSource) -> Self {
+        CommentServiceError::EmptyContent
+    }
+}
+
+impl std::error::Error for DummyBookmarkDataSource {}
+
+#[async_trait]
+impl BookmarkDataSource for MockDatabase {
+    type Error = DummyBookmarkDataSource;
+    async fn add_bookmark(
+        &self,
+        user_id: bson::oid::ObjectId,
+        comment_id: bson::oid::ObjectId,
+    ) -> Result<(), Self::Error> {
+        let mut bookmakrs = self.bookmarks.lock().unwrap();
+        for bookmark in bookmakrs.iter_mut() {
+            if bookmark.key.user_id == user_id.clone().into()
+                && bookmark.key.comment_id == comment_id.clone().into()
+            {
+                return Err(DummyBookmarkDataSource(
+                    "bookmark already exists".to_string(),
+                ));
+            }
+        }
+        bookmakrs.push(Bookmark::new(user_id.into(), comment_id.into()));
+        Ok(())
+    }
+
+    async fn delete_bookmark(
+        &self,
+        user_id: bson::oid::ObjectId,
+        comment_id: bson::oid::ObjectId,
+    ) -> Result<(), Self::Error> {
+        let mut bookmakrs = self.bookmarks.lock().unwrap();
+        for bookmark in bookmakrs.iter_mut() {
+            if bookmark.key.user_id == user_id.clone().into()
+                && bookmark.key.comment_id == comment_id.clone().into()
+            {
+                bookmakrs.retain(|bookmark| {
+                    bookmark.key.user_id != user_id.clone().into()
+                        && bookmark.key.comment_id != comment_id.into()
+                });
+                return Ok(());
+            }
+        }
+        Err(DummyBookmarkDataSource("bookmark not found".to_string()))
+    }
+
+    async fn get_bookmark(
+        &self,
+        user_id: ObjectId,
+        comment_id: ObjectId,
+    ) -> Result<Option<Bookmark>, Self::Error> {
+        let bookmarks = self.bookmarks.lock().unwrap();
+        for bookmark in bookmarks.iter() {
+            if bookmark.key.user_id == user_id.clone().into()
+                && bookmark.key.comment_id == comment_id.clone().into()
+            {
+                return Ok(Some(bookmark.clone()));
+            }
+        }
+        Ok(None)
+    }
+
+    async fn get_bookmarks_of_user(
+        &self,
+        user_id: ObjectId,
+    ) -> Result<BoxStream<Result<Bookmark, Self::Error>>, Self::Error> {
+        let bookmarks = self.bookmarks.lock().unwrap().clone();
+        let stream = futures_util::stream::iter(bookmarks.into_iter());
+        let stream = stream.filter(move |bookmark| {
+            let bookmark = bookmark.clone();
+            async move { bookmark.key.user_id == user_id.clone().into() }
+        });
+        Ok(stream.map(|bookmark| Ok(bookmark)).boxed())
+    }
+
+    async fn get_bookmarks_count(&self, comment_id: ObjectId) -> Result<i32, Self::Error> {
+        let bookmarks = self.bookmarks.lock().unwrap();
+        let mut count = 0;
+        for bookmark in bookmarks.iter() {
+            if bookmark.key.comment_id == comment_id.clone().into() {
+                count += 1;
+            }
+        }
+        Ok(count)
     }
 }
