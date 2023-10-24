@@ -29,7 +29,7 @@ use async_trait::async_trait;
 
 use mongodb::bson;
 
-use crate::models::cv::{self, CV};
+use crate::models::cv::{self, UpdateCVInput, CV};
 use crate::models::users::{self, User};
 
 use crate::data_source::CVDataSource;
@@ -360,7 +360,13 @@ impl CVDataSource for MongoDB {
     ) -> Result<cv::CV, CVDataSourceError> {
         let collection = self.db.collection::<cv::CV>(CV_COLLECTION);
         let filter = bson::doc! {"_id": _cv_id};
-        let update = bson::doc! {"$set": {"title": _input.title, "description": _input.description, "tags": _input.tags}};
+        let mut update = bson::doc! {};
+        _input.title.map(|title| update.insert("title", title));
+        _input
+            .description
+            .map(|description| update.insert("description", description));
+        _input.tags.map(|tags| update.insert("tags", tags));
+        let update = bson::doc! {"$set": update};
         let result = collection
             .find_one_and_update(
                 filter,
