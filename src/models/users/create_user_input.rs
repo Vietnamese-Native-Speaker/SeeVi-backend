@@ -2,7 +2,7 @@ use async_graphql::InputObject;
 use mongodb::bson::Uuid;
 use serde::{Deserialize, Serialize};
 
-use crate::models::{education::Education, sex::Sex};
+use crate::models::{education::Education, experience::Experience, sex::Sex};
 use derive_builder::Builder;
 
 use super::user::Level;
@@ -38,10 +38,9 @@ pub struct CreateUserInput {
     pub level: Option<Level>,
     #[builder(default)]
     pub city: Option<String>,
-    #[builder(default)]
-    pub sex: Option<Sex>,
-    #[builder(default)]
-    pub experiences: Option<String>,
+    pub sex: Sex,
+    #[builder(setter(custom), field(type = "Vec<Experience>"))]
+    pub experiences: Vec<Experience>,
     #[builder(setter(custom), field(type = "Vec<String>"))]
     pub personalities: Vec<String>,
 }
@@ -49,6 +48,31 @@ pub struct CreateUserInput {
 impl CreateUserInput {
     pub fn builder() -> CreateUserInputBuilder {
         CreateUserInputBuilder::default()
+    }
+}
+
+impl Clone for CreateUserInputBuilder {
+    fn clone(&self) -> Self {
+        Self {
+            username: self.username.clone(),
+            password: self.password.clone(),
+            first_name: self.first_name.clone(),
+            last_name: self.last_name.clone(),
+            country: self.country.clone(),
+            skills: self.skills.clone(),
+            primary_email: self.primary_email.clone(),
+            other_emails: self.other_emails.clone(),
+            about: self.about.clone(),
+            avatar: self.avatar.clone(),
+            cover_photo: self.cover_photo.clone(),
+            educations: self.educations.clone(),
+            rating: self.rating.clone(),
+            level: self.level.clone(),
+            city: self.city.clone(),
+            experiences: self.experiences.clone(),
+            sex: self.sex.clone(),
+            personalities: self.personalities.clone(),
+        }
     }
 }
 
@@ -68,6 +92,11 @@ impl CreateUserInputBuilder {
     }
     pub fn with_personalities<T: Into<String>>(mut self, personality: T) -> Self {
         self.personalities.push(personality.into());
+        self
+    }
+
+    pub fn with_experience(mut self, experience: Experience) -> Self {
+        self.experiences.push(experience);
         self
     }
 }

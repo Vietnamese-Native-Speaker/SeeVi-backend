@@ -1,13 +1,14 @@
-use async_graphql::{SimpleObject, InputObject, ComplexObject};
+use async_graphql::{ComplexObject, InputObject, SimpleObject};
 use mongodb::bson::DateTime;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, SimpleObject, InputObject, Debug, PartialEq, Builder)]
-#[graphql(input_name="EducationInput")]
+#[graphql(input_name = "EducationInput")]
 #[graphql(complex)]
 pub struct Education {
     pub school: String,
     pub major: String,
+    #[builder(default)]
     pub minor: Option<String>,
     pub degree: String,
 
@@ -20,26 +21,25 @@ pub struct Education {
 #[ComplexObject]
 impl Education {
     async fn start_date(&self) -> Option<String> {
-        if let Some(date) = self.start_date{
+        if let Some(date) = self.start_date {
             match date.try_to_rfc3339_string() {
                 Ok(string_date) => Some(string_date),
-                Err(err) => None
+                Err(err) => None,
             }
-        }
-        else {
+        } else {
             None
         }
     }
 
     async fn end_date(&self) -> Option<String> {
-        if let Some(date) = self.end_date{
+        if let Some(date) = self.end_date {
             match date.try_to_rfc3339_string() {
                 Ok(string_date) => Some(string_date),
-                Err(err) => None
+                Err(err) => None,
             }
-        }
-        else {
+        } else {
             None
         }
     }
 }
+

@@ -1,7 +1,20 @@
-use mongodb::bson::{Uuid, oid::ObjectId};
+use mongodb::bson::{oid::ObjectId, Uuid};
 use serial_test::serial;
 
-use crate::{models::{users::{CreateUserInput, create_user_input::CreateUserInputBuilder}, education::Education, sex::Sex, cv::{CreateCVInput, create_cv_input::CreateCVInputBuilder}, comment::{Comment, Bookmark}}, data_source::{mongo::MongoForTesting, UserDataSource, comment::BookmarkDataSource, CommentDataSource}, object_id::ScalarObjectId};
+use crate::{
+    data_source::{
+        comment::BookmarkDataSource, mongo::MongoForTesting, CommentDataSource, UserDataSource,
+    },
+    models::{
+        comment::{Comment},
+        cv::{create_cv_input::CreateCVInputBuilder, CreateCVInput},
+        education::Education,
+        experience::{ExperienceBuilder},
+        sex::Sex,
+        users::{create_user_input::CreateUserInputBuilder, CreateUserInput},
+    },
+    object_id::ScalarObjectId,
+};
 
 use async_graphql::futures_util::StreamExt;
 use core::future::ready;
@@ -39,12 +52,22 @@ fn create_demo_user_input() -> CreateUserInput {
         .with_cover_photo(id)
         .with_city("city")
         .with_personalities("personality")
+        .with_experience(
+            ExperienceBuilder::default()
+                .with_title("title")
+                .with_company("company")
+                .with_description("description")
+                .with_employment_type("employment_type")
+                .with_location("location")
+                .build()
+                .unwrap(),
+        )
         .with_rating(4.0)
         .with_sex(Sex::Male)
-        .with_experiences("year_of_experience")
         .build()
         .unwrap()
 }
+
 fn create_demo_cv_input(author_id: ObjectId) -> CreateCVInput {
     CreateCVInputBuilder::default()
         .with_author_id(author_id)
@@ -63,55 +86,69 @@ fn create_test_comment(
     Comment {
         id: comment_id,
         author: author_id,
-        content: content,
+        content,
         created: mongodb::bson::DateTime::now(),
-        bookmarks: 0,
         replies: vec![],
     }
 }
 
 #[tokio::test]
 #[serial]
-async fn test_add_bookmark_and_get_bookmark(){
+async fn test_add_bookmark_and_get_bookmark() {
     let mongodb = MongoForTesting::init().await;
     let user_input = create_demo_user_input();
     let user = mongodb.create_user(user_input).await.unwrap();
     let comment_id = ScalarObjectId::from(ObjectId::new());
     let comment = create_test_comment(comment_id.clone(), user.id.clone(), "content".to_string());
     let check_comment = mongodb.add_comment(comment).await;
-    let check_add = mongodb.add_bookmark(user.id.clone().into(), comment_id.clone().into()).await;
-    let check_bookmark = mongodb.get_bookmark(user.id.clone().into(), comment_id.clone().into()).await.unwrap().unwrap();
+    let check_add = mongodb
+        .add_bookmark(user.id.clone().into(), comment_id.clone().into())
+        .await;
+    let check_bookmark = mongodb
+        .get_bookmark(user.id.clone().into(), comment_id.clone().into())
+        .await
+        .unwrap()
+        .unwrap();
     assert_eq!(*check_bookmark.user_id(), user.id);
     assert_eq!(*check_bookmark.comment_id(), comment_id);
 }
 
 #[tokio::test]
 #[serial]
-async fn test_delete_bookmark(){
+async fn test_delete_bookmark() {
     let mongodb = MongoForTesting::init().await;
     let user_input = create_demo_user_input();
     let user = mongodb.create_user(user_input).await.unwrap();
     let comment_id = ScalarObjectId::from(ObjectId::new());
     let comment = create_test_comment(comment_id.clone(), user.id.clone(), "content".to_string());
     let check_comment = mongodb.add_comment(comment).await;
-    let check_add = mongodb.add_bookmark(user.id.clone().into(), comment_id.clone().into()).await;
-    let check_delete = mongodb.delete_bookmark(user.id.clone().into(), comment_id.clone().into()).await;
-    let check_bookmark = mongodb.get_bookmark(user.id.clone().into(), comment_id.clone().into()).await.unwrap();
+    let check_add = mongodb
+        .add_bookmark(user.id.clone().into(), comment_id.clone().into())
+        .await;
+    let check_delete = mongodb
+        .delete_bookmark(user.id.clone().into(), comment_id.clone().into())
+        .await;
+    let check_bookmark = mongodb
+        .get_bookmark(user.id.clone().into(), comment_id.clone().into())
+        .await
+        .unwrap();
     assert_eq!(check_bookmark, None);
 }
 
 #[tokio::test]
 #[serial]
-async fn test_get_bookmarks_of_user(){
+async fn test_get_bookmarks_of_user() {
     let mongodb = MongoForTesting::init().await;
     let user_input = create_demo_user_input();
     let user = mongodb.create_user(user_input).await.unwrap();
     let comment_id = ScalarObjectId::from(ObjectId::new());
     let comment = create_test_comment(comment_id.clone(), user.id.clone(), "content".to_string());
     let check_comment = mongodb.add_comment(comment).await;
-    let check_add = mongodb.add_bookmark(user.id.clone().into(), comment_id.clone().into()).await;
+    let check_add = mongodb
+        .add_bookmark(user.id.clone().into(), comment_id.clone().into())
+        .await;
     let stream_bookmark = mongodb.get_bookmarks_of_user(user.id.into()).await.unwrap();
-    let fn_test = stream_bookmark.for_each(|bookmark_result|{
+    let fn_test = stream_bookmark.for_each(|bookmark_result| {
         assert_eq!(*bookmark_result.clone().unwrap().user_id(), user.id);
         assert_eq!(*bookmark_result.clone().unwrap().comment_id(), comment_id);
         ready(())

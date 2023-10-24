@@ -2,12 +2,12 @@ use mongodb::bson::{self, oid::ObjectId, Uuid};
 
 use crate::models::{
     education::Education,
-    users::{create_user_input::CreateUserInputBuilder, update_user_input::UpdateUserInputBuilder},
+    users::{create_user_input::CreateUserInputBuilder, update_user_input::UpdateUserInputBuilder}, sex::Sex,
 };
 
 use super::{CreateUserInput, User};
 
-fn create_demo_user_input(test_id: ObjectId) -> CreateUserInput {
+fn create_demo_user_input(_test_id: ObjectId) -> CreateUserInput {
     let dummy_uuid = Uuid::new();
     CreateUserInputBuilder::default()
         .with_username("username")
@@ -16,6 +16,7 @@ fn create_demo_user_input(test_id: ObjectId) -> CreateUserInput {
         .with_last_name("last_name")
         .with_country("country")
         .with_skill("skill")
+        .with_sex(Sex::Male)
         .with_primary_email("primary_email")
         .with_other_mail("other_mails")
         .with_other_mail("other_mails2")
@@ -84,6 +85,7 @@ fn test_user_from_input() {
         .with_last_name("last_name")
         .with_country("country")
         .with_skill("skill")
+        .with_sex(Sex::Male)
         .with_primary_email("primary_email")
         .with_other_mail("other_mails")
         .with_other_mail("other_mails2")

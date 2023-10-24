@@ -168,6 +168,7 @@ mod tests {
     use mongodb::bson::{self, Uuid};
 
     use crate::data_source::mongo::{MongoDB, MongoForTesting};
+    use crate::models::sex::Sex;
     use crate::models::users::CreateUserInput;
 
     use super::super::{UserDataSource, UserDataSourceError};
@@ -181,6 +182,7 @@ mod tests {
             .with_skill("Nothing")
             .with_about("Nothing")
             .with_country("VN")
+            .with_sex(Sex::Female)
             .with_primary_email("pemail")
             .with_username("username")
             .build()

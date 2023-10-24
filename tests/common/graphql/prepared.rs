@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use seevi_backend::object_id::ScalarObjectId;
 
 use super::make_graphql;
@@ -87,9 +85,11 @@ pub fn graphql_user_register(username: &str, password: &str) -> String {
                 "password": password,
                 "firstName": "firstname",
                 "lastName": "lastname",
+                "sex": "MALE",
                 "primaryEmail": "someone@gmail.com",
                 "otherEmails": [],
                 "educations": [],
+                "experiences": [],
                 "skills": [],
                 "personalities": [],
             }

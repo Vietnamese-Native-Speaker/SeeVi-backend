@@ -1,5 +1,5 @@
 use async_graphql::futures_util::StreamExt;
-use mongodb::bson::{self, bson};
+use mongodb::bson;
 
 use crate::{
     models::{comment::CreateCommentInput, cv::CreateCVInput},
@@ -31,13 +31,14 @@ async fn test_get_comment_by_id() {
 async fn test_comment_services() {
     // create a cv
     let db = MockDatabase::new();
-    let cv_input = CreateCVInput {
-        title: "some_title".to_string(),
-        author_id: bson::oid::ObjectId::new().into(),
-        description: Some("some_description".to_string()),
-        tags: vec!["tag1".to_string(), "tag2".to_string()],
-    };
-    let test_cv = CVService::create_cv(&db, cv_input).await.unwrap();
+    let test_cv = CVService::create_cv(
+        &db,
+        bson::oid::ObjectId::new().into(),
+        "some_title".to_string(),
+        "some_description".to_string(),
+    )
+    .await
+    .unwrap();
     assert_eq!("some_title", test_cv.title);
 
     let user_id = bson::oid::ObjectId::new();
@@ -147,13 +148,14 @@ async fn test_comment_services() {
 async fn test_cv_services() {
     // create a cv
     let db = MockDatabase::new();
-    let cv_input = CreateCVInput {
-        title: "some_title".to_string(),
-        author_id: bson::oid::ObjectId::new().into(),
-        description: Some("some_description".to_string()),
-        tags: vec!["tag1".to_string(), "tag2".to_string()],
-    };
-    let test_cv = CVService::create_cv(&db, cv_input).await.unwrap();
+    let test_cv = CVService::create_cv(
+        &db,
+        bson::oid::ObjectId::new().into(),
+        "some_title".to_string(),
+        "some_description".to_string(),
+    )
+    .await
+    .unwrap();
     assert_eq!("some_title", test_cv.title);
 
     // test update cv title
@@ -172,11 +174,11 @@ async fn test_cv_services() {
     let cv = CVService::add_tag(&db, *test_cv.id, "tag3".to_string())
         .await
         .unwrap();
-    assert_eq!(3, cv.tags.len());
+    assert_eq!(1, cv.tags.len());
 
     // test remove tag from cv
     let cv = CVService::remove_tag(&db, *test_cv.id, "tag3".to_string())
         .await
         .unwrap();
-    assert_eq!(2, cv.tags.len());
+    assert_eq!(0, cv.tags.len());
 }

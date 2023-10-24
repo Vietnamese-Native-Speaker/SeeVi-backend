@@ -1,4 +1,5 @@
 use mongodb::bson;
+use mongodb::bson::oid::ObjectId;
 use std::fmt;
 
 #[non_exhaustive]
