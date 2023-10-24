@@ -23,7 +23,7 @@ pub(crate) fn make_function_variables(variables: &[Variable]) -> String {
                 acc, var.name
             )
         } else {
-            format!("{}, {}: Into<serde_json::Value>", acc, var.name)
+            format!("{}, {}: serde_json::Value", acc, var.name)
         }
     })
 }

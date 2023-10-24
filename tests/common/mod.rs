@@ -201,7 +201,7 @@ pub async fn create_cv(
     description: &str,
     routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
 ) -> serde_json::Value {
-    let query = common::graphql::graphql_create_cv(user_id, title, description);
+    let query = common::graphql::mutation_create_cv(user_id.to_string().into(), title.into(), description.into());
     print_json(&query);
 
     let request = warp::test::request()
@@ -222,7 +222,7 @@ pub async fn delete_cv(
     cv_id: ScalarObjectId,
     routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
 ) -> serde_json::Value {
-    let query = common::graphql::graphql_delete_cv(cv_id);
+    let query = common::graphql::mutation_delete_cv(cv_id.to_string().into());
     print_json(&query);
 
     let request = warp::test::request()
@@ -242,8 +242,7 @@ pub async fn change_cv_title(
     title: &str,
     routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
 ) -> serde_json::Value {
-    let query = common::graphql::graphql_change_cv_title(cv_id, title);
-    print_json(&query);
+    let query = common::graphql::mutation_change_cv_title(cv_id.to_string().into(), title.into());
 
     let request = warp::test::request()
         .method("POST")
@@ -262,7 +261,7 @@ pub async fn change_cv_description(
     description: &str,
     routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
 ) -> serde_json::Value {
-    let query = common::graphql::graphql_change_cv_description(cv_id, description);
+    let query = common::graphql::mutation_change_cv_description(cv_id.to_string().into(), description.into());
     print_json(&query);
 
     let request = warp::test::request()
@@ -281,7 +280,7 @@ pub async fn add_tag(
     tag: &str,
     routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
 ) -> serde_json::Value {
-    let query = common::graphql::graphql_add_tag(cv_id, tag);
+    let query = common::graphql::mutation_add_tag(cv_id.to_string().into(), tag.into());
     print_json(&query);
 
     let request = warp::test::request()
@@ -300,7 +299,7 @@ pub async fn remove_tag(
     tag: &str,
     routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
 ) -> serde_json::Value {
-    let query = common::graphql::graphql_remove_tag(cv_id, tag);
+    let query = common::graphql::mutation_remove_tag(cv_id.to_string().into(), tag.into());
     print_json(&query);
 
     let request = warp::test::request()
@@ -320,7 +319,7 @@ pub async fn add_comment(
     content: &str,
     routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
 ) -> serde_json::Value {
-    let query = common::graphql::graphql_add_comment(cv_id, author_id, content);
+    let query = common::graphql::mutation_add_comment(cv_id.to_string().into(), author_id.to_string().into(), content.into());
     print_json(&query);
 
     let request = warp::test::request()
@@ -339,7 +338,7 @@ pub async fn remove_comment(
     comment_id: ScalarObjectId,
     routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
 ) -> serde_json::Value {
-    let query = common::graphql::graphql_remove_comment(cv_id, comment_id);
+    let query = common::graphql::mutation_remove_comment(cv_id.to_string().into(), comment_id.to_string().into());
     print_json(&query);
 
     let request = warp::test::request()
@@ -358,7 +357,7 @@ pub async fn share_cv(
     user_id: ScalarObjectId,
     routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
 ) -> serde_json::Value {
-    let query = common::graphql::graphql_share_cv(cv_id, user_id);
+    let query = common::graphql::mutation_share_cv(cv_id.to_string().into(), user_id.to_string().into());
     print_json(&query);
 
     let request = warp::test::request()
@@ -377,8 +376,9 @@ pub async fn unshare_cv(
     user_id: ScalarObjectId,
     routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
 ) -> serde_json::Value {
-    let query = common::graphql::graphql_unshare_cv(cv_id, user_id);
+    let query = common::graphql::mutation_unshare_cv(cv_id.to_string().into(), user_id.to_string().into());
     print_json(&query);
+
     let request = warp::test::request()
         .method("POST")
         .path("/graphql")
@@ -395,7 +395,7 @@ pub async fn like_cv(
     user_id: ScalarObjectId,
     routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
 ) -> serde_json::Value {
-    let query = common::graphql::graphql_like_cv(cv_id, user_id);
+    let query = common::graphql::mutation_like_cv(cv_id.to_string().into(), user_id.to_string().into());
     print_json(&query);
 
     let request = warp::test::request()
@@ -414,7 +414,7 @@ pub async fn unlike_cv(
     user_id: ScalarObjectId,
     routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
 ) -> serde_json::Value {
-    let query = common::graphql::graphql_unlike_cv(cv_id, user_id);
+    let query = common::graphql::mutation_unlike_cv(cv_id.to_string().into(), user_id.to_string().into());
     print_json(&query);
     let request = warp::test::request()
         .method("POST")
@@ -432,7 +432,7 @@ pub async fn bookmark_cv(
     user_id: ScalarObjectId,
     routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
 ) -> serde_json::Value {
-    let query = common::graphql::graphql_bookmark_cv(cv_id, user_id);
+    let query = common::graphql::mutation_bookmark_cv(cv_id.to_string().into(), user_id.to_string().into());
     print_json(&query);
 
     let request = warp::test::request()
@@ -451,7 +451,7 @@ pub async fn unbookmark_cv(
     user_id: ScalarObjectId,
     routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
 ) -> serde_json::Value {
-    let query = common::graphql::graphql_unbookmark_cv(cv_id, user_id);
+    let query = common::graphql::mutation_unbookmark_cv(cv_id.to_string().into(), user_id.to_string().into());
     print_json(&query);
     let request = warp::test::request()
         .method("POST")
