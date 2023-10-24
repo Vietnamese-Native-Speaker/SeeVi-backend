@@ -6,6 +6,7 @@ mod error;
 
 pub use error::CommentServiceError;
 
+use crate::data_source::BookmarkDataSource;
 use crate::data_source::LikeDataSource;
 use crate::data_source::{CVDataSource, CVDataSourceError, CommentDataSource};
 use crate::models::comment::{Comment, CreateCommentInput, Like, UpdateCommentInput};
@@ -125,21 +126,18 @@ impl CommentService {
     }
 
     pub async fn add_bookmark(
-        cmt_database: &(impl CommentDataSource + std::marker::Sync),
+        cmt_database: &(impl CommentDataSource + BookmarkDataSource + std::marker::Sync),
+        user_id: ObjectId,
         comment_id: ObjectId,
     ) -> Result<Comment, CommentServiceError> {
-        let cv = cmt_database.get_comment_by_id(comment_id).await;
-        match cv {
-            Ok(cv) => {
-                let input = UpdateCommentInput::builder()
-                    .with_bookmarks(cv.bookmarks + 1)
-                    .build()
-                    .unwrap();
-                let rs = cmt_database
-                    .find_and_update_comment(comment_id, input)
-                    .await;
+        let comment = cmt_database.get_comment_by_id(comment_id).await;
+        match comment {
+            Ok(_) => {
+                let rs = cmt_database.add_bookmark(user_id, comment_id).await;
                 match rs {
-                    Ok(rs) => Ok(rs),
+                    Ok(_) => {
+                        return Ok(comment.unwrap());
+                    }
                     Err(err) => Err(err.into()),
                 }
             }
@@ -148,38 +146,31 @@ impl CommentService {
     }
 
     pub async fn remove_bookmark(
-        cmt_database: &(impl CommentDataSource + std::marker::Sync),
+        cmt_database: &(impl CommentDataSource + BookmarkDataSource + std::marker::Sync),
+        user_id: ObjectId,
         comment_id: ObjectId,
     ) -> Result<Comment, CommentServiceError> {
-        let cmt = cmt_database.get_comment_by_id(comment_id).await;
-        match cmt {
-            Ok(cmt) => {
-                let tmp = cmt.bookmarks;
-                if tmp == 0 {
-                    return Err(CommentServiceError::NoBookmarks);
-                }
-                let input = UpdateCommentInput::builder()
-                    .with_bookmarks(cmt.bookmarks - 1)
-                    .build()
-                    .unwrap();
-                let rs = cmt_database
-                    .find_and_update_comment(comment_id, input)
-                    .await;
+        let comment = cmt_database.get_comment_by_id(comment_id).await;
+        match comment {
+            Ok(_) => {
+                let rs = cmt_database.delete_bookmark(user_id, comment_id).await;
                 match rs {
-                    Ok(rs) => {
-                        return Ok(rs);
+                    Ok(_) => {
+                        return Ok(comment.unwrap());
                     }
-                    Err(err) => {
-                        let err: CommentServiceError = err.into();
-                        return Err(err);
-                    }
+                    Err(err) => Err(err.into()),
                 }
             }
-            Err(err) => {
-                let err: CommentServiceError = err.into();
-                return Err(err);
-            }
+            Err(err) => Err(err.into()),
         }
+    }
+
+    pub async fn get_bookmarks_count(
+        cmt_database: &(impl CommentDataSource + BookmarkDataSource + std::marker::Sync),
+        comment_id: ObjectId,
+    ) -> Result<i32, CommentServiceError> {
+        let rs = cmt_database.get_bookmarks_count(comment_id).await;
+        rs.map(|rs| rs).map_err(|err| err.into())
     }
 
     pub async fn add_reply_comment(

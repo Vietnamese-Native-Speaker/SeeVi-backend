@@ -4,7 +4,7 @@ use std::fmt;
 
 #[non_exhaustive]
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum BookmarkDataSourceError{
+pub enum BookmarkDataSourceError {
     // fail to add bookmark
     AddBookmarkFail,
 
@@ -27,24 +27,24 @@ pub enum BookmarkDataSourceError{
     QueryFail,
 }
 
-impl fmt::Display for BookmarkDataSourceError{
+impl fmt::Display for BookmarkDataSourceError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             BookmarkDataSourceError::AddBookmarkFail => {
                 write!(f, "fail to add bookmark!")
-            },
-            BookmarkDataSourceError::DeleteBookmarkFail =>{
+            }
+            BookmarkDataSourceError::DeleteBookmarkFail => {
                 write!(f, "fail to remove bookmark!")
-            },
+            }
             BookmarkDataSourceError::BookmarkAlreadyExists => {
                 write!(f, "bookmark already exists!")
-            },
+            }
             BookmarkDataSourceError::BookmarkNotFound => {
                 write!(f, "cannot find bookmark!")
-            },
+            }
             BookmarkDataSourceError::InvalidCommentId(id) => {
                 write!(f, "comment-id {:?} is invalid!", id)
-            },
+            }
             BookmarkDataSourceError::InvalidUserId(id) => {
                 write!(f, "user-id {:?} is invalid!", id)
             }
@@ -54,3 +54,5 @@ impl fmt::Display for BookmarkDataSourceError{
         }
     }
 }
+
+impl std::error::Error for BookmarkDataSourceError {}
