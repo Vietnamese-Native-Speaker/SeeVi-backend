@@ -10,7 +10,7 @@ pub struct Key {
     pub comment_id: ScalarObjectId,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, SimpleObject)]
+#[derive(Debug, Serialize, Deserialize, Clone, SimpleObject, PartialEq)]
 #[graphql(complex)]
 pub struct Bookmark {
     #[serde(rename = "_id")]
