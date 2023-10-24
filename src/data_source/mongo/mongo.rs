@@ -358,7 +358,25 @@ impl CVDataSource for MongoDB {
         _cv_id: bson::oid::ObjectId,
         _input: cv::UpdateCVInput,
     ) -> Result<cv::CV, CVDataSourceError> {
-        todo!()
+        let collection = self.db.collection::<cv::CV>(CV_COLLECTION);
+        let filter = bson::doc! {"_id": _cv_id};
+        let update = bson::doc! {"$set": {"title": _input.title, "description": _input.description, "tags": _input.tags}};
+        let result = collection
+            .find_one_and_update(
+                filter,
+                update,
+                FindOneAndUpdateOptions::builder()
+                    .return_document(ReturnDocument::After)
+                    .build(),
+            )
+            .await;
+        match result {
+            Ok(cv) => match cv {
+                Some(cv) => Ok(cv),
+                None => Err(CVDataSourceError::IdNotFound(_cv_id)),
+            },
+            Err(_) => Err(CVDataSourceError::DatabaseError),
+        }
     }
 }
 
