@@ -1,6 +1,6 @@
 use crate::{
     models::{
-        cv::{create_cv_input::CreateCVInputBuilder, Bookmark, Like as CVLike, CV},
+        cv::{Bookmark as CVBookmark, CV},
         sex::Sex,
         users::create_user_input::CreateUserInputBuilder,
     },
@@ -29,7 +29,7 @@ impl cv::bookmark::BookmarkDataSource for MockDatabase {
                 return Err(CVInteractionError::AlreadyExists);
             }
         }
-        bookmarks.push(Bookmark::new(user_id, cv_id));
+        bookmarks.push(CVBookmark::new(user_id, cv_id));
         Ok(())
     }
 
@@ -49,7 +49,7 @@ impl cv::bookmark::BookmarkDataSource for MockDatabase {
     async fn get_bookmarks_of_user(
         &self,
         user_id: ObjectId,
-    ) -> Result<BoxStream<Bookmark>, Self::Error> {
+    ) -> Result<BoxStream<CVBookmark>, Self::Error> {
         let bookmarks = self.cv_bookmarks.lock().unwrap().clone();
         let stream = futures_util::stream::iter(bookmarks.into_iter());
         let stream = stream.filter(move |bookmark| {
@@ -63,7 +63,7 @@ impl cv::bookmark::BookmarkDataSource for MockDatabase {
         &self,
         user_id: ObjectId,
         cv_id: ObjectId,
-    ) -> Result<Bookmark, Self::Error> {
+    ) -> Result<CVBookmark, Self::Error> {
         let bookmarks = self.cv_bookmarks.lock().unwrap().clone();
         for bookmark in bookmarks.iter() {
             if *bookmark.user_id() == user_id && *bookmark.cv_id() == cv_id {
@@ -76,7 +76,7 @@ impl cv::bookmark::BookmarkDataSource for MockDatabase {
     async fn get_bookmarks_of_cv(
         &self,
         cv_id: ObjectId,
-    ) -> Result<BoxStream<Result<Bookmark, Self::Error>>, Self::Error> {
+    ) -> Result<BoxStream<Result<CVBookmark, Self::Error>>, Self::Error> {
         let bookmarks = self.cv_bookmarks.lock().unwrap().clone();
         let stream = futures_util::stream::iter(bookmarks.into_iter());
         let stream = stream.filter(move |bookmark| {
@@ -161,22 +161,18 @@ async fn basic() {
     .id;
     let cv_id = CVService::create_cv(
         &db,
-        CreateCVInputBuilder::default()
-            .with_title("Test CV")
-            .with_author_id(user_id)
-            .build()
-            .unwrap(),
+        user_id.into(),
+        "Test CV".to_string(),
+        "Test CV".to_string(),
     )
     .await
     .unwrap()
     .id;
     let cv_id2 = CVService::create_cv(
         &db,
-        CreateCVInputBuilder::default()
-            .with_title("Test CV 2")
-            .with_author_id(user_id)
-            .build()
-            .unwrap(),
+        user_id2.into(),
+        "Test CV 2".to_string(),
+        "Test CV 2".to_string(),
     )
     .await
     .unwrap()

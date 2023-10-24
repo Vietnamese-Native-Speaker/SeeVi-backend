@@ -100,7 +100,7 @@ impl ShareDataSource for MongoDB {
         match result_exist {
             Ok(share_option) => {
                 match share_option {
-                    Some(share) => Err(ShareError::ShareAlreadyExists),
+                    Some(_share) => Err(ShareError::ShareAlreadyExists),
                     None => {
                         let share = Share::new(user_id, cv_id);
                         let add_result = collection.insert_one(share, None).await;

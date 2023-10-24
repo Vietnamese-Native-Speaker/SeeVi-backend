@@ -107,11 +107,9 @@ async fn basic() {
     .id;
     let cv_id = CVService::create_cv(
         &db,
-        CreateCVInputBuilder::default()
-            .with_title("Test CV")
-            .with_author_id(user_id)
-            .build()
-            .unwrap(),
+        user_id.into(),
+        "Test CV".to_string(),
+        "Test CV".to_string(),
     )
     .await
     .unwrap()

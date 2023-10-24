@@ -5,6 +5,7 @@ mod friends_list;
 pub mod mongo;
 mod user;
 
+pub use comment::bookmark::BookmarkDataSource;
 pub use comment::like::LikeDataSource;
 pub use comment::CommentDataSource;
 pub use cv::{CVDataSource, CVDataSourceError};

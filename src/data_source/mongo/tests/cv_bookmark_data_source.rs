@@ -1,109 +1,99 @@
-
-
-use futures_core::future;
-use mongodb::bson::{oid::ObjectId, Uuid};
-use serial_test::serial;
-use crate::{models::{
-    users::{
-        CreateUserInput, 
-        create_user_input::CreateUserInputBuilder
-    }, 
-    education::Education, 
-    sex::Sex, cv::{CreateCVInput, create_cv_input::CreateCVInputBuilder, Bookmark}
-}, data_source::{mongo::{MongoForTesting, cv_bookmark_datasource::BookmarkError}, UserDataSource, CVDataSource, cv::bookmark::BookmarkDataSource}, object_id::ScalarObjectId};
+use crate::{
+    data_source::{
+        cv::bookmark::BookmarkDataSource,
+        mongo::{
+            cv_bookmark_datasource::BookmarkError,
+            tests::{create_demo_cv_input, create_demo_user_input},
+            MongoForTesting,
+        },
+        CVDataSource, UserDataSource,
+    },
+    object_id::ScalarObjectId,
+};
 use async_graphql::futures_util::StreamExt;
 use core::future::ready;
+use mongodb::bson::oid::ObjectId;
+use serial_test::serial;
 
-fn create_demo_user_input() -> CreateUserInput {
-    let id = Uuid::new();
-    CreateUserInputBuilder::default()
-        .with_password("password")
-        .with_username("username")
-        .with_first_name("first_name")
-        .with_last_name("last_name")
-        .with_country("country")
-        .with_skill("skill")
-        .with_primary_email("primary_email")
-        .with_other_mail("other_mails")
-        .with_other_mail("other_mails2")
-        .with_education(Education {
-            school: "school 1".to_string(),
-            major: "major 1".to_string(),
-            minor: Some("minor 1".to_string()),
-            degree: "degree 1".to_string(),
-            start_date: None,
-            end_date: None,
-        })
-        .with_education(Education {
-            school: "school 2".to_string(),
-            major: "major 2".to_string(),
-            minor: Some("minor 2".to_string()),
-            degree: "degree 2".to_string(),
-            start_date: None,
-            end_date: None,
-        })
-        .with_about("about".to_string())
-        .with_avatar(id)
-        .with_cover_photo(id)
-        .with_city("city")
-        .with_personalities("personality")
-        .with_rating(4.0)
-        .with_sex(Sex::Male)
-        .with_experiences("year_of_experience")
-        .build()
-        .unwrap()
-}
-fn create_demo_cv_input(author_id: ObjectId) -> CreateCVInput {
-    CreateCVInputBuilder::default()
-        .with_author_id(author_id)
-        .with_title("title")
-        .with_description("description")
-        .with_tag("tag")
-        .with_tag("tag2")
-        .build()
-        .unwrap()
-}
 #[tokio::test]
 #[serial]
-async fn test_add_bookmark_and_get_bookmark(){
+async fn test_add_bookmark_and_get_bookmark() {
     let mongodb = MongoForTesting::init().await;
     let user_input = create_demo_user_input();
     let user = mongodb.create_user(user_input).await.unwrap();
     let cv_input = create_demo_cv_input(user.id.clone().into());
     let cv = mongodb.create_cv(cv_input).await.unwrap();
-    let result_add = mongodb.add_bookmark(user.id.clone().into(), cv.id.clone().into()).await;
-    let check_bookmark = mongodb.get_bookmark(user.id.clone().into(), cv.id.clone().into()).await.unwrap();
-    assert_eq!(ScalarObjectId::from_object_id(*check_bookmark.cv_id()), cv.id);
-    assert_eq!(ScalarObjectId::from_object_id(*check_bookmark.user_id()), user.id);
+    let result_add = mongodb
+        .add_bookmark(user.id.clone().into(), cv.id.clone().into())
+        .await;
+    let check_bookmark = mongodb
+        .get_bookmark(user.id.clone().into(), cv.id.clone().into())
+        .await
+        .unwrap();
+    assert_eq!(
+        ScalarObjectId::from_object_id(*check_bookmark.cv_id()),
+        cv.id
+    );
+    assert_eq!(
+        ScalarObjectId::from_object_id(*check_bookmark.user_id()),
+        user.id
+    );
 }
 
 #[tokio::test]
 #[serial]
-async fn test_delete_bookmark(){
+async fn test_delete_bookmark() {
     let mongodb = MongoForTesting::init().await;
     let user_input = create_demo_user_input();
     let user = mongodb.create_user(user_input).await.unwrap();
     let cv_input = create_demo_cv_input(user.id.clone().into());
     let cv = mongodb.create_cv(cv_input).await.unwrap();
-    let result_add = mongodb.add_bookmark(user.id.clone().into(), cv.id.clone().into()).await;
-    let result_delete = mongodb.delete_bookmark(user.id.clone().into(), cv.id.clone().into()).await;
-    let check_bookmark = mongodb.get_bookmark(user.id.clone().into(), cv.id.clone().into()).await;
+    let result_add = mongodb
+        .add_bookmark(user.id.clone().into(), cv.id.clone().into())
+        .await;
+    let count = mongodb
+        .get_bookmarks_count_of_cv(cv.id.clone().into())
+        .await
+        .unwrap();
+    assert_eq!(count, 1);
+    let result_delete = mongodb
+        .delete_bookmark(user.id.clone().into(), cv.id.clone().into())
+        .await;
+    let check_bookmark = mongodb
+        .get_bookmark(user.id.clone().into(), cv.id.clone().into())
+        .await;
     assert_eq!(check_bookmark, Err(BookmarkError::BookmarkNotFound));
+    let count = mongodb
+        .get_bookmarks_count_of_cv(cv.id.clone().into())
+        .await
+        .unwrap();
+    assert_eq!(count, 0);
 }
 
 #[tokio::test]
 #[serial]
-async fn test_get_bookmarks_of_cv(){
+async fn test_get_bookmarks_of_cv() {
     let mongodb = MongoForTesting::init().await;
     let user_input = create_demo_user_input();
     let user = mongodb.create_user(user_input).await.unwrap();
     let cv_input = create_demo_cv_input(user.id.clone().into());
     let cv = mongodb.create_cv(cv_input).await.unwrap();
-    let result_add = mongodb.add_bookmark(user.id.clone().into(), cv.id.clone().into()).await;
-    let stream_bookmark = mongodb.get_bookmarks_of_cv(cv.id.clone().into()).await.unwrap();
-    let fn_test = stream_bookmark.for_each(|check_bookmark|{
-        assert_eq!(ScalarObjectId::from_object_id(*check_bookmark.clone().unwrap().cv_id()), cv.id);
-        assert_eq!(ScalarObjectId::from_object_id(*check_bookmark.unwrap().user_id()), user.id);
+    let result_add = mongodb
+        .add_bookmark(user.id.clone().into(), cv.id.clone().into())
+        .await;
+    let stream_bookmark = mongodb
+        .get_bookmarks_of_cv(cv.id.clone().into())
+        .await
+        .unwrap();
+    let fn_test = stream_bookmark.for_each(|check_bookmark| {
+        assert_eq!(
+            ScalarObjectId::from_object_id(*check_bookmark.clone().unwrap().cv_id()),
+            cv.id
+        );
+        assert_eq!(
+            ScalarObjectId::from_object_id(*check_bookmark.unwrap().user_id()),
+            user.id
+        );
         ready(())
     });
     fn_test.await;
@@ -111,17 +101,28 @@ async fn test_get_bookmarks_of_cv(){
 
 #[tokio::test]
 #[serial]
-async fn test_get_bookmarks_of_user(){
+async fn test_get_bookmarks_of_user() {
     let mongodb = MongoForTesting::init().await;
     let user_input = create_demo_user_input();
     let user = mongodb.create_user(user_input).await.unwrap();
     let cv_input = create_demo_cv_input(user.id.clone().into());
     let cv = mongodb.create_cv(cv_input).await.unwrap();
-    let result_add = mongodb.add_bookmark(user.id.clone().into(), cv.id.clone().into()).await;
-    let stream_bookmark = mongodb.get_bookmarks_of_user(user.id.clone().into()).await.unwrap();
-    let fn_test = stream_bookmark.for_each(|check_bookmark|{
-        assert_eq!(ScalarObjectId::from_object_id(*check_bookmark.clone().cv_id()), cv.id);
-        assert_eq!(ScalarObjectId::from_object_id(*check_bookmark.user_id()), user.id);
+    let result_add = mongodb
+        .add_bookmark(user.id.clone().into(), cv.id.clone().into())
+        .await;
+    let stream_bookmark = mongodb
+        .get_bookmarks_of_user(user.id.clone().into())
+        .await
+        .unwrap();
+    let fn_test = stream_bookmark.for_each(|check_bookmark| {
+        assert_eq!(
+            ScalarObjectId::from_object_id(*check_bookmark.clone().cv_id()),
+            cv.id
+        );
+        assert_eq!(
+            ScalarObjectId::from_object_id(*check_bookmark.user_id()),
+            user.id
+        );
         ready(())
     });
     fn_test.await;
@@ -129,20 +130,31 @@ async fn test_get_bookmarks_of_user(){
 
 #[tokio::test]
 #[serial]
-async fn test_get_bookmarked_cvs_of_user(){
+async fn test_get_bookmarked_cvs_of_user() {
     let mongodb = MongoForTesting::init().await;
     let user_input = create_demo_user_input();
     let user = mongodb.create_user(user_input).await.unwrap();
     let cv_input = create_demo_cv_input(user.id.clone().into());
     let cv = mongodb.create_cv(cv_input).await.unwrap();
-    let result_add = mongodb.add_bookmark(user.id.clone().into(), cv.id.clone().into()).await;
-    let stream_cv = mongodb.get_bookmarked_cvs_of_user(user.id.clone().into()).await.unwrap();
-    let fn_test = stream_cv.for_each(|result_cv|{
+    let result_add = mongodb
+        .add_bookmark(user.id.clone().into(), cv.id.clone().into())
+        .await;
+    let stream_cv = mongodb
+        .get_bookmarked_cvs_of_user(user.id.clone().into())
+        .await
+        .unwrap();
+    let fn_test = stream_cv.for_each(|result_cv| {
         assert_eq!(result_cv.as_ref().unwrap().id, cv.id);
         assert_eq!(result_cv.as_ref().unwrap().author_id, user.id);
         assert_eq!(result_cv.as_ref().unwrap().title, "title".to_string());
-        assert_eq!(result_cv.as_ref().unwrap().description, Some("description".to_string()));
-        assert_eq!(result_cv.as_ref().unwrap().tags, vec!["tag".to_string(), "tag2".to_string()]);
+        assert_eq!(
+            result_cv.as_ref().unwrap().description,
+            Some("description".to_string())
+        );
+        assert_eq!(
+            result_cv.as_ref().unwrap().tags,
+            vec!["tag".to_string(), "tag2".to_string()]
+        );
         ready(())
     });
     fn_test.await;
@@ -150,15 +162,20 @@ async fn test_get_bookmarked_cvs_of_user(){
 
 #[tokio::test]
 #[serial]
-async fn test_get_bookmarks_count_of_cv(){
+async fn test_get_bookmarks_count_of_cv() {
     let mongodb = MongoForTesting::init().await;
     let user_input = create_demo_user_input();
     let user = mongodb.create_user(user_input).await.unwrap();
     let cv_input = create_demo_cv_input(user.id.clone().into());
     let cv = mongodb.create_cv(cv_input).await.unwrap();
-    let result_add = mongodb.add_bookmark(user.id.clone().into(), cv.id.clone().into()).await;
+    let result_add = mongodb
+        .add_bookmark(user.id.clone().into(), cv.id.clone().into())
+        .await;
     let user_id2 = ObjectId::new();
     let result_add2 = mongodb.add_bookmark(user_id2, cv.id.clone().into()).await;
-    let count = mongodb.get_bookmarks_count_of_cv(cv.id.into()).await.unwrap();
+    let count = mongodb
+        .get_bookmarks_count_of_cv(cv.id.into())
+        .await
+        .unwrap();
     assert_eq!(count, 2);
 }

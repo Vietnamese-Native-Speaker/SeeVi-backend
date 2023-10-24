@@ -1,7 +1,4 @@
-use crate::models::{
-    comment::{create_comment_input::CreateCommentInputBuilder, CreateCommentInput},
-    cv::create_cv_input::CreateCVInputBuilder,
-};
+use crate::models::comment::CreateCommentInputBuilder;
 
 fn generate_comment_inputs() -> Vec<CreateCommentInputBuilder> {
     vec![

@@ -2,7 +2,8 @@ use super::ShareService;
 use crate::{
     models::{
         cv::{create_cv_input::CreateCVInputBuilder, interactions::Share, Like as CVLike, CV},
-        users::create_user_input::CreateUserInputBuilder, sex::Sex,
+        sex::Sex,
+        users::create_user_input::CreateUserInputBuilder,
     },
     services::{cv_service::cv_service::CVService, user_service::UserService},
 };
@@ -162,11 +163,9 @@ async fn basic() {
     .id;
     let cv_id = CVService::create_cv(
         &db,
-        CreateCVInputBuilder::default()
-            .with_title("Test CV")
-            .with_author_id(user_id)
-            .build()
-            .unwrap(),
+        user_id.into(),
+        "Test CV".to_string(),
+        "Test CV".to_string(),
     )
     .await
     .unwrap()

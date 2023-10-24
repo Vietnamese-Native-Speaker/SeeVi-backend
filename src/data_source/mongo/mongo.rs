@@ -3,9 +3,12 @@ use mongodb::bson::DateTime;
 use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Database};
 
-use crate::data_source::comment::comment_data_error::CommentDataSourceError;
-use crate::data_source::comment::{LikeDataSource, LikeDataSourceError};
+use crate::data_source::comment::error::CommentDataSourceError;
+use crate::data_source::comment::{
+    BookmarkDataSource, BookmarkDataSourceError, LikeDataSource, LikeDataSourceError,
+};
 use crate::models::comment::like::Key;
+use crate::models::comment::Bookmark;
 use crate::models::cv_details::CVDetails;
 use crate::models::education::Education;
 use crate::models::experience::Experience;
@@ -29,7 +32,7 @@ use async_trait::async_trait;
 
 use mongodb::bson;
 
-use crate::models::cv::{self, CV};
+use crate::models::cv::{self, UpdateCVInput, CV};
 use crate::models::users::{self, User};
 
 use crate::data_source::CVDataSource;
@@ -41,6 +44,7 @@ const USER_COLLECTION: &str = "users";
 const APP_NAME: &str = "SeeVi";
 const COMMENT_COLLECTION: &str = "comments";
 const LIKE_COLLECTION: &str = "likes";
+const BOOKMARK_COLLECTION: &str = "bookmarks";
 
 #[derive(Clone)]
 pub struct MongoDB {
@@ -358,7 +362,31 @@ impl CVDataSource for MongoDB {
         _cv_id: bson::oid::ObjectId,
         _input: cv::UpdateCVInput,
     ) -> Result<cv::CV, CVDataSourceError> {
-        todo!()
+        let collection = self.db.collection::<cv::CV>(CV_COLLECTION);
+        let filter = bson::doc! {"_id": _cv_id};
+        let mut update = bson::doc! {};
+        _input.title.map(|title| update.insert("title", title));
+        _input
+            .description
+            .map(|description| update.insert("description", description));
+        _input.tags.map(|tags| update.insert("tags", tags));
+        let update = bson::doc! {"$set": update};
+        let result = collection
+            .find_one_and_update(
+                filter,
+                update,
+                FindOneAndUpdateOptions::builder()
+                    .return_document(ReturnDocument::After)
+                    .build(),
+            )
+            .await;
+        match result {
+            Ok(cv) => match cv {
+                Some(cv) => Ok(cv),
+                None => Err(CVDataSourceError::IdNotFound(_cv_id)),
+            },
+            Err(_) => Err(CVDataSourceError::DatabaseError),
+        }
     }
 }
 
@@ -822,7 +850,7 @@ impl LikeDataSource for MongoDB {
         }
     }
 
-    async fn get_likes_count(&self, comment_id: bson::oid::ObjectId) -> Result<i32, Self::Error> {
+    async fn get_likes_count_of_comment(&self, comment_id: bson::oid::ObjectId) -> Result<i32, Self::Error> {
         let collection: mongodb::Collection<Comment> = self.db.collection(COMMENT_COLLECTION);
         let filter = bson::doc! {"_id.comment_id": comment_id};
         let result = collection.count_documents(filter, None).await;
@@ -844,6 +872,117 @@ impl LikeDataSource for MongoDB {
         match cursor_result {
             Ok(cursor) => Ok(cursor.map(|like| like.unwrap()).boxed()),
             Err(err) => Err(LikeDataSourceError::LikeNotFound),
+        }
+    }
+}
+
+impl From<BookmarkDataSourceError> for CommentServiceError {
+    fn from(value: BookmarkDataSourceError) -> Self {
+        match value {
+            BookmarkDataSourceError::AddBookmarkFail => CommentServiceError::UpdateCommentFailed,
+            BookmarkDataSourceError::DeleteBookmarkFail => CommentServiceError::UpdateCommentFailed,
+            BookmarkDataSourceError::BookmarkAlreadyExists => {
+                CommentServiceError::UpdateCommentFailed
+            }
+            BookmarkDataSourceError::BookmarkNotFound => CommentServiceError::NoBookmarks,
+            BookmarkDataSourceError::InvalidCommentId(id) => CommentServiceError::IdNotFound(id),
+            BookmarkDataSourceError::QueryFail => CommentServiceError::UpdateCommentFailed,
+            BookmarkDataSourceError::InvalidUserId(id) => CommentServiceError::IdNotFound(id),
+        }
+    }
+}
+
+#[async_trait]
+impl BookmarkDataSource for MongoDB {
+    type Error = BookmarkDataSourceError;
+
+    async fn add_bookmark(
+        &self,
+        user_id: ObjectId,
+        comment_id: ObjectId,
+    ) -> Result<(), Self::Error> {
+        let collection = self.db.collection::<Bookmark>("bookmarks");
+        let filter = bson::doc! {
+            "_id.user_id": user_id.clone(),
+            "_id.comment_id": comment_id.clone(),
+        };
+        let result = collection.find_one(filter, None).await;
+        match result {
+            Ok(bookmark_option) => match bookmark_option {
+                Some(bookmark) => Err(BookmarkDataSourceError::BookmarkAlreadyExists),
+                None => {
+                    let bookmark = Bookmark::new(user_id.into(), comment_id.into());
+                    let add_result = collection.insert_one(bookmark, None).await;
+                    match add_result {
+                        Ok(_) => Ok(()),
+                        Err(_) => Err(BookmarkDataSourceError::AddBookmarkFail),
+                    }
+                }
+            },
+            Err(_) => Err(BookmarkDataSourceError::QueryFail),
+        }
+    }
+
+    async fn delete_bookmark(
+        &self,
+        user_id: ObjectId,
+        comment_id: ObjectId,
+    ) -> Result<(), Self::Error> {
+        let collection = self.db.collection::<Bookmark>("bookmarks");
+        let filter = bson::doc! {
+            "_id.user_id" : user_id,
+            "_id.comment_id" : comment_id
+        };
+        let result = collection.find_one_and_delete(filter, None).await;
+        match result {
+            Ok(_) => Ok(()),
+            Err(_) => Err(BookmarkDataSourceError::DeleteBookmarkFail),
+        }
+    }
+
+    async fn get_bookmarks_of_user(
+        &self,
+        user_id: ObjectId,
+    ) -> Result<BoxStream<Result<Bookmark, Self::Error>>, Self::Error> {
+        let collection = self.db.collection::<Bookmark>("bookmarks");
+        let filter = bson::doc! {
+            "_id.user_id": user_id
+        };
+        let result_cursor = collection.find(filter, None).await;
+        match result_cursor {
+            Ok(cursor) => Ok(cursor
+                .map(|result_bookmark| Ok(result_bookmark.unwrap()))
+                .boxed()),
+            Err(_) => Err(BookmarkDataSourceError::QueryFail),
+        }
+    }
+
+    async fn get_bookmark(
+        &self,
+        user_id: ObjectId,
+        comment_id: ObjectId,
+    ) -> Result<Option<Bookmark>, Self::Error> {
+        let collection = self.db.collection::<Bookmark>("bookmarks");
+        let filter = bson::doc! {
+            "_id.user_id": user_id,
+            "_id.comment_id": comment_id
+        };
+        let result = collection.find_one(filter, None).await;
+        match result {
+            Ok(bookmark_option) => Ok(bookmark_option),
+            Err(_) => Err(BookmarkDataSourceError::QueryFail),
+        }
+    }
+
+    async fn get_bookmarks_count(&self, comment_id: ObjectId) -> Result<i32, Self::Error> {
+        let collection = self.db.collection::<Bookmark>("bookmarks");
+        let filter = bson::doc! {
+            "_id.comment_id": comment_id
+        };
+        let result = collection.count_documents(filter, None).await;
+        match result {
+            Ok(count) => Ok(count as i32),
+            Err(_) => Err(BookmarkDataSourceError::QueryFail),
         }
     }
 }

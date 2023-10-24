@@ -1,11 +1,12 @@
 use crate::data_source::mongo::MongoForTesting;
 use crate::data_source::{CVDataSource, CVDataSourceError, CVDetailsDataSource, UserDataSource};
 use crate::models::cv::create_cv_input::CreateCVInputBuilder;
+use crate::models::cv::update_cv_input::UpdateCVInputBuilder;
 use crate::models::cv::CreateCVInput;
 use crate::models::cv_details::cv_details::CVDetailsBuilder;
 use crate::models::cv_details::CVDetails;
 use crate::models::education::Education;
-use crate::models::experience::{Experience, ExperienceBuilder};
+use crate::models::experience::ExperienceBuilder;
 use crate::models::range_values::RangeValues;
 use crate::models::sex::Sex;
 use crate::models::users::create_user_input::CreateUserInputBuilder;
@@ -232,4 +233,28 @@ async fn test_get_cvs_by_filter() {
     let vec_cv = stream_cv.collect::<Vec<_>>().await;
     assert_eq!(vec_cv.len(), 1);
     assert_eq!(vec_cv[0].tags, vec!["tag".to_string(), "tag2".to_string()]);
+}
+
+#[tokio::test]
+#[serial]
+async fn test_find_and_update_cv() {
+    let mongodb = MongoForTesting::init().await;
+    let user = create_demo_user_input();
+    let input_user = mongodb.create_user(user).await.unwrap();
+    let input = create_demo_cv_input(input_user.id.into());
+    let _cv = mongodb.create_cv(input).await.unwrap();
+    let cv_id = _cv.id;
+    let cv_update = UpdateCVInputBuilder::default()
+        .with_id(_cv.id)
+        .with_author_id(_cv.author_id)
+        .with_description("new description".to_string())
+        .build()
+        .unwrap();
+    let updated = mongodb
+        .find_and_update_cv(cv_id.into(), cv_update)
+        .await
+        .unwrap();
+    assert_eq!(updated.description, Some("new description".to_string()));
+    assert_eq!(updated.title, "title".to_string());
+    assert_eq!(updated.tags, vec!["tag".to_string(), "tag2".to_string()]);
 }

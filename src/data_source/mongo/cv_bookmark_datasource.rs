@@ -7,7 +7,7 @@ use mongodb::bson::oid::ObjectId;
 use async_graphql::futures_util::stream::StreamExt;
 use crate::{
     data_source::cv::bookmark::BookmarkDataSource,
-    models::cv::{Bookmark, CV, Like},
+    models::cv::{Bookmark, CV},
     services::cv_service::error::CVServiceError,
 };
 

@@ -1,7 +1,10 @@
 use async_graphql::futures_util::StreamExt;
 use mongodb::bson;
 
-use crate::{models::comment::CreateCommentInput, services::tests::MockDatabase};
+use crate::{
+    models::{comment::CreateCommentInput, cv::CreateCVInput},
+    services::tests::MockDatabase,
+};
 
 use super::comment_service::CommentService;
 use super::cv_service::CVService;
@@ -68,6 +71,24 @@ async fn test_comment_services() {
         .await
         .unwrap();
     assert_eq!(0, total_like);
+
+    // test add bookmark to comment
+    let comment = CommentService::add_bookmark(&db, user_id, cv.comments[0])
+        .await
+        .unwrap();
+    let total_bookmark = CommentService::get_bookmarks_count(&db, comment.id.into())
+        .await
+        .unwrap();
+    assert_eq!(1, total_bookmark);
+
+    // test remove bookmark from comment
+    let comment = CommentService::remove_bookmark(&db, user_id, cv.comments[0])
+        .await
+        .unwrap();
+    let total_bookmark = CommentService::get_bookmarks_count(&db, comment.id.into())
+        .await
+        .unwrap();
+    assert_eq!(0, total_bookmark);
 
     // test add reply to comment
     let comment = CommentService::add_reply_comment(

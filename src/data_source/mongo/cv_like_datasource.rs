@@ -2,9 +2,9 @@
 
 use std::fmt::Display;
 
+use async_graphql::futures_util::stream::StreamExt;
 use futures_core::stream::BoxStream;
 use mongodb::bson::oid::ObjectId;
-use async_graphql::futures_util::stream::StreamExt;
 
 use crate::{data_source::cv, models::cv::Like, services::cv_service::error::CVServiceError};
 
@@ -42,28 +42,28 @@ pub enum LikeError {
 
 impl Display for LikeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self{
-            LikeError::AddLikesFail =>{
+        match self {
+            LikeError::AddLikesFail => {
                 write!(f, "fail to add likes!")
-            },
-            LikeError::DeleteLikesFail =>{
+            }
+            LikeError::DeleteLikesFail => {
                 write!(f, "fail to remove likes!")
-            },
-            LikeError::InvalidCVId(id) =>{
+            }
+            LikeError::InvalidCVId(id) => {
                 write!(f, "cv-id {:?} is invalid!", id)
             }
-            LikeError::InvalidUserId(id) =>{
+            LikeError::InvalidUserId(id) => {
                 write!(f, "user-id {:?} is invalid!", id)
-            },
-            LikeError::LikeNotFound =>{
+            }
+            LikeError::LikeNotFound => {
                 write!(f, "cannot find like!")
-            },
-            LikeError::LikesNumberNotFound =>{
+            }
+            LikeError::LikesNumberNotFound => {
                 write!(f, "fail to get the number of likes!")
-            },
+            }
             LikeError::LikeAlreadyExists => {
                 write!(f, "like already exists!")
-            },
+            }
             LikeError::QueryFail => {
                 write!(f, "fail to do queries")
             }
@@ -71,13 +71,11 @@ impl Display for LikeError {
     }
 }
 
-impl std::error::Error for LikeError {
-
-}
+impl std::error::Error for LikeError {}
 
 impl From<LikeError> for CVServiceError {
     fn from(value: LikeError) -> Self {
-        match value{
+        match value {
             LikeError::AddLikesFail => CVServiceError::UpdateLikeFailed,
             LikeError::DeleteLikesFail => CVServiceError::UpdateLikeFailed,
             LikeError::InvalidCVId(id) => CVServiceError::InvalidId(id),
@@ -85,7 +83,7 @@ impl From<LikeError> for CVServiceError {
             LikeError::LikeAlreadyExists => CVServiceError::UpdateLikeFailed,
             LikeError::LikeNotFound => CVServiceError::LikeNotFound,
             LikeError::QueryFail => CVServiceError::QueryFail,
-            LikeError::LikesNumberNotFound => CVServiceError::LikeNotFound
+            LikeError::LikesNumberNotFound => CVServiceError::LikeNotFound,
         }
     }
 }
@@ -94,65 +92,66 @@ impl From<LikeError> for CVServiceError {
 impl cv::like::LikeDataSource for MongoDB {
     type Error = LikeError;
 
-    async fn add_like(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<(), Self::Error>{
+    async fn add_like(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<(), Self::Error> {
         let collection = self.db.collection::<Like>(CV_LIKE_COLLECTION);
-        let filter = bson::doc!{
+        let filter = bson::doc! {
             "_id.user_id" : user_id.clone(),
             "_id.cv_id" : cv_id.clone()
         };
         let check_exist = collection.find_one(filter, None).await;
-        match check_exist{
-            Ok(like_option) =>{
-                match like_option{
-                    Some(like) => Err(LikeError::LikeAlreadyExists),
-                    None => {
-                        let like = Like::new(user_id, cv_id);
-                        let result = collection.insert_one(like, None).await;
-                        match result {
-                            Ok(_) => Ok(()),
-                            Err(_) => Err(LikeError::AddLikesFail)
-                        }
+        match check_exist {
+            Ok(like_option) => match like_option {
+                Some(_like) => Err(LikeError::LikeAlreadyExists),
+                None => {
+                    let like = Like::new(user_id, cv_id);
+                    let result = collection.insert_one(like, None).await;
+                    match result {
+                        Ok(_) => Ok(()),
+                        Err(_) => Err(LikeError::AddLikesFail),
                     }
                 }
             },
-            Err(_) => Err(LikeError::QueryFail)
+            Err(_) => Err(LikeError::QueryFail),
         }
     }
 
-    async fn delete_like(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<(), Self::Error>{
-        let collection  = self.db.collection::<Like>(CV_LIKE_COLLECTION);
-        let filter = bson::doc!{
+    async fn delete_like(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<(), Self::Error> {
+        let collection = self.db.collection::<Like>(CV_LIKE_COLLECTION);
+        let filter = bson::doc! {
             "_id.user_id": user_id,
             "_id.cv_id": cv_id
         };
         let result = collection.find_one_and_delete(filter, None).await;
-        match result{
-            Ok(_) => Ok(()),
-            Err(_) => Err(LikeError::DeleteLikesFail)
+        match result {
+            Ok(doc) => match doc {
+                Some(_) => Ok(()),
+                None => Err(LikeError::LikeNotFound),
+            },
+            Err(_) => Err(LikeError::DeleteLikesFail),
         }
     }
 
     async fn get_likes_count(&self, cv_id: ObjectId) -> Result<i32, Self::Error> {
         let collection = self.db.collection::<Like>(CV_LIKE_COLLECTION);
-        let filter = bson::doc!{
+        let filter = bson::doc! {
             "_id.cv_id": cv_id
         };
         let result = collection.count_documents(filter, None).await;
-        match result{
+        match result {
             Ok(count) => Ok(count as i32),
-            Err(_) => Err(LikeError::LikesNumberNotFound)
+            Err(_) => Err(LikeError::LikesNumberNotFound),
         }
     }
 
-    async fn get_likes(&self, cv_id: ObjectId) -> Result<BoxStream<Like>, Self::Error>{
+    async fn get_likes(&self, cv_id: ObjectId) -> Result<BoxStream<Like>, Self::Error> {
         let collection = self.db.collection::<Like>(CV_LIKE_COLLECTION);
-        let filter = bson::doc!{
+        let filter = bson::doc! {
             "_id.cv_id": cv_id
         };
         let result = collection.find(filter, None).await;
-        match result{
-            Ok(cursor) => Ok(cursor.map(|like|like.unwrap()).boxed()),
-            Err(_) => Err(LikeError::QueryFail)
+        match result {
+            Ok(cursor) => Ok(cursor.map(|like| like.unwrap()).boxed()),
+            Err(_) => Err(LikeError::QueryFail),
         }
     }
 }
