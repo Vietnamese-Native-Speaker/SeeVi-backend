@@ -10,9 +10,10 @@ use crate::{
     services::cv_service::comment_service::CommentServiceError,
 };
 
+pub use bookmark::error::BookmarkDataSourceError;
+pub use bookmark::BookmarkDataSource;
 pub use like::error::LikeDataSourceError;
 pub use like::LikeDataSource;
-
 #[async_trait]
 pub trait CommentDataSource {
     type Error: std::error::Error + Send + Sync + Into<CommentServiceError>;
