@@ -41,7 +41,7 @@ impl Like {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, SimpleObject)]
+#[derive(Debug, Serialize, Deserialize, Clone, SimpleObject, PartialEq)]
 #[graphql(complex)]
 pub struct Bookmark {
     #[serde(rename = "_id")]
@@ -74,7 +74,7 @@ impl Bookmark {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, SimpleObject)]
+#[derive(Debug, Serialize, Deserialize, Clone, SimpleObject, PartialEq)]
 #[graphql(complex)]
 pub struct Share {
     #[serde(rename = "_id")]
