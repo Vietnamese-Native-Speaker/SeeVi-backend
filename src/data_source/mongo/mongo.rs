@@ -870,8 +870,8 @@ impl BookmarkDataSource for MongoDB {
     ) -> Result<(), Self::Error>{
         let collection = self.db.collection::<Bookmark>("bookmarks");
         let filter = bson::doc!{
-            "key.user_id": user_id.clone(),
-            "key.comment_id": comment_id.clone(),
+            "_id.user_id": user_id.clone(),
+            "_id.comment_id": comment_id.clone(),
         };
         let result = collection.find_one(filter, None).await;
         match result {
@@ -899,8 +899,8 @@ impl BookmarkDataSource for MongoDB {
     ) -> Result<(), Self::Error>{
         let collection = self.db.collection::<Bookmark>("bookmarks");
         let filter = bson::doc!{
-            "key.user_id" : user_id,
-            "key.comment_id" : comment_id
+            "_id.user_id" : user_id,
+            "_id.comment_id" : comment_id
         };
         let result = collection.find_one_and_delete(filter, None).await;
         match result{
@@ -915,7 +915,7 @@ impl BookmarkDataSource for MongoDB {
     ) -> Result<BoxStream<Result<Bookmark, Self::Error>>, Self::Error>{
         let collection = self.db.collection::<Bookmark>("bookmarks");
         let filter = bson::doc!{
-            "key.user_id": user_id
+            "_id.user_id": user_id
         };
         let result_cursor = collection.find(filter, None).await;
         match result_cursor{
@@ -927,8 +927,8 @@ impl BookmarkDataSource for MongoDB {
     async fn get_bookmark(&self, user_id: ObjectId, comment_id: ObjectId) -> Result<Option<Bookmark>, Self::Error>{
         let collection = self.db.collection::<Bookmark>("bookmarks");
         let filter = bson::doc!{
-            "key.user_id": user_id,
-            "key.comment_id": comment_id
+            "_id.user_id": user_id,
+            "_id.comment_id": comment_id
         };
         let result = collection.find_one(filter, None).await;
         match result {
