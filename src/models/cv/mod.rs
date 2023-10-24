@@ -11,3 +11,4 @@ mod tests;
 pub use interactions::Key;
 pub use interactions::Like;
 pub use interactions::Bookmark;
+pub use interactions::Share;
