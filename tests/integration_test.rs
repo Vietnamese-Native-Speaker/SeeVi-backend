@@ -347,7 +347,6 @@ async fn test_cv_apis() {
         "test description",
         &routes
     ).await;
-    print_json(&create_cv_rs);
     assert_eq!(create_cv_rs.get("data").unwrap().get("createCv").unwrap().get("title").unwrap().as_str().unwrap(), "test title");
 
     // get cv id
@@ -390,7 +389,7 @@ async fn test_cv_apis() {
         "test tag",
         &routes
     ).await;
-    assert_eq!(add_tag_rs.get("data").unwrap().get("addTag").unwrap().get("tags").unwrap().get("edges").unwrap().as_array().unwrap().len(), 1);
+    assert_eq!(add_tag_rs.get("data").unwrap().get("addOneTag").unwrap().get("tags").unwrap().as_array().unwrap().len(), 1);
     
     // remove tag
     let remove_tag_rs = common::remove_tag(
@@ -399,7 +398,7 @@ async fn test_cv_apis() {
         "test tag",
         &routes
     ).await;
-    assert_eq!(remove_tag_rs.get("data").unwrap().get("removeTag").unwrap().get("tags").unwrap().get("edges").unwrap().as_array().unwrap().len(), 0);
+    assert_eq!(remove_tag_rs.get("data").unwrap().get("removeOneTag").unwrap().get("tags").unwrap().as_array().unwrap().len(), 0);
 
     // create user 2
     let user2 = make_register_request("ltp2", "ltp2", &routes).await;
@@ -443,6 +442,7 @@ async fn test_cv_apis() {
         "test comment",
         &routes
     ).await;
+    print_json(&add_comment_rs);
     assert_eq!(add_comment_rs.get("data").unwrap().get("addComment").unwrap().get("comments").unwrap().get("edges").unwrap().as_array().unwrap().len(), 1);
 
     assert_eq!(add_comment_rs.get("data").unwrap().get("addComment").unwrap().get("comments").unwrap().get("edges").unwrap().as_array().unwrap()[0].get("node").unwrap().get("content").unwrap().as_str().unwrap(), "test comment");

@@ -209,11 +209,8 @@ pub async fn create_cv(
         .path("/graphql")
         .header("Authorization", "Bearer ".to_string() + &token)
         .body(query);
-    println!("request: {:?}", request);
     let reply = request.reply(routes).await.body().clone();
-    println!("reply: {:?}", reply);
     let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
-    println!("reply: {}", reply);
     reply
 }
 
@@ -243,14 +240,13 @@ pub async fn change_cv_title(
     routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
 ) -> serde_json::Value {
     let query = common::graphql::mutation_change_cv_title(cv_id.to_string().into(), title.into());
-
+    print_json(&query);
     let request = warp::test::request()
         .method("POST")
         .path("/graphql")
         .header("Authorization", "Bearer ".to_string() + &token)
         .body(query);
     let reply = request.reply(routes).await.body().clone();
-    print_json(&reply);
     let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
     reply
 }

@@ -228,7 +228,21 @@ make_graphql!(
 make_graphql!(
     mutation add_comment($id: ScalarObjectId!, $author: ScalarObjectId!, $content: String!) {
         addComment(cvId: $id, authorId: $author, content: $content) {
-            comments
+            comments {
+                edges {
+                    node {
+                        id
+                        created
+                    }
+                cursor
+                }
+                pageInfo {
+                    hasNextPage,
+                    hasPreviousPage,
+                    startCursor,
+                    endCursor
+                }
+            }
         }
     }
 );
@@ -236,7 +250,21 @@ make_graphql!(
 make_graphql!(
     mutation remove_comment($id: ScalarObjectId!, $comment_id: ScalarObjectId!) {
         removeComment(cvId: $id, commentId: $comment_id) {
-            comments
+            comments {
+                edges {
+                    node {
+                        id
+                        created
+                    }
+                cursor
+                }
+                pageInfo {
+                    hasNextPage,
+                    hasPreviousPage,
+                    startCursor,
+                    endCursor
+                }
+            }
         }
     }
 );
