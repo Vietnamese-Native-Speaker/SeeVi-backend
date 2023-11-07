@@ -35,18 +35,6 @@ impl Comment {
     async fn created(&self) -> String {
         self.created.try_to_rfc3339_string().unwrap()
     }
-}
-
-impl Comment {
-    pub fn new(content: String, author: bson::oid::ObjectId) -> Self {
-        Self {
-            id: bson::oid::ObjectId::new().into(),
-            author: author.into(),
-            content,
-            created: bson::DateTime::now(),
-            replies: vec![],
-        }
-    }
 
     async fn replies(
         &self,
@@ -197,6 +185,18 @@ impl Comment {
         match rs {
             Ok(count) => Ok(count),
             Err(e) => Err(e.extend()),
+        }
+    }
+}
+
+impl Comment {
+    pub fn new(content: String, author: bson::oid::ObjectId) -> Self {
+        Self {
+            id: bson::oid::ObjectId::new().into(),
+            author: author.into(),
+            content,
+            created: bson::DateTime::now(),
+            replies: vec![],
         }
     }
 }
