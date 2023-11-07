@@ -1,7 +1,7 @@
 use super::ShareService;
 use crate::{
     models::{
-        cv::{create_cv_input::CreateCVInputBuilder, interactions::Share, Like as CVLike, CV},
+        cv::{create_cv_input::CreateCVInputBuilder, interactions::CvShare, CvLike as CVLike, CV},
         sex::Sex,
         users::create_user_input::CreateUserInputBuilder,
     },
@@ -23,7 +23,7 @@ impl cv::share::ShareDataSource for MockDatabase {
     async fn get_shares_of_cv(
         &self,
         cv_id: ObjectId,
-    ) -> Result<BoxStream<Result<Share, Self::Error>>, Self::Error> {
+    ) -> Result<BoxStream<Result<CvShare, Self::Error>>, Self::Error> {
         let shares = self.cv_shares.lock().unwrap().clone();
         let stream = futures_util::stream::iter(shares.into_iter());
         let stream = stream
@@ -67,7 +67,7 @@ impl cv::share::ShareDataSource for MockDatabase {
                 return Err(CVInteractionError::AlreadyExists);
             }
         }
-        shares.push(Share::new(user_id, cv_id));
+        shares.push(CvShare::new(user_id, cv_id));
         Ok(())
     }
 
@@ -89,7 +89,7 @@ impl cv::share::ShareDataSource for MockDatabase {
     async fn get_shares_by_user_id(
         &self,
         user_id: ObjectId,
-    ) -> Result<BoxStream<Share>, Self::Error> {
+    ) -> Result<BoxStream<CvShare>, Self::Error> {
         let shares = self.cv_shares.lock().unwrap().clone();
         let stream = futures_util::stream::iter(shares.into_iter());
         let stream = stream.filter(move |share| {
@@ -103,7 +103,7 @@ impl cv::share::ShareDataSource for MockDatabase {
         &self,
         user_id: ObjectId,
         comment_id: ObjectId,
-    ) -> Result<Share, Self::Error> {
+    ) -> Result<CvShare, Self::Error> {
         let shares = self.cv_shares.lock().unwrap();
         for share in shares.iter() {
             if *share.user_id() == user_id && *share.cv_id() == comment_id {

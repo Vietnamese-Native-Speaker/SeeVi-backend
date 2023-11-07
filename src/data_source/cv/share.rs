@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use mongodb::bson::oid::ObjectId;
 
 use crate::{
-    models::cv::{interactions::Share, CV},
+    models::cv::{interactions::CvShare, CV},
     services::cv_service::error::CVServiceError,
 };
 
@@ -20,19 +20,19 @@ pub trait ShareDataSource: CVDataSource {
     async fn get_shares_by_user_id(
         &self,
         user_id: ObjectId,
-    ) -> Result<BoxStream<Share>, Self::Error>;
+    ) -> Result<BoxStream<CvShare>, Self::Error>;
 
     async fn get_shared_cvs_by_user_id(
         &self,
         user_id: ObjectId,
     ) -> Result<BoxStream<Result<CV, Self::Error>>, Self::Error>;
 
-    async fn get_share(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<Share, Self::Error>;
+    async fn get_share(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<CvShare, Self::Error>;
 
     async fn get_shares_of_cv(
         &self,
         cv_id: ObjectId,
-    ) -> Result<BoxStream<Result<Share, Self::Error>>, Self::Error>;
+    ) -> Result<BoxStream<Result<CvShare, Self::Error>>, Self::Error>;
 
     /// The default implementation might not be efficient, reimplementation is recommended.
     async fn get_shares_count_of_cv(&self, cv_id: ObjectId) -> Result<i32, Self::Error> {

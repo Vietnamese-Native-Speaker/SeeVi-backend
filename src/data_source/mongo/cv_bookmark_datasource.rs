@@ -7,7 +7,7 @@ use mongodb::bson::oid::ObjectId;
 use async_graphql::futures_util::stream::StreamExt;
 use crate::{
     data_source::cv::bookmark::BookmarkDataSource,
-    models::cv::{Bookmark, CV},
+    models::cv::{CvBookmark, CV},
     services::cv_service::error::CVServiceError,
 };
 
@@ -88,7 +88,7 @@ impl From<BookmarkError> for CVServiceError {
 impl BookmarkDataSource for MongoDB {
     type Error = BookmarkError;
     async fn add_bookmark(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<(), Self::Error> {
-        let collection = self.db.collection::<Bookmark>(CV_BOOKMARK_COLLECTION);
+        let collection = self.db.collection::<CvBookmark>(CV_BOOKMARK_COLLECTION);
         let filter = bson::doc!{
             "_id.user_id": user_id.clone(),
             "_id.cv_id": cv_id
@@ -99,7 +99,7 @@ impl BookmarkDataSource for MongoDB {
                 match bookmark_option {
                     Some(_) => Err(BookmarkError::BookmarkAlreadyExists),
                     None => {
-                        let bookmark = Bookmark::new(user_id, cv_id);
+                        let bookmark = CvBookmark::new(user_id, cv_id);
                         let add_result = collection.insert_one(bookmark, None).await;
                         match add_result{
                             Ok(_) => Ok(()),
@@ -113,7 +113,7 @@ impl BookmarkDataSource for MongoDB {
     }
 
     async fn delete_bookmark(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<(), Self::Error> {
-        let collection = self.db.collection::<Bookmark>(CV_BOOKMARK_COLLECTION);
+        let collection = self.db.collection::<CvBookmark>(CV_BOOKMARK_COLLECTION);
         let filter = bson::doc!{
             "_id.user_id": user_id,
             "_id.cv_id": cv_id
@@ -128,8 +128,8 @@ impl BookmarkDataSource for MongoDB {
     async fn get_bookmarks_of_user(
         &self,
         user_id: ObjectId,
-    ) -> Result<BoxStream<Bookmark>, Self::Error> {
-        let collection = self.db.collection::<Bookmark>(CV_BOOKMARK_COLLECTION);
+    ) -> Result<BoxStream<CvBookmark>, Self::Error> {
+        let collection = self.db.collection::<CvBookmark>(CV_BOOKMARK_COLLECTION);
         let filter = bson::doc!{
             "_id.user_id": user_id
         };
@@ -144,8 +144,8 @@ impl BookmarkDataSource for MongoDB {
         &self,
         user_id: ObjectId,
         cv_id: ObjectId,
-    ) -> Result<Bookmark, Self::Error> {
-        let collection = self.db.collection::<Bookmark>(CV_BOOKMARK_COLLECTION);
+    ) -> Result<CvBookmark, Self::Error> {
+        let collection = self.db.collection::<CvBookmark>(CV_BOOKMARK_COLLECTION);
         let filter = bson::doc!{
             "_id.user_id": user_id,
             "_id.cv_id": cv_id
@@ -165,8 +165,8 @@ impl BookmarkDataSource for MongoDB {
     async fn get_bookmarks_of_cv(
         &self,
         cv_id: ObjectId,
-    ) -> Result<BoxStream<Result<Bookmark, Self::Error>>, Self::Error> {
-        let collection = self.db.collection::<Bookmark>(CV_BOOKMARK_COLLECTION);
+    ) -> Result<BoxStream<Result<CvBookmark, Self::Error>>, Self::Error> {
+        let collection = self.db.collection::<CvBookmark>(CV_BOOKMARK_COLLECTION);
         let filter = bson::doc!{
             "_id.cv_id": cv_id
         };
@@ -181,7 +181,7 @@ impl BookmarkDataSource for MongoDB {
         &self,
         user_id: ObjectId,
     ) -> Result<BoxStream<Result<CV, Self::Error>>, Self::Error> {
-        let bookmark_collection = self.db.collection::<Bookmark>(CV_BOOKMARK_COLLECTION);
+        let bookmark_collection = self.db.collection::<CvBookmark>(CV_BOOKMARK_COLLECTION);
         let bookmark_filter = bson::doc!{
             "_id.user_id": user_id
         };
@@ -205,7 +205,7 @@ impl BookmarkDataSource for MongoDB {
 
     /// This default implementation is not efficient, reimplement it if you can.
     async fn get_bookmarks_count_of_cv(&self, cv_id: ObjectId) -> Result<u64, Self::Error> {
-        let collection = self.db.collection::<Bookmark>(CV_BOOKMARK_COLLECTION);
+        let collection = self.db.collection::<CvBookmark>(CV_BOOKMARK_COLLECTION);
         let filter = bson::doc!{
             "_id.cv_id": cv_id
         };

@@ -9,7 +9,7 @@ pub use error::CommentServiceError;
 use crate::data_source::BookmarkDataSource;
 use crate::data_source::LikeDataSource;
 use crate::data_source::{CVDataSource, CVDataSourceError, CommentDataSource};
-use crate::models::comment::{Comment, CreateCommentInput, Like, UpdateCommentInput};
+use crate::models::comment::{Comment, CreateCommentInput, CommentLike, UpdateCommentInput};
 
 pub struct CommentService {}
 
@@ -226,7 +226,7 @@ impl CommentService {
     pub async fn get_likes(
         cmt_database: &(impl CommentDataSource + LikeDataSource + std::marker::Sync),
         comment_id: ObjectId,
-    ) -> Result<BoxStream<Result<Like, CommentServiceError>>, CommentServiceError> {
+    ) -> Result<BoxStream<Result<CommentLike, CommentServiceError>>, CommentServiceError> {
         let likes = match cmt_database.get_likes(comment_id).await {
             Ok(likes) => likes,
             Err(err) => return Err(err.into()),

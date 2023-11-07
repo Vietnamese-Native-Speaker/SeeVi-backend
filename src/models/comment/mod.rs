@@ -4,12 +4,12 @@ mod create_comment_input;
 pub mod like;
 pub mod update_comment_input;
 
-pub use bookmark::Bookmark;
-pub use bookmark::Key as BookmarkKey;
+pub use bookmark::CommentBookmark;
+pub use bookmark::CommentBookmarkKey as BookmarkKey;
 pub use comment::Comment;
 pub use create_comment_input::{
     CreateCommentInput, CreateCommentInputBuilder, CreateCommentInputBuilderError,
 };
-pub use like::Key as LikeKey;
-pub use like::Like;
+pub use like::CommentLikeKey as LikeKey;
+pub use like::CommentLike;
 pub use update_comment_input::UpdateCommentInput;

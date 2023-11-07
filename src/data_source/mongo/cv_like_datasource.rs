@@ -6,7 +6,7 @@ use async_graphql::futures_util::stream::StreamExt;
 use futures_core::stream::BoxStream;
 use mongodb::bson::oid::ObjectId;
 
-use crate::{data_source::cv, models::cv::Like, services::cv_service::error::CVServiceError};
+use crate::{data_source::cv, models::cv::CvLike, services::cv_service::error::CVServiceError};
 
 use super::MongoDB;
 
@@ -93,7 +93,7 @@ impl cv::like::LikeDataSource for MongoDB {
     type Error = LikeError;
 
     async fn add_like(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<(), Self::Error> {
-        let collection = self.db.collection::<Like>(CV_LIKE_COLLECTION);
+        let collection = self.db.collection::<CvLike>(CV_LIKE_COLLECTION);
         let filter = bson::doc! {
             "_id.user_id" : user_id.clone(),
             "_id.cv_id" : cv_id.clone()
@@ -103,7 +103,7 @@ impl cv::like::LikeDataSource for MongoDB {
             Ok(like_option) => match like_option {
                 Some(_like) => Err(LikeError::LikeAlreadyExists),
                 None => {
-                    let like = Like::new(user_id, cv_id);
+                    let like = CvLike::new(user_id, cv_id);
                     let result = collection.insert_one(like, None).await;
                     match result {
                         Ok(_) => Ok(()),
@@ -116,7 +116,7 @@ impl cv::like::LikeDataSource for MongoDB {
     }
 
     async fn delete_like(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<(), Self::Error> {
-        let collection = self.db.collection::<Like>(CV_LIKE_COLLECTION);
+        let collection = self.db.collection::<CvLike>(CV_LIKE_COLLECTION);
         let filter = bson::doc! {
             "_id.user_id": user_id,
             "_id.cv_id": cv_id
@@ -132,7 +132,7 @@ impl cv::like::LikeDataSource for MongoDB {
     }
 
     async fn get_likes_count(&self, cv_id: ObjectId) -> Result<i32, Self::Error> {
-        let collection = self.db.collection::<Like>(CV_LIKE_COLLECTION);
+        let collection = self.db.collection::<CvLike>(CV_LIKE_COLLECTION);
         let filter = bson::doc! {
             "_id.cv_id": cv_id
         };
@@ -143,8 +143,8 @@ impl cv::like::LikeDataSource for MongoDB {
         }
     }
 
-    async fn get_likes(&self, cv_id: ObjectId) -> Result<BoxStream<Like>, Self::Error> {
-        let collection = self.db.collection::<Like>(CV_LIKE_COLLECTION);
+    async fn get_likes(&self, cv_id: ObjectId) -> Result<BoxStream<CvLike>, Self::Error> {
+        let collection = self.db.collection::<CvLike>(CV_LIKE_COLLECTION);
         let filter = bson::doc! {
             "_id.cv_id": cv_id
         };

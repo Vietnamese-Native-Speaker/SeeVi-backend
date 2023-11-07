@@ -8,7 +8,7 @@ use async_graphql::futures_util::stream::StreamExt;
 
 use crate::{
     data_source::cv::share::ShareDataSource,
-    models::cv::{interactions::Share, CV},
+    models::cv::{interactions::CvShare, CV},
     services::cv_service::error::CVServiceError,
 };
 
@@ -91,7 +91,7 @@ impl ShareDataSource for MongoDB {
     type Error = ShareError;
 
     async fn add_share(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<(), Self::Error> {
-        let collection = self.db.collection::<Share>(CV_SHARE_COLLECTION);
+        let collection = self.db.collection::<CvShare>(CV_SHARE_COLLECTION);
         let filter = bson::doc!{
             "_id.user_id": user_id.clone(),
             "_id.cv_id": cv_id
@@ -102,7 +102,7 @@ impl ShareDataSource for MongoDB {
                 match share_option {
                     Some(_share) => Err(ShareError::ShareAlreadyExists),
                     None => {
-                        let share = Share::new(user_id, cv_id);
+                        let share = CvShare::new(user_id, cv_id);
                         let add_result = collection.insert_one(share, None).await;
                         match add_result{
                             Ok(_) => Ok(()),
@@ -116,7 +116,7 @@ impl ShareDataSource for MongoDB {
     }
 
     async fn delete_share(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<(), Self::Error> {
-        let collection = self.db.collection::<Share>(CV_SHARE_COLLECTION);
+        let collection = self.db.collection::<CvShare>(CV_SHARE_COLLECTION);
         let filter = bson::doc!{
             "_id.user_id": user_id,
             "_id.cv_id": cv_id
@@ -131,8 +131,8 @@ impl ShareDataSource for MongoDB {
     async fn get_shares_by_user_id(
         &self,
         user_id: ObjectId,
-    ) -> Result<BoxStream<Share>, Self::Error> {
-        let collection = self.db.collection::<Share>(CV_SHARE_COLLECTION);
+    ) -> Result<BoxStream<CvShare>, Self::Error> {
+        let collection = self.db.collection::<CvShare>(CV_SHARE_COLLECTION);
         let filter = bson::doc!{
             "_id.user_id": user_id
         };
@@ -147,7 +147,7 @@ impl ShareDataSource for MongoDB {
         &self,
         user_id: ObjectId,
     ) -> Result<BoxStream<Result<CV, Self::Error>>, Self::Error> {
-        let share_collection = self.db.collection::<Share>(CV_SHARE_COLLECTION);
+        let share_collection = self.db.collection::<CvShare>(CV_SHARE_COLLECTION);
         let share_filter = bson::doc!{
             "_id.user_id": user_id
         };
@@ -169,8 +169,8 @@ impl ShareDataSource for MongoDB {
         }
     }
 
-    async fn get_share(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<Share, Self::Error> {
-        let collection = self.db.collection::<Share>(CV_SHARE_COLLECTION);
+    async fn get_share(&self, user_id: ObjectId, cv_id: ObjectId) -> Result<CvShare, Self::Error> {
+        let collection = self.db.collection::<CvShare>(CV_SHARE_COLLECTION);
         let filter = bson::doc!{
             "_id.user_id": user_id,
             "_id.cv_id": cv_id
@@ -190,8 +190,8 @@ impl ShareDataSource for MongoDB {
     async fn get_shares_of_cv(
         &self,
         cv_id: ObjectId,
-    ) -> Result<BoxStream<Result<Share, Self::Error>>, Self::Error> {
-        let collection = self.db.collection::<Share>(CV_SHARE_COLLECTION);
+    ) -> Result<BoxStream<Result<CvShare, Self::Error>>, Self::Error> {
+        let collection = self.db.collection::<CvShare>(CV_SHARE_COLLECTION);
         let filter = bson::doc!{
             "_id.cv_id": cv_id
         };
@@ -203,7 +203,7 @@ impl ShareDataSource for MongoDB {
     }
 
     async fn get_shares_count_of_cv(&self, cv_id: ObjectId) -> Result<i32, Self::Error> {
-        let collection = self.db.collection::<Share>(CV_SHARE_COLLECTION);
+        let collection = self.db.collection::<CvShare>(CV_SHARE_COLLECTION);
         let filter = bson::doc!{
             "_id.cv_id": cv_id
         };

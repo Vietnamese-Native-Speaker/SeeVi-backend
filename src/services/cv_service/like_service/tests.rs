@@ -1,7 +1,7 @@
 use super::LikeService;
 use crate::{
     models::{
-        cv::{create_cv_input::CreateCVInputBuilder, Like as CVLike},
+        cv::{create_cv_input::CreateCVInputBuilder, CvLike as CVLike},
         users::create_user_input::CreateUserInputBuilder, sex::Sex,
     },
     services::{cv_service::cv_service::CVService, user_service::UserService},

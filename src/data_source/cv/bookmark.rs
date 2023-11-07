@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use mongodb::bson::oid::ObjectId;
 
 use crate::{
-    models::cv::{Bookmark, CV},
+    models::cv::{CvBookmark, CV},
     services::cv_service::error::CVServiceError,
 };
 
@@ -18,18 +18,18 @@ pub trait BookmarkDataSource {
     async fn get_bookmarks_of_user(
         &self,
         user_id: ObjectId,
-    ) -> Result<BoxStream<Bookmark>, Self::Error>;
+    ) -> Result<BoxStream<CvBookmark>, Self::Error>;
 
     async fn get_bookmark(
         &self,
         user_id: ObjectId,
         cv_id: ObjectId,
-    ) -> Result<Bookmark, Self::Error>;
+    ) -> Result<CvBookmark, Self::Error>;
 
     async fn get_bookmarks_of_cv(
         &self,
         cv_id: ObjectId,
-    ) -> Result<BoxStream<Result<Bookmark, Self::Error>>, Self::Error>;
+    ) -> Result<BoxStream<Result<CvBookmark, Self::Error>>, Self::Error>;
 
     async fn get_bookmarked_cvs_of_user(
         &self,

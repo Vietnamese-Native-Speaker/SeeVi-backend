@@ -5,24 +5,24 @@ use serde::{Deserialize, Serialize};
 use crate::object_id::ScalarObjectId;
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, SimpleObject)]
-pub struct Key {
+pub struct CommentLikeKey {
     pub user_id: ScalarObjectId,
     pub comment_id: ScalarObjectId,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, SimpleObject)]
 #[graphql(complex)]
-pub struct Like {
+pub struct CommentLike {
     #[serde(rename = "_id")]
-    pub key: Key,
+    pub key: CommentLikeKey,
     #[graphql(skip)]
     pub created: DateTime,
 }
 
-impl Like {
+impl CommentLike {
     pub fn new(user_id: ScalarObjectId, comment_id: ScalarObjectId) -> Self {
         Self {
-            key: Key {
+            key: CommentLikeKey {
                 user_id,
                 comment_id,
             },
@@ -32,7 +32,7 @@ impl Like {
 }
 
 #[ComplexObject]
-impl Like {
+impl CommentLike {
     pub async fn created(&self) -> String {
         self.created.try_to_rfc3339_string().unwrap()
     }

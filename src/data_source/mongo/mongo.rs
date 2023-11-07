@@ -7,8 +7,8 @@ use crate::data_source::comment::error::CommentDataSourceError;
 use crate::data_source::comment::{
     BookmarkDataSource, BookmarkDataSourceError, LikeDataSource, LikeDataSourceError,
 };
-use crate::models::comment::like::Key;
-use crate::models::comment::Bookmark;
+use crate::models::comment::like::CommentLikeKey;
+use crate::models::comment::CommentBookmark;
 use crate::models::cv_details::CVDetails;
 use crate::models::education::Education;
 use crate::models::experience::Experience;
@@ -23,7 +23,7 @@ use crate::{
         CVDetailsDataSource, CommentDataSource, FriendsListDataSource, FriendsListError,
         UserDataSource, UserDataSourceError,
     },
-    models::comment::{Comment, CreateCommentInput, Like, UpdateCommentInput},
+    models::comment::{Comment, CreateCommentInput, CommentLike, UpdateCommentInput},
 };
 use async_graphql::futures_util::stream::BoxStream;
 use async_graphql::futures_util::stream::StreamExt;
@@ -345,6 +345,22 @@ impl CVDataSource for MongoDB {
 
     async fn update_cv_info(&self, _input: cv::UpdateCVInput) -> Result<cv::CV, CVDataSourceError> {
         unimplemented!()
+    }
+
+    async fn add_comment_to_cv(
+        &self,
+        _cv_id: ObjectId,
+        _comment_id: Comment,
+    ) -> Result<CV, CVDataSourceError> {
+        todo!()
+    }
+
+    async fn remove_comment_from_cv(
+        &self,
+        _cv_id: ObjectId,
+        _comment_id: ObjectId,
+    ) -> Result<CV, CVDataSourceError> {
+        todo!()
     }
 
     async fn delete_cv(&self, id: bson::oid::ObjectId) -> Result<(), CVDataSourceError> {
@@ -804,7 +820,7 @@ impl LikeDataSource for MongoDB {
         comment_id: bson::oid::ObjectId,
     ) -> Result<(), Self::Error> {
         let comment_collection: mongodb::Collection<Comment> = self.db.collection(LIKE_COLLECTION);
-        let like_collection: mongodb::Collection<Like> = self.db.collection(COMMENT_COLLECTION);
+        let like_collection: mongodb::Collection<CommentLike> = self.db.collection(COMMENT_COLLECTION);
         let filter = bson::doc! {
             "key.user_id": user_id.clone(),
             "key.comment_id": comment_id.clone(),
@@ -814,8 +830,8 @@ impl LikeDataSource for MongoDB {
             Ok(like_option) => match like_option {
                 Some(_) => Err(LikeDataSourceError::LikeAlreadyExists),
                 None => {
-                    let like = Like {
-                        key: Key {
+                    let like = CommentLike {
+                        key: CommentLikeKey {
                             user_id: user_id.clone().into(),
                             comment_id: comment_id.clone().into(),
                         },
@@ -838,7 +854,7 @@ impl LikeDataSource for MongoDB {
         comment_id: bson::oid::ObjectId,
     ) -> Result<(), Self::Error> {
         let comment_collection: mongodb::Collection<Comment> = self.db.collection(LIKE_COLLECTION);
-        let like_collection: mongodb::Collection<Like> = self.db.collection(COMMENT_COLLECTION);
+        let like_collection: mongodb::Collection<CommentLike> = self.db.collection(COMMENT_COLLECTION);
         let filter = bson::doc! {
             "key.user_id": user_id,
             "key.comment_id": comment_id,
@@ -863,8 +879,8 @@ impl LikeDataSource for MongoDB {
     async fn get_likes(
         &self,
         comment_id: bson::oid::ObjectId,
-    ) -> Result<BoxStream<Like>, Self::Error> {
-        let collection: mongodb::Collection<Like> = self.db.collection(LIKE_COLLECTION);
+    ) -> Result<BoxStream<CommentLike>, Self::Error> {
+        let collection: mongodb::Collection<CommentLike> = self.db.collection(LIKE_COLLECTION);
         let filter = bson::doc! {
             "key.comment_id": comment_id,
         };
@@ -901,7 +917,7 @@ impl BookmarkDataSource for MongoDB {
         user_id: ObjectId,
         comment_id: ObjectId,
     ) -> Result<(), Self::Error> {
-        let collection = self.db.collection::<Bookmark>("bookmarks");
+        let collection = self.db.collection::<CommentBookmark>("bookmarks");
         let filter = bson::doc! {
             "_id.user_id": user_id.clone(),
             "_id.comment_id": comment_id.clone(),
@@ -911,7 +927,7 @@ impl BookmarkDataSource for MongoDB {
             Ok(bookmark_option) => match bookmark_option {
                 Some(bookmark) => Err(BookmarkDataSourceError::BookmarkAlreadyExists),
                 None => {
-                    let bookmark = Bookmark::new(user_id.into(), comment_id.into());
+                    let bookmark = CommentBookmark::new(user_id.into(), comment_id.into());
                     let add_result = collection.insert_one(bookmark, None).await;
                     match add_result {
                         Ok(_) => Ok(()),
@@ -928,7 +944,7 @@ impl BookmarkDataSource for MongoDB {
         user_id: ObjectId,
         comment_id: ObjectId,
     ) -> Result<(), Self::Error> {
-        let collection = self.db.collection::<Bookmark>("bookmarks");
+        let collection = self.db.collection::<CommentBookmark>("bookmarks");
         let filter = bson::doc! {
             "_id.user_id" : user_id,
             "_id.comment_id" : comment_id
@@ -943,8 +959,8 @@ impl BookmarkDataSource for MongoDB {
     async fn get_bookmarks_of_user(
         &self,
         user_id: ObjectId,
-    ) -> Result<BoxStream<Result<Bookmark, Self::Error>>, Self::Error> {
-        let collection = self.db.collection::<Bookmark>("bookmarks");
+    ) -> Result<BoxStream<Result<CommentBookmark, Self::Error>>, Self::Error> {
+        let collection = self.db.collection::<CommentBookmark>("bookmarks");
         let filter = bson::doc! {
             "_id.user_id": user_id
         };
@@ -961,8 +977,8 @@ impl BookmarkDataSource for MongoDB {
         &self,
         user_id: ObjectId,
         comment_id: ObjectId,
-    ) -> Result<Option<Bookmark>, Self::Error> {
-        let collection = self.db.collection::<Bookmark>("bookmarks");
+    ) -> Result<Option<CommentBookmark>, Self::Error> {
+        let collection = self.db.collection::<CommentBookmark>("bookmarks");
         let filter = bson::doc! {
             "_id.user_id": user_id,
             "_id.comment_id": comment_id
@@ -975,7 +991,7 @@ impl BookmarkDataSource for MongoDB {
     }
 
     async fn get_bookmarks_count(&self, comment_id: ObjectId) -> Result<i32, Self::Error> {
-        let collection = self.db.collection::<Bookmark>("bookmarks");
+        let collection = self.db.collection::<CommentBookmark>("bookmarks");
         let filter = bson::doc! {
             "_id.comment_id": comment_id
         };

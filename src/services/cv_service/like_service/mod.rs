@@ -6,7 +6,7 @@ use mongodb::bson::oid::ObjectId;
 
 use crate::{
     data_source::{cv::like::LikeDataSource, CVDataSource, UserDataSource},
-    models::cv::Like,
+    models::cv::CvLike,
     services::user_service::error::UserServiceError,
 };
 
@@ -90,7 +90,7 @@ impl LikeService {
     pub async fn get_likes_by_cv(
         db: &(impl LikeDataSource + UserDataSource + CVDataSource + std::marker::Sync),
         cv_id: ObjectId,
-    ) -> Result<BoxStream<Result<Like, CVServiceError>>, CVServiceError> {
+    ) -> Result<BoxStream<Result<CvLike, CVServiceError>>, CVServiceError> {
         if let Err(e) = db.get_cv_by_id(cv_id).await {
             match e {
                 crate::data_source::CVDataSourceError::IdNotFound(_) => {

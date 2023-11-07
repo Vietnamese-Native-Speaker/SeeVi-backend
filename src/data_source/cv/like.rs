@@ -2,7 +2,7 @@ use async_graphql::futures_util::{stream::BoxStream, StreamExt};
 use async_trait::async_trait;
 use mongodb::bson::oid::ObjectId;
 
-use crate::{models::cv::Like, services::cv_service::error::CVServiceError};
+use crate::{models::cv::CvLike, services::cv_service::error::CVServiceError};
 
 #[async_trait]
 pub trait LikeDataSource {
@@ -18,5 +18,5 @@ pub trait LikeDataSource {
         Ok(count as i32)
     }
 
-    async fn get_likes(&self, cv_id: ObjectId) -> Result<BoxStream<Like>, Self::Error>;
+    async fn get_likes(&self, cv_id: ObjectId) -> Result<BoxStream<CvLike>, Self::Error>;
 }

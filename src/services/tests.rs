@@ -5,14 +5,14 @@ use crate::data_source::CommentDataSource;
 use crate::data_source::LikeDataSource;
 use crate::data_source::UserDataSource;
 use crate::data_source::{FriendsListDataSource, FriendsListError};
-use crate::models::comment::Bookmark as CommentBookmark;
+use crate::models::comment::CommentBookmark as CommentBookmark;
 use crate::models::comment::Comment;
 use crate::models::comment::CreateCommentInput;
-use crate::models::comment::Like;
+use crate::models::comment::CommentLike;
 use crate::models::comment::UpdateCommentInput;
-use crate::models::cv::interactions::Like as CVLike;
-use crate::models::cv::interactions::Share;
-use crate::models::cv::Bookmark as CVBookmark;
+use crate::models::cv::interactions::CvLike as CVLike;
+use crate::models::cv::interactions::CvShare;
+use crate::models::cv::CvBookmark as CVBookmark;
 use crate::models::cv::CreateCVInput;
 use crate::models::cv::UpdateCVInput;
 use crate::models::cv::CV;
@@ -36,8 +36,8 @@ pub struct MockDatabase {
     pub(crate) friend_requests: Mutex<Vec<FriendRequest>>,
     pub(crate) cvs: Mutex<Vec<CV>>,
     pub(crate) comments: Mutex<Vec<Comment>>,
-    pub(crate) likes: Mutex<Vec<Like>>,
-    pub(crate) cv_shares: Mutex<Vec<Share>>,
+    pub(crate) likes: Mutex<Vec<CommentLike>>,
+    pub(crate) cv_shares: Mutex<Vec<CvShare>>,
     pub(crate) cv_bookmarks: Mutex<Vec<CVBookmark>>,
     pub(crate) cv_likes: Mutex<Vec<CVLike>>,
     pub(crate) bookmarks: Mutex<Vec<CommentBookmark>>,
@@ -523,7 +523,7 @@ impl LikeDataSource for MockDatabase {
                 return Err(DummyLikeDataSource("like already exists".to_string()));
             }
         }
-        likes.push(Like::new(user_id.into(), comment_id.into()));
+        likes.push(CommentLike::new(user_id.into(), comment_id.into()));
         Ok(())
     }
 
@@ -561,7 +561,7 @@ impl LikeDataSource for MockDatabase {
     async fn get_likes(
         &self,
         comment_id: bson::oid::ObjectId,
-    ) -> Result<BoxStream<Like>, Self::Error> {
+    ) -> Result<BoxStream<CommentLike>, Self::Error> {
         let likes = self.likes.lock().unwrap().clone();
         let stream = futures_util::stream::iter(likes.into_iter());
         let stream = stream.filter(move |like| {

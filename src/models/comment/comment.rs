@@ -12,7 +12,7 @@ use crate::{
 };
 
 use super::create_comment_input::CreateCommentInput;
-use super::Like;
+use super::CommentLike;
 
 #[derive(Debug, Serialize, Deserialize, Clone, SimpleObject, Builder)]
 #[graphql(complex)]
@@ -117,7 +117,7 @@ impl Comment {
     ) -> gql::Result<
         connection::Connection<
             ScalarObjectId,
-            Like,
+            CommentLike,
             connection::EmptyFields,
             connection::EmptyFields,
         >,

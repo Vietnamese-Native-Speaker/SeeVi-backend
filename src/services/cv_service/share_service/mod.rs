@@ -7,7 +7,7 @@ use mongodb::bson::oid::ObjectId;
 
 use crate::{
     data_source::{cv::share::ShareDataSource, CVDataSource, UserDataSource},
-    models::cv::{interactions::Share, CV},
+    models::cv::{interactions::CvShare, CV},
     services::user_service::error::UserServiceError,
 };
 
@@ -120,7 +120,7 @@ impl ShareService {
     pub async fn get_shares_of_cv(
         db: &(impl ShareDataSource + CVDataSource + std::marker::Sync),
         cv_id: ObjectId,
-    ) -> Result<BoxStream<Result<Share, CVServiceError>>, CVServiceError> {
+    ) -> Result<BoxStream<Result<CvShare, CVServiceError>>, CVServiceError> {
         if let Err(e) = db.get_cv_by_id(cv_id).await {
             match e {
                 crate::data_source::CVDataSourceError::IdNotFound(_) => {

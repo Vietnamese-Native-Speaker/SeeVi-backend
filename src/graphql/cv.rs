@@ -3,8 +3,8 @@
 use async_graphql as gql;
 use async_graphql::{connection, futures_util::StreamExt, ComplexObject, Context};
 
-use crate::models::cv::interactions::Share;
-use crate::models::cv::Like;
+use crate::models::cv::interactions::CvShare;
+use crate::models::cv::CvLike;
 use crate::services::cv_service::like_service::LikeService;
 use crate::services::cv_service::share_service::ShareService;
 use crate::{
@@ -30,7 +30,7 @@ impl CV {
     ) -> gql::Result<
         connection::Connection<
             ScalarObjectId,
-            Like,
+            CvLike,
             connection::EmptyFields,
             connection::EmptyFields,
         >,
@@ -174,7 +174,7 @@ impl CV {
     ) -> gql::Result<
         connection::Connection<
             ScalarObjectId,
-            Share,
+            CvShare,
             connection::EmptyFields,
             connection::EmptyFields,
         >,

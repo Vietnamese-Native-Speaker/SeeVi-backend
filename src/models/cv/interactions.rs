@@ -3,24 +3,24 @@ use mongodb::bson::{oid::ObjectId, DateTime};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, SimpleObject)]
-pub struct Key {
+pub struct CvInteractionsKey {
     pub user_id: ObjectId,
     pub cv_id: ObjectId,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, SimpleObject)]
 #[graphql(complex)]
-pub struct Like {
+pub struct CvLike {
     #[serde(rename = "_id")]
-    key: Key,
+    key: CvInteractionsKey,
     #[graphql(skip)]
     pub created: DateTime,
 }
 
-impl Like {
+impl CvLike {
     pub fn new(user_id: ObjectId, cv_id: ObjectId) -> Self {
         Self {
-            key: Key { user_id, cv_id },
+            key: CvInteractionsKey { user_id, cv_id },
             created: DateTime::now(),
         }
     }
@@ -35,7 +35,7 @@ impl Like {
 }
 
 #[ComplexObject]
-impl Like {
+impl CvLike {
     pub async fn created(&self) -> String {
         self.created.try_to_rfc3339_string().unwrap()
     }
@@ -43,17 +43,17 @@ impl Like {
 
 #[derive(Debug, Serialize, Deserialize, Clone, SimpleObject, PartialEq)]
 #[graphql(complex)]
-pub struct Bookmark {
+pub struct CvBookmark {
     #[serde(rename = "_id")]
-    key: Key,
+    key: CvInteractionsKey,
     #[graphql(skip)]
     pub created: DateTime,
 }
 
-impl Bookmark {
+impl CvBookmark {
     pub fn new(user_id: ObjectId, cv_id: ObjectId) -> Self {
         Self {
-            key: Key { user_id, cv_id },
+            key: CvInteractionsKey { user_id, cv_id },
             created: DateTime::now(),
         }
     }
@@ -68,7 +68,7 @@ impl Bookmark {
 }
 
 #[ComplexObject]
-impl Bookmark {
+impl CvBookmark {
     pub async fn created(&self) -> String {
         self.created.try_to_rfc3339_string().unwrap()
     }
@@ -76,17 +76,17 @@ impl Bookmark {
 
 #[derive(Debug, Serialize, Deserialize, Clone, SimpleObject, PartialEq)]
 #[graphql(complex)]
-pub struct Share {
+pub struct CvShare {
     #[serde(rename = "_id")]
-    key: Key,
+    key: CvInteractionsKey,
     #[graphql(skip)]
     pub created: DateTime,
 }
 
-impl Share {
+impl CvShare {
     pub fn new(user_id: ObjectId, cv_id: ObjectId) -> Self {
         Self {
-            key: Key { user_id, cv_id },
+            key: CvInteractionsKey { user_id, cv_id },
             created: DateTime::now(),
         }
     }
@@ -101,7 +101,7 @@ impl Share {
 }
 
 #[ComplexObject]
-impl Share {
+impl CvShare {
     pub async fn created(&self) -> String {
         self.created.try_to_rfc3339_string().unwrap()
     }

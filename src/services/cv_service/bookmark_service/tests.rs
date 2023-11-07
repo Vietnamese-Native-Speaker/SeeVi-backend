@@ -1,6 +1,6 @@
 use crate::{
     models::{
-        cv::{Bookmark as CVBookmark, CV},
+        cv::{CvBookmark as CVBookmark, CV},
         sex::Sex,
         users::create_user_input::CreateUserInputBuilder,
     },
