@@ -74,6 +74,7 @@ impl Query {
         }
     }
 
+    /// Get CVs using specified filter
     async fn cvs_list(
         &self,
         ctx: &Context<'_>,

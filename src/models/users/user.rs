@@ -61,6 +61,7 @@ pub struct User {
 
 #[async_graphql::ComplexObject]
 impl User {
+    /// Get friends list of user.
     async fn friends(
         &self,
         ctx: &Context<'_>,
@@ -131,6 +132,7 @@ impl User {
         .await
     }
 
+    /// Get the CVs owned by the user.
     async fn cvs(
         &self,
         ctx: &Context<'_>,
