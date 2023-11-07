@@ -541,3 +541,266 @@ async fn test_cv_apis() {
     ).await;
     assert_eq!(delete_cv_rs.get("data").unwrap().get("deleteCv").unwrap(), true);
 } 
+
+#[tokio::test]
+async fn test_cv_comment_apis() {
+    // Flow of this test:
+    // 1. Create 3 users
+    // 2. Login 3 users
+    // 3. Create a cv from user 1
+    // 4. Add a comment from user 2 to cv
+    // 5. Add a comment from user 3 to cv
+    // 6. Add reply from user 1 to comment of user 2
+    // 7. User 3 like comment of user 2
+    // 8. User 3 unlike comment of user 2
+    // 9. User 3 bookmark comment of user 2
+    // 10. User 3 bookmark comment of user 2 (test duplicate bookmark)
+    // 11. User 1 remove reply of user 1
+    // 12. User 3 unbookmark comment of user 2
+    // 13. User 2 edit comment content
+    // 14. User 2 delete comment
+
+    dotenv::dotenv().ok();
+
+    let mongo_ds = MongoForTesting::init().await;
+
+    let schema = Schema::build(Query, Mutation, EmptySubscription)
+        .data(mongo_ds)
+        .finish();
+    let routes = default_route(schema);
+
+    // Create 3 users
+
+    let user1 = make_register_request("ltp1", "ltp1", &routes).await;
+    print_json(&user1);
+
+    let user2 = make_register_request("ltp2", "ltp2", &routes).await;
+    print_json(&user2);
+
+    let user3 = make_register_request("ltp3", "ltp3", &routes).await;
+    print_json(&user3);
+
+    // Login 3 users
+
+    let login_rs1 = make_login_request("ltp1", "ltp1", &routes).await;
+    let access_token1 = login_rs1
+        .get("data")
+        .expect("should have 'data' field")
+        .get("login")
+        .expect("should have 'login' field")
+        .get("accessToken")
+        .expect("should have 'accessToken' field")
+        .as_str()
+        .unwrap()
+        .to_string();
+    let id1 = login_rs1
+        .get("data")
+        .expect("should have 'data' field")
+        .get("login")
+        .expect("should have 'login' field")
+        .get("id")
+        .expect("should have 'id' field")
+        .as_str()
+        .unwrap()
+        .to_string()
+        .parse::<ObjectId>()
+        .map(Into::<ScalarObjectId>::into)
+        .unwrap();
+
+    let login_rs2 = make_login_request("ltp2", "ltp2", &routes).await;
+    let access_token2 = login_rs2
+        .get("data")
+        .expect("should have 'data' field")
+        .get("login")
+        .expect("should have 'login' field")
+        .get("accessToken")
+        .expect("should have 'accessToken' field")
+        .as_str()
+        .unwrap()
+        .to_string();
+    let id2 = login_rs2
+        .get("data")
+        .expect("should have 'data' field")
+        .get("login")
+        .expect("should have 'login' field")
+        .get("id")
+        .expect("should have 'id' field")
+        .as_str()
+        .unwrap()
+        .to_string()
+        .parse::<ObjectId>()
+        .map(Into::<ScalarObjectId>::into)
+        .unwrap();
+
+    let login_rs3 = make_login_request("ltp3", "ltp3", &routes).await;
+    let access_token3 = login_rs3
+        .get("data")
+        .expect("should have 'data' field")
+        .get("login")
+        .expect("should have 'login' field")
+        .get("accessToken")
+        .expect("should have 'accessToken' field")
+        .as_str()
+        .unwrap()
+        .to_string();
+    let id3 = login_rs3
+        .get("data")
+        .expect("should have 'data' field")
+        .get("login")
+        .expect("should have 'login' field")
+        .get("id")
+        .expect("should have 'id' field")
+        .as_str()
+        .unwrap()
+        .to_string()
+        .parse::<ObjectId>()
+        .map(Into::<ScalarObjectId>::into)
+        .unwrap();
+
+    // Create a cv from user 1
+    let cv1 = common::create_cv(
+        access_token1.clone(),
+        id1.clone(),
+        "test title",
+        "test description",
+        &routes
+    ).await;
+    assert_eq!(cv1.get("data").unwrap().get("createCv").unwrap().get("title").unwrap().as_str().unwrap(), "test title");
+    let cv_id1 = cv1
+        .get("data")
+        .expect("should have 'data' field")
+        .get("createCv")
+        .expect("should have 'createCv' field")
+        .get("id")
+        .expect("should have 'id' field")
+        .as_str()
+        .unwrap()
+        .to_string()
+        .parse::<ObjectId>()
+        .map(Into::<ScalarObjectId>::into)
+        .unwrap();
+
+    // Add a comment from user 2 to cv
+    let comment_from_user2 = common::add_comment(
+        access_token2.clone(),
+        id2.clone(),
+        cv_id1.clone(),
+        "test comment from user 2",
+        &routes
+    ).await;
+    let comment_id_from_user2 = comment_from_user2
+        .get("data")
+        .expect("should have 'data' field")
+        .get("addCommentToCv")
+        .expect("should have 'addCommentToCv' field")
+        .get("comments")
+        .expect("should have 'comments' field")
+        .get("edges")
+        .expect("should have 'edges' field")
+        .as_array()
+        .unwrap()[0]
+        .get("node")
+        .expect("should have 'node' field")
+        .get("id")
+        .expect("should have 'id' field")
+        .as_str()
+        .unwrap()
+        .to_string()
+        .parse::<ObjectId>()
+        .map(Into::<ScalarObjectId>::into)
+        .unwrap();
+    assert_eq!(comment_from_user2.get("data").unwrap().get("addCommentToCv").unwrap().get("comments").unwrap().get("edges").unwrap().as_array().unwrap().len(), 1);
+    assert_eq!(comment_from_user2.get("data").unwrap().get("addCommentToCv").unwrap().get("comments").unwrap().get("edges").unwrap().as_array().unwrap()[0].get("node").unwrap().get("content").unwrap().as_str().unwrap(), "test comment from user 2");
+
+    // Add a comment from user 3 to cv
+    let comment_from_user3 = common::add_comment(
+        access_token3.clone(),
+        id3.clone(),
+        cv_id1.clone(),
+        "test comment from user 3",
+        &routes
+    ).await;
+    assert_eq!(comment_from_user3.get("data").unwrap().get("addCommentToCv").unwrap().get("comments").unwrap().get("edges").unwrap().as_array().unwrap().len(), 2);
+
+    // Add reply from user 1 to comment of user 2
+    let reply_from_user1 = common::add_reply_to_comment(
+        access_token1.clone(),
+        comment_id_from_user2.clone(),
+        id1.clone(),
+        "test reply from user 1",
+        &routes
+    ).await;
+    assert_eq!(reply_from_user1.get("data").unwrap().get("addReplyToComment").unwrap().get("replies").unwrap().get("edges").unwrap().as_array().unwrap().len(), 1);
+
+    // User 3 like comment of user 2
+    let like_comment_from_user3 = common::like_comment(
+        access_token3.clone(),
+        comment_id_from_user2.clone(),
+        id3.clone(),
+        &routes
+    ).await;
+    assert_eq!(like_comment_from_user3.get("data").unwrap().get("likeComment").unwrap(), true);
+
+    // User 3 unlike comment of user 2
+    let unlike_comment_from_user3 = common::unlike_comment(
+        access_token3.clone(),
+        comment_id_from_user2.clone(),
+        id3.clone(),
+        &routes
+    ).await;
+    assert_eq!(unlike_comment_from_user3.get("data").unwrap().get("unlikeComment").unwrap(), true);
+
+    // User 3 bookmark comment of user 2
+    let bookmark_comment_from_user3 = common::bookmark_comment(
+        access_token3.clone(),
+        comment_id_from_user2.clone(),
+        id3.clone(),
+        &routes
+    ).await;
+    assert_eq!(bookmark_comment_from_user3.get("data").unwrap().get("bookmarkComment").unwrap(), true);
+
+    // User 3 bookmark comment of user 2 (test duplicate bookmark)
+    let bookmark_comment_from_user3 = common::bookmark_comment(
+        access_token3.clone(),
+        comment_id_from_user2.clone(),
+        id3.clone(),
+        &routes
+    ).await;
+    assert_eq!(bookmark_comment_from_user3.get("data").unwrap().get("bookmarkComment").unwrap(), false);
+
+    // User 3 unbookmark comment of user 2
+    let unbookmark_comment_from_user3 = common::unbookmark_comment(
+        access_token3.clone(),
+        comment_id_from_user2.clone(),
+        id3.clone(),
+        &routes
+    ).await;
+    assert_eq!(unbookmark_comment_from_user3.get("data").unwrap().get("unbookmarkComment").unwrap(), true);
+
+    // User 1 remove reply of user 1
+    let remove_reply_from_user1 = common::remove_reply_from_comment(
+        access_token1.clone(),
+        comment_id_from_user2.clone(),
+        id1.clone(),
+        &routes
+    ).await;
+    assert_eq!(remove_reply_from_user1.get("data").unwrap().get("removeReplyFromComment").unwrap(), true);
+
+    // User 2 edit comment content
+    let edit_comment_from_user2 = common::update_content_comment(
+        access_token2.clone(),
+        comment_id_from_user2.clone(),
+        "test edit comment from user 2",
+        &routes
+    ).await;
+    assert_eq!(edit_comment_from_user2.get("data").unwrap().get("updateContentComment").unwrap().get("content").unwrap().as_str().unwrap(), "test edit comment from user 2");
+
+    // User 2 delete comment
+    let delete_comment_from_user2 = common::remove_comment(
+        access_token2.clone(),
+        cv_id1.clone(),
+        comment_id_from_user2.clone(),
+        &routes
+    ).await;
+    assert_eq!(delete_comment_from_user2.get("data").unwrap().get("deleteComment").unwrap(), true);
+}

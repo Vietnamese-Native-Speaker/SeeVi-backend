@@ -226,8 +226,8 @@ make_graphql!(
 );
 
 make_graphql!(
-    mutation add_comment($id: ScalarObjectId!, $author: ScalarObjectId!, $content: String!) {
-        addComment(cvId: $id, authorId: $author, content: $content) {
+    mutation add_comment_to_cv($id: ScalarObjectId!, $author: ScalarObjectId!, $content: String!) {
+        addCommentToCv(cvId: $id, authorId: $author, content: $content) {
             comments {
                 edges {
                     node {
@@ -248,8 +248,8 @@ make_graphql!(
 );
 
 make_graphql!(
-    mutation remove_comment($id: ScalarObjectId!, $comment_id: ScalarObjectId!) {
-        removeComment(cvId: $id, commentId: $comment_id) {
+    mutation remove_comment_from_cv($id: ScalarObjectId!, $comment_id: ScalarObjectId!) {
+        removeCommentFromCv(cvId: $id, commentId: $comment_id) {
             comments {
                 edges {
                     node {
@@ -325,3 +325,82 @@ make_graphql!(
         }
     }
 );
+
+make_graphql!(
+    mutation add_reply_to_comment($comment_id: ScalarObjectId!, $author_id: ScalarObjectId!, $content: String!) {
+        addReplyToComment(commentId: $comment_id, authorId: $author_id, content: $content) {
+            replies(first: 1) {
+                edges {
+                    node {
+                        id,
+                        content,
+                        created
+                    }
+                    cursor
+                }
+                pageInfo {
+                    hasNextPage,
+                    hasPreviousPage,
+                    startCursor,
+                    endCursor
+                }
+            }
+        }
+    }
+);
+
+make_graphql!(
+    mutation remove_reply_from_comment($comment_id: ScalarObjectId!, $reply_id: ScalarObjectId!) {
+        removeReplyFromComment(commentId: $comment_id, replyId: $reply_id) {
+            replies(first: 1) {
+                edges {
+                    node {
+                        id,
+                        content,
+                        created
+                    }
+                    cursor
+                }
+                pageInfo {
+                    hasNextPage,
+                    hasPreviousPage,
+                    startCursor,
+                    endCursor
+                }
+            }
+        }
+    }
+);
+
+make_graphql!(
+    mutation like_comment($comment_id: ScalarObjectId!, $user_id: ScalarObjectId!) {
+        likeComment(commentId: $comment_id, userId: $user_id)
+    }
+);
+
+make_graphql!(
+    mutation unlike_comment($comment_id: ScalarObjectId!, $user_id: ScalarObjectId!) {
+        unlikeComment(commentId: $comment_id, userId: $user_id)
+    }
+);
+
+make_graphql!(
+    mutation bookmark_comment($comment_id: ScalarObjectId!, $user_id: ScalarObjectId!) {
+        addBookmarkComment(commentId: $comment_id, authorId: $user_id)
+    }
+);
+
+make_graphql!(
+    mutation unbookmark_comment($comment_id: ScalarObjectId!, $user_id: ScalarObjectId!) {
+        removeBookmarkComment(commentId: $comment_id, authorId: $user_id)
+    }
+);
+
+make_graphql!(
+    mutation update_content_comment($comment_id: ScalarObjectId!, $content: String!) {
+        updateContentComment(commentId: $comment_id, content: $content) {
+            content
+        }
+    }
+);
+

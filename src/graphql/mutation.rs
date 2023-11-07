@@ -216,7 +216,7 @@ impl Mutation {
         }
     }
 
-    async fn add_comment(
+    async fn add_comment_to_cv(
         &self,
         ctx: &Context<'_>,
         cv_id: ScalarObjectId,
@@ -238,7 +238,7 @@ impl Mutation {
         }
     }
 
-    async fn remove_comment(
+    async fn remove_comment_from_cv(
         &self,
         ctx: &Context<'_>,
         cv_id: ScalarObjectId,
@@ -324,7 +324,7 @@ impl Mutation {
         comment_id: ScalarObjectId,
         author_id: ScalarObjectId,
         content: String,
-    ) -> GqlResult<bool> {
+    ) -> GqlResult<Comment> {
         let rs = CommentService::add_reply_comment(
             ctx.data_opt::<MongoDB>()
                 .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
@@ -335,7 +335,7 @@ impl Mutation {
         .await;
         authorization(ctx)?;
         match rs {
-            Ok(_) => Ok(true),
+            Ok(comment) => Ok(comment),
             Err(e) => Err(e.into()),
         }
     }
@@ -345,7 +345,7 @@ impl Mutation {
         ctx: &Context<'_>,
         comment_id: ScalarObjectId,
         reply_id: ScalarObjectId,
-    ) -> GqlResult<bool> {
+    ) -> GqlResult<Comment> {
         let rs = CommentService::remove_reply_comment(
             ctx.data_opt::<MongoDB>()
                 .unwrap_or_else(|| ctx.data_unchecked::<MongoForTesting>()),
@@ -355,7 +355,7 @@ impl Mutation {
         .await;
         authorization(ctx)?;
         match rs {
-            Ok(_) => Ok(true),
+            Ok(comment) => Ok(comment),
             Err(e) => Err(e.into()),
         }
     }
