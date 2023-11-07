@@ -36,6 +36,7 @@ impl Comment {
         self.created.try_to_rfc3339_string().unwrap()
     }
 
+    /// Get replies of this comment.
     async fn replies(
         &self,
         ctx: &Context<'_>,
@@ -107,6 +108,7 @@ impl Comment {
         .await
     }
 
+    /// Get likes of this comment
     async fn likes(
         &self,
         ctx: &Context<'_>,
@@ -177,6 +179,7 @@ impl Comment {
         .await
     }
 
+    /// Get the number of likes of this comment.
     async fn likes_count(&self, ctx: &Context<'_>, comment_id: ScalarObjectId) -> gql::Result<i32> {
         let db = ctx
             .data_opt::<MongoDB>()
