@@ -59,7 +59,6 @@ pub struct User {
     pub sex: Sex,
 }
 
-
 impl From<CreateUserInput> for User {
     fn from(input: CreateUserInput) -> Self {
         Self {

@@ -1,5 +1,6 @@
-use crate::data_source::mongo::MongoForTesting;
+use crate::data_source::mongo::{self, MongoForTesting};
 use crate::data_source::{CVDataSource, CVDataSourceError, CVDetailsDataSource, UserDataSource};
+use crate::models::comment::Comment;
 use crate::models::cv::create_cv_input::CreateCVInputBuilder;
 use crate::models::cv::update_cv_input::UpdateCVInputBuilder;
 use crate::models::cv::CreateCVInput;
@@ -13,7 +14,7 @@ use crate::models::users::create_user_input::CreateUserInputBuilder;
 use crate::models::users::CreateUserInput;
 use async_graphql::futures_util::StreamExt;
 use mongodb::bson::oid::ObjectId;
-use mongodb::bson::Uuid;
+use mongodb::bson::{DateTime, Uuid};
 use serial_test::serial;
 fn create_demo_user_input() -> CreateUserInput {
     let id = Uuid::new();
@@ -134,6 +135,34 @@ fn create_demo_cv_input(author_id: ObjectId) -> CreateCVInput {
         .with_tag("tag2")
         .build()
         .unwrap()
+}
+
+#[tokio::test]
+async fn test_add_comment_to_cv() {
+    let mongodb = MongoForTesting::init().await;
+    let user_input = create_demo_user_input();
+    let user = mongodb.create_user(user_input).await.unwrap();
+    let cv_input = create_demo_cv_input(user.id.into());
+    let cv = mongodb.create_cv(cv_input).await.unwrap();
+    let comment_without_user = Comment::new("hello".to_string(), ObjectId::new().into());
+    let comment_input = Comment::new("hello".to_string(), user.id.into());
+
+    mongodb
+        .add_comment_to_cv(ObjectId::new().into(), comment_without_user)
+        .await
+        .expect_err("should not be able to add comment to cv without user");
+
+    mongodb
+        .add_comment_to_cv(ObjectId::new().into(), comment_input.clone())
+        .await
+        .expect_err("should not be able to add comment to cv without cv");
+    let cv = mongodb
+        .add_comment_to_cv(cv.id.into(), comment_input.clone())
+        .await
+        .unwrap();
+    let cv = mongodb.get_cv_by_id(cv.id.into()).await.unwrap();
+    assert_eq!(cv.comments.len(), 1);
+    assert_eq!(cv.comments[0], comment_input.id.into());
 }
 
 #[tokio::test]

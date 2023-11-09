@@ -15,8 +15,7 @@ use crate::{
 use super::CreateCVInput;
 
 /// Struct represents CV defined in the Diagram. Note that this struct only
-/// represents the metadata of a CV. Actual implementation of the CV is to
-/// be discussed.
+/// represents the metadata of a CV.
 #[derive(Debug, Serialize, Deserialize, Clone, SimpleObject, PartialEq)]
 #[graphql(complex)]
 pub struct CV {
@@ -30,6 +29,7 @@ pub struct CV {
     pub comments: Vec<bson::oid::ObjectId>,
     #[graphql(skip)]
     pub created: DateTime,
+    /// The resource identifier of the CV, can be used to query the actual CV data on the storage.
     pub cv: Option<ResourceIdentifier>,
 }
 
