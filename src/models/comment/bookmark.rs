@@ -4,14 +4,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::object_id::ScalarObjectId;
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, SimpleObject)]
-pub struct Key {
-    pub user_id: ScalarObjectId,
-    pub comment_id: ScalarObjectId,
-}
+use super::Key;
 
 #[derive(Debug, Serialize, Deserialize, Clone, SimpleObject, PartialEq)]
-#[graphql(complex)]
+#[graphql(complex, name = "CommentBookmark")]
 pub struct Bookmark {
     #[serde(rename = "_id")]
     pub key: Key,
@@ -45,4 +41,3 @@ impl Bookmark {
         self.created.try_to_rfc3339_string().unwrap()
     }
 }
-
