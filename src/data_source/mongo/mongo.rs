@@ -278,6 +278,41 @@ impl UserDataSource for MongoDB {
 
 #[async_trait]
 impl CVDataSource for MongoDB {
+    async fn add_comment_to_cv(
+        &self,
+        cv_id: ObjectId,
+        comment: Comment,
+    ) -> Result<CV, CVDataSourceError> {
+        let cv_collection: mongodb::Collection<cv::CV> = self.db.collection(CV_COLLECTION);
+        self.get_cv_by_id(cv_id.clone()).await?;
+        let comment_id = comment.id.clone();
+        let add_rs = self.add_comment(comment).await;
+        match add_rs {
+            Ok(_) => {
+                let filter = bson::doc! {"_id": cv_id};
+                let update = bson::doc! {"$push": {"comments": ObjectId::from(comment_id)}};
+                println!("update {:?}", comment_id);
+                let result = cv_collection
+                    .find_one_and_update(filter, update, None)
+                    .await;
+                match result {
+                    Ok(cv) => match cv {
+                        Some(cv) => Ok(cv),
+                        None => Err(CVDataSourceError::IdNotFound(cv_id)),
+                    },
+                    Err(_) => Err(CVDataSourceError::DatabaseError),
+                }
+            }
+            Err(e) => {
+                panic!("add comment failed {:?}", e);
+                match e {
+                    CommentDataSourceError::DatabaseError => Err(CVDataSourceError::DatabaseError),
+                    _ => unimplemented!("Unexpected Error {:?}", e),
+                }
+            }
+        }
+    }
+
     async fn get_cvs_by_user_id(
         &self,
         user_id: ObjectId,
@@ -681,7 +716,7 @@ impl CommentDataSource for MongoDB {
         let result = collection.insert_one(&comment, None).await;
         match result {
             Ok(_) => Ok(()),
-            Err(_) => Err(CommentDataSourceError::DatabaseError),
+            Err(e) => Err(CommentDataSourceError::DatabaseError),
         }
     }
 
