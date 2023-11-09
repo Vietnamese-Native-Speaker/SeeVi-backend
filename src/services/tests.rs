@@ -5,11 +5,14 @@ use crate::data_source::CommentDataSource;
 use crate::data_source::LikeDataSource;
 use crate::data_source::UserDataSource;
 use crate::data_source::{FriendsListDataSource, FriendsListError};
-use crate::models::comment::Bookmark;
+use crate::models::comment::Bookmark as CommentBookmark;
 use crate::models::comment::Comment;
 use crate::models::comment::CreateCommentInput;
 use crate::models::comment::Like;
 use crate::models::comment::UpdateCommentInput;
+use crate::models::cv::interactions::Like as CVLike;
+use crate::models::cv::interactions::Share;
+use crate::models::cv::Bookmark as CVBookmark;
 use crate::models::cv::CreateCVInput;
 use crate::models::cv::UpdateCVInput;
 use crate::models::cv::CV;
@@ -20,18 +23,24 @@ use async_graphql::futures_util::{self, StreamExt};
 use async_trait::async_trait;
 use mongodb::bson;
 use mongodb::bson::oid::ObjectId;
+use std::fmt::Display;
+use std::fmt::Formatter;
 use std::sync::Mutex;
 
 use super::cv_service::comment_service::CommentServiceError;
+use super::cv_service::error::CVServiceError;
 use super::user_service::error::UserServiceError;
 
 pub struct MockDatabase {
-    users: Mutex<Vec<User>>,
-    friend_requests: Mutex<Vec<FriendRequest>>,
-    cvs: Mutex<Vec<CV>>,
-    comments: Mutex<Vec<Comment>>,
-    likes: Mutex<Vec<Like>>,
-    bookmarks: Mutex<Vec<Bookmark>>,
+    pub(crate) users: Mutex<Vec<User>>,
+    pub(crate) friend_requests: Mutex<Vec<FriendRequest>>,
+    pub(crate) cvs: Mutex<Vec<CV>>,
+    pub(crate) comments: Mutex<Vec<Comment>>,
+    pub(crate) likes: Mutex<Vec<Like>>,
+    pub(crate) cv_shares: Mutex<Vec<Share>>,
+    pub(crate) cv_bookmarks: Mutex<Vec<CVBookmark>>,
+    pub(crate) cv_likes: Mutex<Vec<CVLike>>,
+    pub(crate) bookmarks: Mutex<Vec<CommentBookmark>>,
 }
 
 impl MockDatabase {
@@ -42,6 +51,9 @@ impl MockDatabase {
             cvs: Mutex::new(Vec::new()),
             comments: Mutex::new(Vec::new()),
             likes: Mutex::new(Vec::new()),
+            cv_shares: Mutex::new(Vec::new()),
+            cv_bookmarks: Mutex::new(Vec::new()),
+            cv_likes: Mutex::new(Vec::new()),
             bookmarks: Mutex::new(Vec::new()),
         }
     }
@@ -535,7 +547,7 @@ impl LikeDataSource for MockDatabase {
         Err(DummyLikeDataSource("like not found".to_string()))
     }
 
-    async fn get_likes_count(&self, comment_id: bson::oid::ObjectId) -> Result<i32, Self::Error> {
+    async fn get_likes_count_of_comment(&self, comment_id: bson::oid::ObjectId) -> Result<i32, Self::Error> {
         let likes = self.likes.lock().unwrap();
         let mut count = 0;
         for like in likes.iter() {
@@ -557,6 +569,29 @@ impl LikeDataSource for MockDatabase {
             async move { like.key.comment_id == comment_id.clone().into() }
         });
         Ok(stream.map(|like| like).boxed())
+    }
+}
+
+#[derive(Debug)]
+pub enum CVInteractionError {
+    NotFound,
+    AlreadyExists,
+}
+
+impl Display for CVInteractionError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CVInteractionError::NotFound => write!(f, "share not found"),
+            CVInteractionError::AlreadyExists => write!(f, "share already exists"),
+        }
+    }
+}
+
+impl std::error::Error for CVInteractionError {}
+
+impl From<CVInteractionError> for CVServiceError {
+    fn from(_: CVInteractionError) -> Self {
+        CVServiceError::DatabaseError
     }
 }
 
@@ -595,7 +630,7 @@ impl BookmarkDataSource for MockDatabase {
                 ));
             }
         }
-        bookmakrs.push(Bookmark::new(user_id.into(), comment_id.into()));
+        bookmakrs.push(CommentBookmark::new(user_id.into(), comment_id.into()));
         Ok(())
     }
 
@@ -623,7 +658,7 @@ impl BookmarkDataSource for MockDatabase {
         &self,
         user_id: ObjectId,
         comment_id: ObjectId,
-    ) -> Result<Option<Bookmark>, Self::Error> {
+    ) -> Result<Option<CommentBookmark>, Self::Error> {
         let bookmarks = self.bookmarks.lock().unwrap();
         for bookmark in bookmarks.iter() {
             if bookmark.key.user_id == user_id.clone().into()
@@ -638,7 +673,7 @@ impl BookmarkDataSource for MockDatabase {
     async fn get_bookmarks_of_user(
         &self,
         user_id: ObjectId,
-    ) -> Result<BoxStream<Result<Bookmark, Self::Error>>, Self::Error> {
+    ) -> Result<BoxStream<Result<CommentBookmark, Self::Error>>, Self::Error> {
         let bookmarks = self.bookmarks.lock().unwrap().clone();
         let stream = futures_util::stream::iter(bookmarks.into_iter());
         let stream = stream.filter(move |bookmark| {

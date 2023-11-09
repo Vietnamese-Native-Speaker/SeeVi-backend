@@ -1,5 +1,5 @@
 mod comment;
-mod cv;
+pub mod cv;
 mod cv_details;
 mod friends_list;
 pub mod mongo;

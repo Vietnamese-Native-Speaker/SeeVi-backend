@@ -5,8 +5,24 @@ use mongodb::bson;
 use serde::{Deserialize, Serialize};
 
 /// A wrapper around `bson::oid::ObjectId` to make it work with async-graphql.
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Default)]
+#[derive(
+    Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Default,
+)]
 pub struct ScalarObjectId(bson::oid::ObjectId);
+
+impl ScalarObjectId {
+    pub fn new() -> Self {
+        ScalarObjectId(bson::oid::ObjectId::new())
+    }
+
+    pub fn to_object_id(self) -> bson::oid::ObjectId {
+        self.0
+    }
+
+    pub fn from_object_id(id: bson::oid::ObjectId) -> Self {
+        ScalarObjectId(id)
+    }
+}
 
 #[Scalar]
 impl ScalarType for ScalarObjectId {

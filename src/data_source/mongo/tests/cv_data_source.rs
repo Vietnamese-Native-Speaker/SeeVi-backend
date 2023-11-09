@@ -7,7 +7,7 @@ use crate::models::cv::CreateCVInput;
 use crate::models::cv_details::cv_details::CVDetailsBuilder;
 use crate::models::cv_details::CVDetails;
 use crate::models::education::Education;
-use crate::models::experience::{Experience, ExperienceBuilder};
+use crate::models::experience::ExperienceBuilder;
 use crate::models::range_values::RangeValues;
 use crate::models::sex::Sex;
 use crate::models::users::create_user_input::CreateUserInputBuilder;

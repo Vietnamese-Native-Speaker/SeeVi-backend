@@ -219,7 +219,7 @@ impl CommentService {
         cmt_database: &(impl CommentDataSource + LikeDataSource + std::marker::Sync),
         comment_id: ObjectId,
     ) -> Result<i32, CommentServiceError> {
-        let rs = cmt_database.get_likes_count(comment_id).await;
+        let rs = cmt_database.get_likes_count_of_comment(comment_id).await;
         rs.map(|rs| rs).map_err(|err| err.into())
     }
 

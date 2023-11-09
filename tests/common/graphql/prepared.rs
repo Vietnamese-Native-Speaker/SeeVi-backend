@@ -1,3 +1,4 @@
+use graphql_query_maker::make_graphql;
 use seevi_backend::object_id::ScalarObjectId;
 
 use super::make_graphql;
@@ -174,3 +175,232 @@ pub fn graphql_decline_friend_request(
         }),
     )
 }
+
+make_graphql!(
+    mutation create_cv($user_id: ScalarObjectId!, $title: String!, $description: String!) {
+        createCv(userId: $user_id, title: $title, description: $description) {
+          id,
+          authorId,
+          title,
+          description
+        }
+    }
+);
+
+make_graphql!(
+    mutation delete_cv($id: ScalarObjectId!) {
+        deleteCv(cvId: $id)
+    }
+);
+
+make_graphql!(
+    mutation change_cv_title($id: ScalarObjectId!, $title: String!) {
+        changeCvTitle(cvId: $id, title: $title) {
+            title
+          }
+    }
+);
+
+make_graphql!(
+    mutation change_cv_description($id: ScalarObjectId!, $description: String!) {
+        changeCvDescription(cvId: $id, description: $description) {
+            description
+        }
+    }
+);
+
+make_graphql!(
+    mutation add_tag($id: ScalarObjectId!, $tag: String!) {
+        addOneTag(cvId: $id, tag: $tag) {
+            tags
+        }
+    }
+);
+
+make_graphql!(
+    mutation remove_tag($id: ScalarObjectId!, $tag: String!) {
+        removeOneTag(cvId: $id, tag: $tag) {
+            tags
+        }
+    }
+);
+
+make_graphql!(
+    mutation add_comment_to_cv($id: ScalarObjectId!, $author: ScalarObjectId!, $content: String!) {
+        addCommentToCv(cvId: $id, authorId: $author, content: $content) {
+            comments {
+                edges {
+                    node {
+                        id
+                        created
+                    }
+                cursor
+                }
+                pageInfo {
+                    hasNextPage,
+                    hasPreviousPage,
+                    startCursor,
+                    endCursor
+                }
+            }
+        }
+    }
+);
+
+make_graphql!(
+    mutation remove_comment_from_cv($id: ScalarObjectId!, $comment_id: ScalarObjectId!) {
+        removeCommentFromCv(cvId: $id, commentId: $comment_id) {
+            comments {
+                edges {
+                    node {
+                        id
+                        created
+                    }
+                cursor
+                }
+                pageInfo {
+                    hasNextPage,
+                    hasPreviousPage,
+                    startCursor,
+                    endCursor
+                }
+            }
+        }
+    }
+);
+
+make_graphql!(
+    mutation share_cv($cv_id: ScalarObjectId!, $user_id: ScalarObjectId!) {
+        shareCv(cvId: $cv_id, userId: $user_id)
+    }
+);
+
+make_graphql!(
+    mutation unshare_cv($cv_id: ScalarObjectId!, $user_id: ScalarObjectId!) {
+        unshareCv(cvId: $cv_id, userId: $user_id)
+    }
+);
+
+make_graphql!(
+    mutation like_cv($cv_id: ScalarObjectId!, $user_id: ScalarObjectId!) {
+        likeCv(cvId: $cv_id, userId: $user_id)
+    }
+);
+
+make_graphql!(
+    mutation unlike_cv($cv_id: ScalarObjectId!, $user_id: ScalarObjectId!) {
+        unlikeCv(cvId: $cv_id, userId: $user_id)
+    }
+);
+
+make_graphql!(
+    mutation bookmark_cv($cv_id: ScalarObjectId!, $user_id: ScalarObjectId!) {
+        bookmarkCv(cvId: $cv_id, userId: $user_id)
+    }
+);
+
+make_graphql!(
+    mutation unbookmark_cv($cv_id: ScalarObjectId!, $user_id: ScalarObjectId!) {
+        unbookmarkCv(cvId: $cv_id, userId: $user_id)
+    }
+);
+
+make_graphql!(
+    query cvs_list($filter: Cvdetails!, $after: String, $before: String, $first: Int, $last: Int) {
+        cvsList(filter: $filter, after: $after, before: $before, first: $first, last: $last) {
+            edges {
+                node {
+                    id,
+                    title,
+                    description,
+                }
+                cursor
+            }
+            pageInfo {
+                hasNextPage,
+                hasPreviousPage,
+                startCursor,
+                endCursor
+            }
+        }
+    }
+);
+
+make_graphql!(
+    mutation add_reply_to_comment($comment_id: ScalarObjectId!, $author_id: ScalarObjectId!, $content: String!) {
+        addReplyToComment(commentId: $comment_id, authorId: $author_id, content: $content) {
+            replies(first: 1) {
+                edges {
+                    node {
+                        id,
+                        content,
+                        created
+                    }
+                    cursor
+                }
+                pageInfo {
+                    hasNextPage,
+                    hasPreviousPage,
+                    startCursor,
+                    endCursor
+                }
+            }
+        }
+    }
+);
+
+make_graphql!(
+    mutation remove_reply_from_comment($comment_id: ScalarObjectId!, $reply_id: ScalarObjectId!) {
+        removeReplyFromComment(commentId: $comment_id, replyId: $reply_id) {
+            replies(first: 1) {
+                edges {
+                    node {
+                        id,
+                        content,
+                        created
+                    }
+                    cursor
+                }
+                pageInfo {
+                    hasNextPage,
+                    hasPreviousPage,
+                    startCursor,
+                    endCursor
+                }
+            }
+        }
+    }
+);
+
+make_graphql!(
+    mutation like_comment($comment_id: ScalarObjectId!, $user_id: ScalarObjectId!) {
+        likeComment(commentId: $comment_id, userId: $user_id)
+    }
+);
+
+make_graphql!(
+    mutation unlike_comment($comment_id: ScalarObjectId!, $user_id: ScalarObjectId!) {
+        unlikeComment(commentId: $comment_id, userId: $user_id)
+    }
+);
+
+make_graphql!(
+    mutation bookmark_comment($comment_id: ScalarObjectId!, $user_id: ScalarObjectId!) {
+        addBookmarkComment(commentId: $comment_id, authorId: $user_id)
+    }
+);
+
+make_graphql!(
+    mutation unbookmark_comment($comment_id: ScalarObjectId!, $user_id: ScalarObjectId!) {
+        removeBookmarkComment(commentId: $comment_id, authorId: $user_id)
+    }
+);
+
+make_graphql!(
+    mutation update_content_comment($comment_id: ScalarObjectId!, $content: String!) {
+        updateContentComment(commentId: $comment_id, content: $content) {
+            content
+        }
+    }
+);
+

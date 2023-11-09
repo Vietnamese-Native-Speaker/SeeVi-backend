@@ -41,11 +41,34 @@ pub enum CVServiceError{
     /// Database Error
     DatabaseError,
 
+    /// Failed to like cv
+    LikeFailed(String),
+
+    /// like not found
+    LikeNotFound,
+
+    /// bookmark not found
+    BookmarkNotFound,
+
+    /// share not found 
+    ShareNotFound, 
+
+    // update like failed
+    UpdateLikeFailed,
+
+    /// update bookmark failed
+    UpdateBookmarkFailed,
+
+    /// update share failed
+    UpdateShareFailed
 }
 
 impl fmt::Display for CVServiceError{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            CVServiceError::LikeFailed(s) => {
+                write!(f, "Like failed: {}", s)
+            }
             CVServiceError::DatabaseError => {
                 write!(f, "Database error")
             }
@@ -81,6 +104,24 @@ impl fmt::Display for CVServiceError{
             }
             CVServiceError::RemoveCommentFailed => {
                 write!(f, "Remove comment failed")
+            }
+            CVServiceError::BookmarkNotFound => {
+                write!(f, "Cannot find bookmark")
+            }
+            CVServiceError::ShareNotFound => {
+                write!(f, "Cannot find share")
+            }
+            CVServiceError::LikeNotFound => {
+                write!(f, "Cannot find like")
+            }
+            CVServiceError::UpdateBookmarkFailed => {
+                write!(f, "Cannot update bookmark")
+            }
+            CVServiceError::UpdateShareFailed => {
+                write!(f, "Cannot update share")
+            }
+            CVServiceError::UpdateLikeFailed => {
+                write!(f, "Cannot update like")
             }
         }
     }
