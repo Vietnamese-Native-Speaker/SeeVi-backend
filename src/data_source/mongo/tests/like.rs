@@ -1,60 +1,17 @@
-use mongodb::bson::{Uuid, oid::ObjectId};
+use mongodb::bson::{oid::ObjectId, Uuid};
 use serial_test::serial;
 
-use crate::{models::{users::{CreateUserInput, create_user_input::CreateUserInputBuilder}, education::Education, sex::Sex, cv::{CreateCVInput, create_cv_input::CreateCVInputBuilder}, comment::{Comment, Like}}, data_source::{mongo::MongoForTesting, UserDataSource, comment::LikeDataSource, CommentDataSource}, object_id::ScalarObjectId};
+use crate::{
+    data_source::{
+        comment::LikeDataSource, mongo::{MongoForTesting, tests::create_demo_user_input}, CommentDataSource, UserDataSource,
+    },
+    models::comment::Comment,
+    object_id::ScalarObjectId,
+};
 
 use async_graphql::futures_util::StreamExt;
 use core::future::ready;
 
-fn create_demo_user_input() -> CreateUserInput {
-    let id = Uuid::new();
-    CreateUserInputBuilder::default()
-        .with_password("password")
-        .with_username("username")
-        .with_first_name("first_name")
-        .with_last_name("last_name")
-        .with_country("country")
-        .with_skill("skill")
-        .with_primary_email("primary_email")
-        .with_other_mail("other_mails")
-        .with_other_mail("other_mails2")
-        .with_education(Education {
-            school: "school 1".to_string(),
-            major: "major 1".to_string(),
-            minor: Some("minor 1".to_string()),
-            degree: "degree 1".to_string(),
-            start_date: None,
-            end_date: None,
-        })
-        .with_education(Education {
-            school: "school 2".to_string(),
-            major: "major 2".to_string(),
-            minor: Some("minor 2".to_string()),
-            degree: "degree 2".to_string(),
-            start_date: None,
-            end_date: None,
-        })
-        .with_about("about".to_string())
-        .with_avatar(id)
-        .with_cover_photo(id)
-        .with_city("city")
-        .with_personalities("personality")
-        .with_rating(4.0)
-        .with_sex(Sex::Male)
-        .with_experiences("year_of_experience")
-        .build()
-        .unwrap()
-}
-fn create_demo_cv_input(author_id: ObjectId) -> CreateCVInput {
-    CreateCVInputBuilder::default()
-        .with_author_id(author_id)
-        .with_title("title")
-        .with_description("description")
-        .with_tag("tag")
-        .with_tag("tag2")
-        .build()
-        .unwrap()
-}
 fn create_test_comment(
     comment_id: ScalarObjectId,
     author_id: ScalarObjectId,
@@ -63,56 +20,67 @@ fn create_test_comment(
     Comment {
         id: comment_id,
         author: author_id,
-        content: content,
+        content,
         created: mongodb::bson::DateTime::now(),
-        likes: 0,
-        bookmarks: 0,
-        shares: 0,
         replies: vec![],
     }
 }
 
 #[tokio::test]
 #[serial]
-async fn test_add_like_and_get_likes_count(){
+async fn test_add_like_and_get_likes_count() {
     let mongodb = MongoForTesting::init().await;
     let user_input = create_demo_user_input();
     let user = mongodb.create_user(user_input).await.unwrap();
     let comment_id = ScalarObjectId::from(ObjectId::new());
     let comment = create_test_comment(comment_id.clone(), user.id.clone(), "content".to_string());
     let check_comment = mongodb.add_comment(comment).await;
-    let check_add = mongodb.add_like(user.id.clone().into(), comment_id.clone().into()).await;
-    let check_like = mongodb.get_likes_count(comment_id.clone().into()).await.unwrap();
+    let check_add = mongodb
+        .add_like(user.id.clone().into(), comment_id.clone().into())
+        .await;
+    let check_like = mongodb
+        .get_likes_count_of_comment(comment_id.clone().into())
+        .await
+        .unwrap();
     assert_eq!(check_like, 1);
 }
 
 #[tokio::test]
 #[serial]
-async fn test_delete_like(){
+async fn test_delete_like() {
     let mongodb = MongoForTesting::init().await;
     let user_input = create_demo_user_input();
     let user = mongodb.create_user(user_input).await.unwrap();
     let comment_id = ScalarObjectId::from(ObjectId::new());
     let comment = create_test_comment(comment_id.clone(), user.id.clone(), "content".to_string());
     let check_comment = mongodb.add_comment(comment).await;
-    let check_add = mongodb.add_like(user.id.clone().into(), comment_id.clone().into()).await;
-    let check_delete = mongodb.delete_like(user.id.clone().into(), comment_id.clone().into()).await;
-    let check_like = mongodb.get_likes_count(comment_id.clone().into()).await.unwrap();
+    let check_add = mongodb
+        .add_like(user.id.clone().into(), comment_id.clone().into())
+        .await;
+    let check_delete = mongodb
+        .delete_like(user.id.clone().into(), comment_id.clone().into())
+        .await;
+    let check_like = mongodb
+        .get_likes_count_of_comment(comment_id.clone().into())
+        .await
+        .unwrap();
     assert_eq!(check_like, 0);
 }
 
 #[tokio::test]
 #[serial]
-async fn test_get_likes(){
+async fn test_get_likes() {
     let mongodb = MongoForTesting::init().await;
     let user_input = create_demo_user_input();
     let user = mongodb.create_user(user_input).await.unwrap();
     let comment_id = ScalarObjectId::from(ObjectId::new());
     let comment = create_test_comment(comment_id.clone(), user.id.clone(), "content".to_string());
     let _check_comment = mongodb.add_comment(comment).await;
-    let _check_add = mongodb.add_like(user.id.clone().into(), comment_id.clone().into()).await;
+    let _check_add = mongodb
+        .add_like(user.id.clone().into(), comment_id.clone().into())
+        .await;
     let stream_like = mongodb.get_likes(comment_id.into()).await.unwrap();
-    let fn_test = stream_like.for_each(|like_result|{
+    let fn_test = stream_like.for_each(|like_result| {
         assert_eq!(like_result.clone().key.user_id, user.id);
         assert_eq!(like_result.clone().key.comment_id, comment_id);
         ready(())
