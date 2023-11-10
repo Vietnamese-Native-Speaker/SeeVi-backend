@@ -887,7 +887,7 @@ impl LikeDataSource for MongoDB {
         &self,
         comment_id: bson::oid::ObjectId,
     ) -> Result<i32, Self::Error> {
-        let collection: mongodb::Collection<Comment> = self.db.collection(COMMENT_COLLECTION);
+        let collection: mongodb::Collection<Like> = self.db.collection(LIKE_COLLECTION);
         let filter = bson::doc! {"_id.comment_id": comment_id};
         let result = collection.count_documents(filter, None).await;
         match result {
