@@ -1,6 +1,7 @@
 use async_graphql::{Scalar, ScalarType};
 use mongodb::bson;
 
+/// A DateTime scalar that use the rfc3339 format.
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
 )]
@@ -24,7 +25,7 @@ impl From<DateTime> for bson::DateTime {
     }
 }
 
-#[Scalar]
+#[Scalar(specified_by_url = "https://www.rfc-editor.org/rfc/rfc3339")]
 impl ScalarType for DateTime {
     fn parse(value: async_graphql::Value) -> async_graphql::InputValueResult<Self> {
         let dt = bson::DateTime::parse_rfc3339_str(value.into_value().to_string()).unwrap();
