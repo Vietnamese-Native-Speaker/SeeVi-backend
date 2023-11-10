@@ -1,30 +1,20 @@
-use mongodb::bson::{oid::ObjectId, Uuid};
+use mongodb::bson::oid::ObjectId;
 use serial_test::serial;
 
 use crate::{
     data_source::{
-        comment::LikeDataSource, mongo::{MongoForTesting, tests::create_demo_user_input}, CommentDataSource, UserDataSource,
+        comment::LikeDataSource,
+        mongo::{
+            tests::{create_demo_user_input, create_test_comment},
+            MongoForTesting,
+        },
+        CommentDataSource, UserDataSource,
     },
-    models::comment::Comment,
     object_id::ScalarObjectId,
 };
 
 use async_graphql::futures_util::StreamExt;
 use core::future::ready;
-
-fn create_test_comment(
-    comment_id: ScalarObjectId,
-    author_id: ScalarObjectId,
-    content: String,
-) -> Comment {
-    Comment {
-        id: comment_id,
-        author: author_id,
-        content,
-        created: mongodb::bson::DateTime::now(),
-        replies: vec![],
-    }
-}
 
 #[tokio::test]
 #[serial]
@@ -34,8 +24,8 @@ async fn test_add_like_and_get_likes_count() {
     let user = mongodb.create_user(user_input).await.unwrap();
     let comment_id = ScalarObjectId::from(ObjectId::new());
     let comment = create_test_comment(comment_id.clone(), user.id.clone(), "content".to_string());
-    let check_comment = mongodb.add_comment(comment).await;
-    let check_add = mongodb
+    let _check_comment = mongodb.add_comment(comment).await;
+    let _check_add = mongodb
         .add_like(user.id.clone().into(), comment_id.clone().into())
         .await;
     let check_like = mongodb
@@ -53,11 +43,11 @@ async fn test_delete_like() {
     let user = mongodb.create_user(user_input).await.unwrap();
     let comment_id = ScalarObjectId::from(ObjectId::new());
     let comment = create_test_comment(comment_id.clone(), user.id.clone(), "content".to_string());
-    let check_comment = mongodb.add_comment(comment).await;
-    let check_add = mongodb
+    let _check_comment = mongodb.add_comment(comment).await;
+    let _check_add = mongodb
         .add_like(user.id.clone().into(), comment_id.clone().into())
         .await;
-    let check_delete = mongodb
+    let _check_delete = mongodb
         .delete_like(user.id.clone().into(), comment_id.clone().into())
         .await;
     let check_like = mongodb

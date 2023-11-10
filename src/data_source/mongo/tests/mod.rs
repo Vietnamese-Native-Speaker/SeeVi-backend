@@ -1,12 +1,12 @@
 use mongodb::bson::{oid::ObjectId, Uuid};
 
-use crate::models::{
+use crate::{models::{
     cv::{create_cv_input::CreateCVInputBuilder, CreateCVInput},
     education::Education,
     experience::ExperienceBuilder,
     sex::Sex,
-    users::{create_user_input::CreateUserInputBuilder, CreateUserInput},
-};
+    users::{create_user_input::CreateUserInputBuilder, CreateUserInput}, comment::Comment,
+}, object_id::ScalarObjectId, common::DateTime};
 
 mod bookmark;
 mod comment_data_source;
@@ -14,8 +14,8 @@ mod cv_bookmark_data_source;
 mod cv_data_source;
 mod cv_like_data_source;
 mod cv_share_data_source;
-mod user_data_source;
 mod like;
+mod user_data_source;
 
 fn create_demo_user_input() -> CreateUserInput {
     let id = Uuid::new();
@@ -65,6 +65,7 @@ fn create_demo_user_input() -> CreateUserInput {
         .build()
         .unwrap()
 }
+
 fn create_demo_cv_input(author_id: ObjectId) -> CreateCVInput {
     CreateCVInputBuilder::default()
         .with_author_id(author_id)
@@ -74,4 +75,18 @@ fn create_demo_cv_input(author_id: ObjectId) -> CreateCVInput {
         .with_tag("tag2")
         .build()
         .unwrap()
+}
+
+fn create_test_comment(
+    comment_id: ScalarObjectId,
+    author_id: ScalarObjectId,
+    content: String,
+) -> Comment {
+    Comment {
+        id: comment_id,
+        author: author_id,
+        content,
+        created: DateTime::now(),
+        replies: vec![],
+    }
 }
