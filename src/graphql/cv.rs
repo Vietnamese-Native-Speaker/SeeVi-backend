@@ -16,10 +16,6 @@ use crate::{
 
 #[ComplexObject]
 impl CV {
-    async fn created(&self) -> String {
-        self.created.try_to_rfc3339_string().unwrap()
-    }
-
     async fn likes(
         &self,
         ctx: &Context<'_>,

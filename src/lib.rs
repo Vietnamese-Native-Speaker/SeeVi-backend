@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate derive_builder;
 
-use std::{convert::Infallible, sync::Arc};
+use std::convert::Infallible;
 
 use async_graphql::{EmptySubscription, Schema};
 use async_graphql_warp::{GraphQLBadRequest, GraphQLResponse};
@@ -19,6 +19,7 @@ pub mod mock_data;
 pub mod models;
 pub mod object_id;
 pub mod services;
+pub mod common;
 
 #[derive(Clone)]
 pub struct State {
