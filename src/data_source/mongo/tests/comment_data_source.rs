@@ -1,3 +1,4 @@
+use crate::common::DateTime;
 use crate::data_source::CommentDataSource;
 use crate::models::comment::update_comment_input::UpdateCommentInputBuilder;
 use crate::models::comment::Comment;
@@ -15,7 +16,7 @@ fn create_test_comment(
         id: comment_id,
         author: author_id,
         content,
-        created: mongodb::bson::DateTime::now(),
+        created: DateTime::now(),
         replies: vec![],
     }
 }

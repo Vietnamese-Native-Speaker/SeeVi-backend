@@ -6,14 +6,14 @@ use crate::{
         comment::BookmarkDataSource, mongo::MongoForTesting, CommentDataSource, UserDataSource,
     },
     models::{
-        comment::{Comment},
+        comment::Comment,
         cv::{create_cv_input::CreateCVInputBuilder, CreateCVInput},
         education::Education,
-        experience::{ExperienceBuilder},
+        experience::ExperienceBuilder,
         sex::Sex,
         users::{create_user_input::CreateUserInputBuilder, CreateUserInput},
     },
-    object_id::ScalarObjectId,
+    object_id::ScalarObjectId, common::DateTime,
 };
 
 use async_graphql::futures_util::StreamExt;
@@ -87,7 +87,7 @@ fn create_test_comment(
         id: comment_id,
         author: author_id,
         content,
-        created: mongodb::bson::DateTime::now(),
+        created: DateTime::now(),
         replies: vec![],
     }
 }
