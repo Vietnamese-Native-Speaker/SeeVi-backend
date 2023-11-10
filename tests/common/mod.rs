@@ -194,3 +194,397 @@ pub async fn friendslist(
     reply.to_owned()
 }
 
+pub async fn create_cv(
+    token: String,
+    user_id: ScalarObjectId,
+    title: &str,
+    description: &str,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_create_cv(user_id.to_string().into(), title.into(), description.into());
+    print_json(&query);
+
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + &token)
+        .body(query);
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply
+}
+
+pub async fn delete_cv(
+    token: String,
+    cv_id: ScalarObjectId,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_delete_cv(cv_id.to_string().into());
+    print_json(&query);
+
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + &token)
+        .body(query);
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+
+    reply
+}
+
+pub async fn change_cv_title(
+    token: String,
+    cv_id: ScalarObjectId,
+    title: &str,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_change_cv_title(cv_id.to_string().into(), title.into());
+    print_json(&query);
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + &token)
+        .body(query);
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply
+}
+
+pub async fn change_cv_description(
+    token: String,
+    cv_id: ScalarObjectId,
+    description: &str,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_change_cv_description(cv_id.to_string().into(), description.into());
+    print_json(&query);
+
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + &token)
+        .body(query);
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply
+}
+
+pub async fn add_tag(
+    token: String,
+    cv_id: ScalarObjectId,
+    tag: &str,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_add_tag(cv_id.to_string().into(), tag.into());
+    print_json(&query);
+
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + &token)
+        .body(query.clone());
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply
+}
+
+pub async fn remove_tag(
+    token: String,
+    cv_id: ScalarObjectId,
+    tag: &str,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_remove_tag(cv_id.to_string().into(), tag.into());
+    print_json(&query);
+
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + &token)
+        .body(query.clone());
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply
+}
+
+pub async fn add_comment(
+    token: String,
+    cv_id: ScalarObjectId,
+    author_id: ScalarObjectId,
+    content: &str,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_add_comment_to_cv(cv_id.to_string().into(), author_id.to_string().into(), content.into());
+    print_json(&query);
+
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + &token)
+        .body(query.clone());
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply
+}
+
+pub async fn remove_comment(
+    token: String,
+    cv_id: ScalarObjectId,
+    comment_id: ScalarObjectId,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_remove_comment_from_cv(cv_id.to_string().into(), comment_id.to_string().into());
+    print_json(&query);
+
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + &token)
+        .body(query.clone());
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply
+}
+
+pub async fn share_cv(
+    token: String,
+    cv_id: ScalarObjectId,
+    user_id: ScalarObjectId,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_share_cv(cv_id.to_string().into(), user_id.to_string().into());
+    print_json(&query);
+
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + &token)
+        .body(query.clone());
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply
+}
+
+pub async fn unshare_cv(
+    token: String,
+    cv_id: ScalarObjectId,
+    user_id: ScalarObjectId,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_unshare_cv(cv_id.to_string().into(), user_id.to_string().into());
+    print_json(&query);
+
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + &token)
+        .body(query.clone());
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply
+}
+
+pub async fn like_cv(
+    token: String,
+    cv_id: ScalarObjectId,
+    user_id: ScalarObjectId,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_like_cv(cv_id.to_string().into(), user_id.to_string().into());
+    print_json(&query);
+
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + &token)
+        .body(query.clone());
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply
+}
+
+pub async fn unlike_cv(
+    token: String,
+    cv_id: ScalarObjectId,
+    user_id: ScalarObjectId,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_unlike_cv(cv_id.to_string().into(), user_id.to_string().into());
+    print_json(&query);
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + &token)
+        .body(query.clone());
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply
+}
+
+pub async fn bookmark_cv(
+    token: String,
+    cv_id: ScalarObjectId,
+    user_id: ScalarObjectId,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_bookmark_cv(cv_id.to_string().into(), user_id.to_string().into());
+    print_json(&query);
+
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + &token)
+        .body(query.clone());
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply
+}
+
+pub async fn unbookmark_cv(
+    token: String,
+    cv_id: ScalarObjectId,
+    user_id: ScalarObjectId,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_unbookmark_cv(cv_id.to_string().into(), user_id.to_string().into());
+    print_json(&query);
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + &token)
+        .body(query.clone());
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+
+    reply
+}
+
+pub async fn add_reply_to_comment(
+    token: String,
+    comment_id: ScalarObjectId,
+    author_id: ScalarObjectId,
+    content: &str,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_add_reply_to_comment(comment_id.to_string().into(), author_id.to_string().into(), content.into());
+    print_json(&query);
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + token.as_str())
+        .body(query.clone());
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+
+    reply
+}
+
+pub async fn remove_reply_from_comment(
+    token: String,
+    comment_id: ScalarObjectId,
+    reply_id: ScalarObjectId,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_remove_reply_from_comment(comment_id.to_string().into(), reply_id.to_string().into());
+    print_json(&query);
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + token.as_str())
+        .body(query.clone());
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+
+    reply
+}
+
+pub async fn like_comment(
+    token: String,
+    comment_id: ScalarObjectId,
+    user_id: ScalarObjectId,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_like_comment(comment_id.to_string().into(), user_id.to_string().into());
+    print_json(&query);
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + token.as_str())
+        .body(query.clone());
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply
+}
+
+pub async fn unlike_comment(
+    token: String,
+    comment_id: ScalarObjectId,
+    user_id: ScalarObjectId,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_unlike_comment(comment_id.to_string().into(), user_id.to_string().into());
+    print_json(&query);
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + token.as_str())
+        .body(query.clone());
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply
+}
+
+pub async fn bookmark_comment(
+    token: String,
+    comment_id: ScalarObjectId,
+    user_id: ScalarObjectId,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_bookmark_comment(comment_id.to_string().into(), user_id.to_string().into());
+    print_json(&query);
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + token.as_str())
+        .body(query.clone());
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply
+}
+
+pub async fn unbookmark_comment(
+    token: String,
+    comment_id: ScalarObjectId,
+    user_id: ScalarObjectId,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_unbookmark_comment(comment_id.to_string().into(), user_id.to_string().into());
+    print_json(&query);
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_string() + token.as_str())
+        .body(query.clone());
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply
+}
+
+pub async fn update_content_comment(
+    token: String,
+    comment_id: ScalarObjectId,
+    content: &str,
+    routes: &(impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone + 'static),
+) -> serde_json::Value {
+    let query = common::graphql::mutation_update_content_comment(comment_id.to_string().into(), content.into());
+    print_json(&query);
+    let request = warp::test::request()
+        .method("POST")
+        .path("/graphql")
+        .header("Authorization", "Bearer ".to_owned() + token.as_str())
+        .body(query.clone());
+    let reply = request.reply(routes).await.body().clone();
+    let reply = serde_json::from_slice::<serde_json::Value>(&reply).unwrap();
+    reply
+}

@@ -1,11 +1,18 @@
+use crate::data_source::BookmarkDataSource;
 use crate::data_source::CVDataSource;
 use crate::data_source::CVDataSourceError;
 use crate::data_source::CommentDataSource;
+use crate::data_source::LikeDataSource;
 use crate::data_source::UserDataSource;
 use crate::data_source::{FriendsListDataSource, FriendsListError};
+use crate::models::comment::Bookmark as CommentBookmark;
 use crate::models::comment::Comment;
 use crate::models::comment::CreateCommentInput;
+use crate::models::comment::Like;
 use crate::models::comment::UpdateCommentInput;
+use crate::models::cv::interactions::Like as CVLike;
+use crate::models::cv::interactions::Share;
+use crate::models::cv::Bookmark as CVBookmark;
 use crate::models::cv::CreateCVInput;
 use crate::models::cv::UpdateCVInput;
 use crate::models::cv::CV;
@@ -16,16 +23,24 @@ use async_graphql::futures_util::{self, StreamExt};
 use async_trait::async_trait;
 use mongodb::bson;
 use mongodb::bson::oid::ObjectId;
+use std::fmt::Display;
+use std::fmt::Formatter;
 use std::sync::Mutex;
 
 use super::cv_service::comment_service::CommentServiceError;
+use super::cv_service::error::CVServiceError;
 use super::user_service::error::UserServiceError;
 
 pub struct MockDatabase {
-    users: Mutex<Vec<User>>,
-    friend_requests: Mutex<Vec<FriendRequest>>,
-    cvs: Mutex<Vec<CV>>,
-    comments: Mutex<Vec<Comment>>,
+    pub(crate) users: Mutex<Vec<User>>,
+    pub(crate) friend_requests: Mutex<Vec<FriendRequest>>,
+    pub(crate) cvs: Mutex<Vec<CV>>,
+    pub(crate) comments: Mutex<Vec<Comment>>,
+    pub(crate) likes: Mutex<Vec<Like>>,
+    pub(crate) cv_shares: Mutex<Vec<Share>>,
+    pub(crate) cv_bookmarks: Mutex<Vec<CVBookmark>>,
+    pub(crate) cv_likes: Mutex<Vec<CVLike>>,
+    pub(crate) bookmarks: Mutex<Vec<CommentBookmark>>,
 }
 
 impl MockDatabase {
@@ -35,6 +50,11 @@ impl MockDatabase {
             friend_requests: Mutex::new(Vec::new()),
             cvs: Mutex::new(Vec::new()),
             comments: Mutex::new(Vec::new()),
+            likes: Mutex::new(Vec::new()),
+            cv_shares: Mutex::new(Vec::new()),
+            cv_bookmarks: Mutex::new(Vec::new()),
+            cv_likes: Mutex::new(Vec::new()),
+            bookmarks: Mutex::new(Vec::new()),
         }
     }
 }
@@ -462,13 +482,215 @@ impl CommentDataSource for MockDatabase {
         for comment in comments.iter_mut() {
             if comment.id == _id.into() {
                 comment.content = _input.content.clone().unwrap_or(comment.content.clone());
-                comment.likes = _input.likes.clone().unwrap_or(comment.likes);
-                comment.bookmarks = _input.bookmarks.clone().unwrap_or(comment.bookmarks);
-                comment.shares = _input.shares.clone().unwrap_or(comment.shares);
                 comment.replies = _input.replies.clone().unwrap_or(comment.replies.clone());
                 return Ok(comment.clone());
             }
         }
         Err(DummyCommentDataSourceError)
+    }
+}
+
+#[derive(Debug)]
+pub struct DummyLikeDataSource(String);
+
+impl std::fmt::Display for DummyLikeDataSource {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl From<DummyLikeDataSource> for CommentServiceError {
+    fn from(_: DummyLikeDataSource) -> Self {
+        CommentServiceError::EmptyContent
+    }
+}
+
+impl std::error::Error for DummyLikeDataSource {}
+
+#[async_trait]
+impl LikeDataSource for MockDatabase {
+    type Error = DummyLikeDataSource;
+    async fn add_like(
+        &self,
+        user_id: bson::oid::ObjectId,
+        comment_id: bson::oid::ObjectId,
+    ) -> Result<(), Self::Error> {
+        let mut likes = self.likes.lock().unwrap();
+        for like in likes.iter_mut() {
+            if like.key.user_id == user_id.clone().into()
+                && like.key.comment_id == comment_id.clone().into()
+            {
+                return Err(DummyLikeDataSource("like already exists".to_string()));
+            }
+        }
+        likes.push(Like::new(user_id.into(), comment_id.into()));
+        Ok(())
+    }
+
+    async fn delete_like(
+        &self,
+        user_id: bson::oid::ObjectId,
+        comment_id: bson::oid::ObjectId,
+    ) -> Result<(), Self::Error> {
+        let mut likes = self.likes.lock().unwrap();
+        for like in likes.iter_mut() {
+            if like.key.user_id == user_id.clone().into()
+                && like.key.comment_id == comment_id.clone().into()
+            {
+                likes.retain(|like| {
+                    like.key.user_id != user_id.clone().into()
+                        && like.key.comment_id != comment_id.into()
+                });
+                return Ok(());
+            }
+        }
+        Err(DummyLikeDataSource("like not found".to_string()))
+    }
+
+    async fn get_likes_count_of_comment(&self, comment_id: bson::oid::ObjectId) -> Result<i32, Self::Error> {
+        let likes = self.likes.lock().unwrap();
+        let mut count = 0;
+        for like in likes.iter() {
+            if like.key.comment_id == comment_id.clone().into() {
+                count += 1;
+            }
+        }
+        Ok(count)
+    }
+
+    async fn get_likes(
+        &self,
+        comment_id: bson::oid::ObjectId,
+    ) -> Result<BoxStream<Like>, Self::Error> {
+        let likes = self.likes.lock().unwrap().clone();
+        let stream = futures_util::stream::iter(likes.into_iter());
+        let stream = stream.filter(move |like| {
+            let like = like.clone();
+            async move { like.key.comment_id == comment_id.clone().into() }
+        });
+        Ok(stream.map(|like| like).boxed())
+    }
+}
+
+#[derive(Debug)]
+pub enum CVInteractionError {
+    NotFound,
+    AlreadyExists,
+}
+
+impl Display for CVInteractionError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CVInteractionError::NotFound => write!(f, "share not found"),
+            CVInteractionError::AlreadyExists => write!(f, "share already exists"),
+        }
+    }
+}
+
+impl std::error::Error for CVInteractionError {}
+
+impl From<CVInteractionError> for CVServiceError {
+    fn from(_: CVInteractionError) -> Self {
+        CVServiceError::DatabaseError
+    }
+}
+
+#[derive(Debug)]
+pub struct DummyBookmarkDataSource(String);
+
+impl std::fmt::Display for DummyBookmarkDataSource {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl From<DummyBookmarkDataSource> for CommentServiceError {
+    fn from(_: DummyBookmarkDataSource) -> Self {
+        CommentServiceError::EmptyContent
+    }
+}
+
+impl std::error::Error for DummyBookmarkDataSource {}
+
+#[async_trait]
+impl BookmarkDataSource for MockDatabase {
+    type Error = DummyBookmarkDataSource;
+    async fn add_bookmark(
+        &self,
+        user_id: bson::oid::ObjectId,
+        comment_id: bson::oid::ObjectId,
+    ) -> Result<(), Self::Error> {
+        let mut bookmakrs = self.bookmarks.lock().unwrap();
+        for bookmark in bookmakrs.iter_mut() {
+            if bookmark.key.user_id == user_id.clone().into()
+                && bookmark.key.comment_id == comment_id.clone().into()
+            {
+                return Err(DummyBookmarkDataSource(
+                    "bookmark already exists".to_string(),
+                ));
+            }
+        }
+        bookmakrs.push(CommentBookmark::new(user_id.into(), comment_id.into()));
+        Ok(())
+    }
+
+    async fn delete_bookmark(
+        &self,
+        user_id: bson::oid::ObjectId,
+        comment_id: bson::oid::ObjectId,
+    ) -> Result<(), Self::Error> {
+        let mut bookmakrs = self.bookmarks.lock().unwrap();
+        for bookmark in bookmakrs.iter_mut() {
+            if bookmark.key.user_id == user_id.clone().into()
+                && bookmark.key.comment_id == comment_id.clone().into()
+            {
+                bookmakrs.retain(|bookmark| {
+                    bookmark.key.user_id != user_id.clone().into()
+                        && bookmark.key.comment_id != comment_id.into()
+                });
+                return Ok(());
+            }
+        }
+        Err(DummyBookmarkDataSource("bookmark not found".to_string()))
+    }
+
+    async fn get_bookmark(
+        &self,
+        user_id: ObjectId,
+        comment_id: ObjectId,
+    ) -> Result<Option<CommentBookmark>, Self::Error> {
+        let bookmarks = self.bookmarks.lock().unwrap();
+        for bookmark in bookmarks.iter() {
+            if bookmark.key.user_id == user_id.clone().into()
+                && bookmark.key.comment_id == comment_id.clone().into()
+            {
+                return Ok(Some(bookmark.clone()));
+            }
+        }
+        Ok(None)
+    }
+
+    async fn get_bookmarks_of_user(
+        &self,
+        user_id: ObjectId,
+    ) -> Result<BoxStream<Result<CommentBookmark, Self::Error>>, Self::Error> {
+        let bookmarks = self.bookmarks.lock().unwrap().clone();
+        let stream = futures_util::stream::iter(bookmarks.into_iter());
+        let stream = stream.filter(move |bookmark| {
+            let bookmark = bookmark.clone();
+            async move { bookmark.key.user_id == user_id.clone().into() }
+        });
+        Ok(stream.map(|bookmark| Ok(bookmark)).boxed())
+    }
+
+    async fn get_bookmarks_count(&self, comment_id: ObjectId) -> Result<i32, Self::Error> {
+        let bookmarks = self.bookmarks.lock().unwrap();
+        let mut count = 0;
+        for bookmark in bookmarks.iter() {
+            if bookmark.key.comment_id == comment_id.clone().into() {
+                count += 1;
+            }
+        }
+        Ok(count)
     }
 }

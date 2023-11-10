@@ -4,19 +4,27 @@ use serde::{Deserialize, Serialize};
 
 use crate::object_id::ScalarObjectId;
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, SimpleObject)]
-pub struct Key {
-    pub user_id: ScalarObjectId,
-    pub comment_id: ScalarObjectId,
-}
+use super::Key;
 
 #[derive(Debug, Serialize, Deserialize, Clone, SimpleObject)]
-#[graphql(complex)]
+#[graphql(complex, name = "CommentLike")]
 pub struct Like {
     #[serde(rename = "_id")]
     pub key: Key,
     #[graphql(skip)]
     pub created: DateTime,
+}
+
+impl Like {
+    pub fn new(user_id: ScalarObjectId, comment_id: ScalarObjectId) -> Self {
+        Self {
+            key: Key {
+                user_id,
+                comment_id,
+            },
+            created: DateTime::now(),
+        }
+    }
 }
 
 #[ComplexObject]

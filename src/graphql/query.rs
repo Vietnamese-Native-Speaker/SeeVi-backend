@@ -12,7 +12,6 @@ use crate::{
 use async_graphql as gql;
 use async_graphql::{futures_util::StreamExt, Context, InputObject, Object};
 use gql::{connection, ErrorExtensions};
-use mongodb::bson::oid::ObjectId;
 
 use super::authorization;
 
@@ -75,6 +74,7 @@ impl Query {
         }
     }
 
+    /// Get CVs using specified filter
     async fn cvs_list(
         &self,
         ctx: &Context<'_>,

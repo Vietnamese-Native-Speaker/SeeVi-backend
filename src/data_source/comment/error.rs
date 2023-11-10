@@ -1,63 +1,63 @@
-use async_graphql::ErrorExtensions;
-use mongodb::bson::{self, oid::ObjectId};
+use mongodb::bson;
+use mongodb::bson::oid::ObjectId;
 use std::fmt;
 
 #[non_exhaustive]
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum LikeDataSourceError{
-    // fail to add likes
-    AddLikesFail,
+#[derive(Debug, PartialEq, Eq, Clone)]
 
-    // fail to remove likes
-    DeleteLikesFail,
+pub enum CommentDataSourceError {
+    /// Error when the comment id is not found
+    IdNotFound(bson::oid::ObjectId),
 
-    // fail to get the number of likes
-    LikesNumberNotFound,
+    /// Error when the comment content is empty
+    EmptyContent,
 
-    // invalid comment-id
-    InvalidCommentId(ObjectId),
+    /// Error when the number of likes is invalid
+    NoLikes,
 
-    // invalid user-id
-    InvalidUserId(ObjectId),
+    /// Error when the number of bookmarks is invalid
+    NoBookmarks,
 
-    // cannot find like
-    LikeNotFound,
+    /// Error when create comment fails
+    CreateCommentFailed,
 
-    // Like already exists
-    LikeAlreadyExists,
+    /// Error when update comment fails
+    UpdateCommentFailed,
 
-    // fail to do queries
-    QueryFail,
+    /// Error when delete comment fails
+    DeleteCommentFailed,
+
+    /// Database error
+    DatabaseError,
 }
 
-impl fmt::Display for LikeDataSourceError{
+impl fmt::Display for CommentDataSourceError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self{
-            LikeDataSourceError::AddLikesFail =>{
-                write!(f, "fail to add likes!")
-            },
-            LikeDataSourceError::DeleteLikesFail =>{
-                write!(f, "fail to remove likes!")
-            },
-            LikeDataSourceError::InvalidCommentId(id) =>{
-                write!(f, "comment-id {:?} is invalid!", id)
+        match self {
+            CommentDataSourceError::IdNotFound(id) => {
+                write!(f, "Comment id {} not found", id)
             }
-            LikeDataSourceError::InvalidUserId(id) =>{
-                write!(f, "user-id {:?} is invalid!", id)
-            },
-            LikeDataSourceError::LikeNotFound =>{
-                write!(f, "cannot find like!")
-            },
-            LikeDataSourceError::LikesNumberNotFound =>{
-                write!(f, "fail to get the number of likes!")
-            },
-            LikeDataSourceError::LikeAlreadyExists => {
-                write!(f, "like already exists!")
-            },
-            LikeDataSourceError::QueryFail => {
-                write!(f, "fail to do queries")
+            CommentDataSourceError::EmptyContent => {
+                write!(f, "Comment content is empty")
+            }
+            CommentDataSourceError::NoLikes => {
+                write!(f, "Comment likes is zero")
+            }
+            CommentDataSourceError::NoBookmarks => {
+                write!(f, "Comment bookmarks is zero")
+            }
+            CommentDataSourceError::CreateCommentFailed => {
+                write!(f, "Create comment failed")
+            }
+            CommentDataSourceError::UpdateCommentFailed => {
+                write!(f, "Update comment failed")
+            }
+            CommentDataSourceError::DeleteCommentFailed => {
+                write!(f, "Delete comment failed")
+            }
+            CommentDataSourceError::DatabaseError => {
+                write!(f, "Database error")
             }
         }
     }
 }
-

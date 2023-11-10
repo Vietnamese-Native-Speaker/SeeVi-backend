@@ -2,8 +2,6 @@ use async_graphql::ErrorExtensions;
 use mongodb::bson;
 use std::fmt;
 
-use crate::models::users::User;
-
 #[non_exhaustive]
 #[derive(Debug, PartialEq, Eq, Clone)]
 

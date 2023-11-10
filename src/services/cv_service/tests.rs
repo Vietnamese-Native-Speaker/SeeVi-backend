@@ -1,11 +1,8 @@
 use async_graphql::futures_util::StreamExt;
-use mongodb::bson::{self, bson};
+use mongodb::bson;
 
 use crate::{
-    models::{
-        comment::{Comment, CreateCommentInput, UpdateCommentInput},
-        cv::CreateCVInput,
-    },
+    models::{comment::CreateCommentInput, cv::CreateCVInput},
     services::tests::MockDatabase,
 };
 
@@ -28,21 +25,23 @@ async fn test_get_comment_by_id() {
         .await
         .unwrap();
     assert_eq!("test", comment.content);
-    assert_eq!(0, comment.likes);
 }
 
 #[tokio::test]
 async fn test_comment_services() {
     // create a cv
     let db = MockDatabase::new();
-    let cv_input = CreateCVInput {
-        title: "some_title".to_string(),
-        author_id: bson::oid::ObjectId::new().into(),
-        description: Some("some_description".to_string()),
-        tags: vec!["tag1".to_string(), "tag2".to_string()],
-    };
-    let test_cv = CVService::create_cv(&db, cv_input).await.unwrap();
+    let test_cv = CVService::create_cv(
+        &db,
+        bson::oid::ObjectId::new().into(),
+        "some_title".to_string(),
+        "some_description".to_string(),
+    )
+    .await
+    .unwrap();
     assert_eq!("some_title", test_cv.title);
+
+    let user_id = bson::oid::ObjectId::new();
 
     // test add comment to cv
     let cv = CVService::add_comment(
@@ -56,34 +55,40 @@ async fn test_comment_services() {
     assert_eq!(1, cv.comments.len());
 
     // test add like to comment
-    let comment = CommentService::add_like_comment(&db, cv.comments[0])
+    let comment = CommentService::add_like_comment(&db, user_id, cv.comments[0])
         .await
         .unwrap();
-    assert_eq!(1, comment.likes);
+    let total_like = CommentService::get_likes_count(&db, comment.id.into())
+        .await
+        .unwrap();
+    assert_eq!(1, total_like);
 
     // test remove like from comment
-    let comment = CommentService::remove_like_comment(&db, cv.comments[0])
+    let comment = CommentService::remove_like_comment(&db, user_id, cv.comments[0])
         .await
         .unwrap();
-    assert_eq!(0, comment.likes);
+    let total_like = CommentService::get_likes_count(&db, comment.id.into())
+        .await
+        .unwrap();
+    assert_eq!(0, total_like);
 
     // test add bookmark to comment
-    let comment = CommentService::add_bookmark(&db, cv.comments[0])
+    let comment = CommentService::add_bookmark(&db, user_id, cv.comments[0])
         .await
         .unwrap();
-    assert_eq!(1, comment.bookmarks);
+    let total_bookmark = CommentService::get_bookmarks_count(&db, comment.id.into())
+        .await
+        .unwrap();
+    assert_eq!(1, total_bookmark);
 
     // test remove bookmark from comment
-    let comment = CommentService::remove_bookmark(&db, cv.comments[0])
+    let comment = CommentService::remove_bookmark(&db, user_id, cv.comments[0])
         .await
         .unwrap();
-    assert_eq!(0, comment.bookmarks);
-
-    // test add share to comment
-    let comment = CommentService::add_share_comment(&db, cv.comments[0])
+    let total_bookmark = CommentService::get_bookmarks_count(&db, comment.id.into())
         .await
         .unwrap();
-    assert_eq!(1, comment.shares);
+    assert_eq!(0, total_bookmark);
 
     // test add reply to comment
     let comment = CommentService::add_reply_comment(
@@ -143,13 +148,14 @@ async fn test_comment_services() {
 async fn test_cv_services() {
     // create a cv
     let db = MockDatabase::new();
-    let cv_input = CreateCVInput {
-        title: "some_title".to_string(),
-        author_id: bson::oid::ObjectId::new().into(),
-        description: Some("some_description".to_string()),
-        tags: vec!["tag1".to_string(), "tag2".to_string()],
-    };
-    let test_cv = CVService::create_cv(&db, cv_input).await.unwrap();
+    let test_cv = CVService::create_cv(
+        &db,
+        bson::oid::ObjectId::new().into(),
+        "some_title".to_string(),
+        "some_description".to_string(),
+    )
+    .await
+    .unwrap();
     assert_eq!("some_title", test_cv.title);
 
     // test update cv title
@@ -168,11 +174,11 @@ async fn test_cv_services() {
     let cv = CVService::add_tag(&db, *test_cv.id, "tag3".to_string())
         .await
         .unwrap();
-    assert_eq!(3, cv.tags.len());
+    assert_eq!(1, cv.tags.len());
 
     // test remove tag from cv
     let cv = CVService::remove_tag(&db, *test_cv.id, "tag3".to_string())
         .await
         .unwrap();
-    assert_eq!(2, cv.tags.len());
+    assert_eq!(0, cv.tags.len());
 }
