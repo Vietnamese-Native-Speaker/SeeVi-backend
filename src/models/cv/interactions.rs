@@ -3,13 +3,14 @@ use mongodb::bson::{oid::ObjectId, DateTime};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, SimpleObject)]
+#[graphql(name = "CvInteractionKey")]
 pub struct Key {
     pub user_id: ObjectId,
     pub cv_id: ObjectId,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, SimpleObject)]
-#[graphql(complex)]
+#[graphql(complex, name = "CvLike")]
 pub struct Like {
     #[serde(rename = "_id")]
     key: Key,
@@ -42,7 +43,7 @@ impl Like {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, SimpleObject, PartialEq)]
-#[graphql(complex)]
+#[graphql(complex, name = "CvBookmark")]
 pub struct Bookmark {
     #[serde(rename = "_id")]
     key: Key,
@@ -75,7 +76,7 @@ impl Bookmark {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, SimpleObject, PartialEq)]
-#[graphql(complex)]
+#[graphql(complex, name = "CvShare")]
 pub struct Share {
     #[serde(rename = "_id")]
     key: Key,

@@ -7,7 +7,7 @@ use crate::data_source::comment::error::CommentDataSourceError;
 use crate::data_source::comment::{
     BookmarkDataSource, BookmarkDataSourceError, LikeDataSource, LikeDataSourceError,
 };
-use crate::models::comment::like::Key;
+use crate::models::comment::Key;
 use crate::models::comment::Bookmark;
 use crate::models::cv_details::CVDetails;
 use crate::models::education::Education;
@@ -32,7 +32,7 @@ use async_trait::async_trait;
 
 use mongodb::bson;
 
-use crate::models::cv::{self, UpdateCVInput, CV};
+use crate::models::cv::{self, CV};
 use crate::models::users::{self, User};
 
 use crate::data_source::CVDataSource;
