@@ -2,9 +2,10 @@ use async_graphql as gql;
 use async_graphql::{ComplexObject, Context, SimpleObject};
 use gql::futures_util::StreamExt;
 use gql::{connection, ErrorExtensions};
-use mongodb::bson::{self, DateTime};
+use mongodb::bson;
 use serde::{Deserialize, Serialize};
 
+use crate::common::DateTime;
 use crate::{
     data_source::mongo::{MongoDB, MongoForTesting},
     object_id::ScalarObjectId,
@@ -23,7 +24,6 @@ pub struct Comment {
 
     pub content: String,
 
-    #[graphql(skip)]
     pub created: DateTime,
 
     #[graphql(skip)]
@@ -32,10 +32,6 @@ pub struct Comment {
 
 #[ComplexObject]
 impl Comment {
-    async fn created(&self) -> String {
-        self.created.try_to_rfc3339_string().unwrap()
-    }
-
     /// Get replies of this comment.
     async fn replies(
         &self,
@@ -198,7 +194,7 @@ impl Comment {
             id: bson::oid::ObjectId::new().into(),
             author: author.into(),
             content,
-            created: bson::DateTime::now(),
+            created: DateTime::now(),
             replies: vec![],
         }
     }

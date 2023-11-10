@@ -1,15 +1,10 @@
-use async_graphql as gql;
-use async_graphql::{ComplexObject, SimpleObject};
-use gql::futures_util::StreamExt;
-use gql::{connection, Context};
-use mongodb::bson::{self, DateTime, Uuid};
+use async_graphql::SimpleObject;
+use mongodb::bson::{self, Uuid};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    data_source::mongo::{MongoDB, MongoForTesting},
-    models::{comment::Comment, ResourceIdentifier},
-    object_id::ScalarObjectId,
-    services::cv_service::comment_service::CommentService,
+    models::ResourceIdentifier,
+    object_id::ScalarObjectId, common::DateTime,
 };
 
 use super::CreateCVInput;
@@ -27,7 +22,6 @@ pub struct CV {
     pub tags: Vec<String>,
     #[graphql(skip)]
     pub comments: Vec<bson::oid::ObjectId>,
-    #[graphql(skip)]
     pub created: DateTime,
     /// The resource identifier of the CV, can be used to query the actual CV data on the storage.
     pub cv: Option<ResourceIdentifier>,
