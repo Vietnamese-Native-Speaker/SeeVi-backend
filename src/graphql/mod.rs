@@ -1,15 +1,20 @@
+use async_graphql::ErrorExtensions;
+
+use crate::{
+    error::ServerError,
+    services::auth_service::{AuthService, Claims},
+};
+
+pub mod mutation;
 pub mod query;
+mod cv;
+mod user;
 
-use async_graphql::http::receive_json;
-use tide::*;
-use crate::State;
+pub type GqlResult<T> = Result<T, async_graphql::Error>;
 
-pub async fn graphql(req: Request<State>) -> tide::Result {
-    let schema = req.state().schema.clone();
-    let gql_resp = schema.execute(receive_json(req).await?).await;
-
-    let mut resp = Response::new(StatusCode::Ok);
-    resp.set_body(Body::from_json(&gql_resp)?);
-
-    Ok(resp.into())
+fn authorization(ctx: &async_graphql::Context<'_>) -> GqlResult<Claims> {
+    let token = ctx.data_unchecked::<Option<String>>();
+    let token = token.as_ref().ok_or_else(|| ServerError::Unauthorized.extend())?;
+    let rs = AuthService::decode_token(token, true);
+    rs.ok_or_else(|| ServerError::InvalidToken.extend())
 }
