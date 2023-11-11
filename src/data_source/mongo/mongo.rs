@@ -7,8 +7,8 @@ use crate::data_source::comment::error::CommentDataSourceError;
 use crate::data_source::comment::{
     BookmarkDataSource, BookmarkDataSourceError, LikeDataSource, LikeDataSourceError,
 };
-use crate::models::comment::Key;
 use crate::models::comment::Bookmark;
+use crate::models::comment::Key;
 use crate::models::cv_details::CVDetails;
 use crate::models::education::Education;
 use crate::models::experience::Experience;
@@ -838,11 +838,10 @@ impl LikeDataSource for MongoDB {
         user_id: bson::oid::ObjectId,
         comment_id: bson::oid::ObjectId,
     ) -> Result<(), Self::Error> {
-        let comment_collection: mongodb::Collection<Comment> = self.db.collection(LIKE_COLLECTION);
-        let like_collection: mongodb::Collection<Like> = self.db.collection(COMMENT_COLLECTION);
+        let like_collection: mongodb::Collection<Like> = self.db.collection(LIKE_COLLECTION);
         let filter = bson::doc! {
-            "key.user_id": user_id.clone(),
-            "key.comment_id": comment_id.clone(),
+            "_id.user_id": user_id.clone(),
+            "_id.comment_id": comment_id.clone(),
         };
         let result_exist = like_collection.find_one(filter, None).await;
         match result_exist {
@@ -872,21 +871,23 @@ impl LikeDataSource for MongoDB {
         user_id: bson::oid::ObjectId,
         comment_id: bson::oid::ObjectId,
     ) -> Result<(), Self::Error> {
-        let comment_collection: mongodb::Collection<Comment> = self.db.collection(LIKE_COLLECTION);
-        let like_collection: mongodb::Collection<Like> = self.db.collection(COMMENT_COLLECTION);
+        let like_collection: mongodb::Collection<Like> = self.db.collection(LIKE_COLLECTION);
         let filter = bson::doc! {
-            "key.user_id": user_id,
-            "key.comment_id": comment_id,
+            "_id.user_id": user_id,
+            "_id.comment_id": comment_id,
         };
         let result_delete = like_collection.find_one_and_delete(filter, None).await;
         match result_delete {
-            Ok(like_option) => Ok(()),
+            Ok(_) => Ok(()),
             Err(err) => Err(LikeDataSourceError::DeleteLikesFail),
         }
     }
 
-    async fn get_likes_count_of_comment(&self, comment_id: bson::oid::ObjectId) -> Result<i32, Self::Error> {
-        let collection: mongodb::Collection<Comment> = self.db.collection(COMMENT_COLLECTION);
+    async fn get_likes_count_of_comment(
+        &self,
+        comment_id: bson::oid::ObjectId,
+    ) -> Result<i32, Self::Error> {
+        let collection: mongodb::Collection<Like> = self.db.collection(LIKE_COLLECTION);
         let filter = bson::doc! {"_id.comment_id": comment_id};
         let result = collection.count_documents(filter, None).await;
         match result {
@@ -901,7 +902,7 @@ impl LikeDataSource for MongoDB {
     ) -> Result<BoxStream<Like>, Self::Error> {
         let collection: mongodb::Collection<Like> = self.db.collection(LIKE_COLLECTION);
         let filter = bson::doc! {
-            "key.comment_id": comment_id,
+            "_id.comment_id": comment_id
         };
         let cursor_result = collection.find(filter, None).await;
         match cursor_result {
